@@ -11,9 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
+
 import { ThemeToggle } from '@/components/theme-toggle';
-  Video, 
+ import {  Video, 
   VideoOff, 
   Mic, 
   MicOff, 
