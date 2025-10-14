@@ -11,18 +11,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  ArrowLeft, 
-  Search, 
-  Video, 
-  Phone, 
-  User, 
-  Clock, 
+import {
+  ArrowLeft,
+  Search,
+  Video,
+  Phone,
+  User,
+  Clock,
   Calendar,
   Filter,
   Plus,
   Stethoscope,
-  MessageCircle
+  MessageCircle,
+  CreditCard
 } from 'lucide-react';
 
 interface Appointment {
@@ -36,10 +37,11 @@ interface Appointment {
   date: string;
   time: string;
   type: 'video' | 'phone';
-  status: 'upcoming' | 'completed' | 'cancelled' | 'confirmed';
+  status: 'upcoming' | 'completed' | 'cancelled' | 'confirmed' | 'pending';
   symptoms?: string[];
   avatar?: string;
   consultationFee?: number;
+  paymentStatus?: 'pending' | 'completed' | 'failed';
 }
 
 export default function PatientAppointmentsPage() {
@@ -54,9 +56,8 @@ export default function PatientAppointmentsPage() {
     if (!isAuthenticated || isDoctor) {
       router.push('/');
     } else {
-      // Load appointments from localStorage
       const storedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-      const userAppointments = storedAppointments.filter((apt: Appointment) => 
+      const userAppointments = storedAppointments.filter((apt: Appointment) =>
         apt.patientId === user?.id
       );
       setAppointments(userAppointments);
@@ -66,24 +67,22 @@ export default function PatientAppointmentsPage() {
   const filterAppointments = (status?: string) => {
     let filtered = appointments;
 
-    // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(apt => 
+      filtered = filtered.filter(apt =>
         apt.doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         apt.doctorSpecialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (apt.symptoms && apt.symptoms.some(symptom => 
+        (apt.symptoms && apt.symptoms.some(symptom =>
           symptom.toLowerCase().includes(searchQuery.toLowerCase())
         ))
       );
     }
 
-    // Filter by status
     const today = new Date().toISOString().split('T')[0];
-    
+
     switch (status) {
       case 'upcoming':
-        filtered = filtered.filter(apt => 
-          apt.date >= today && (apt.status === 'upcoming' || apt.status === 'confirmed')
+        filtered = filtered.filter(apt =>
+          apt.date >= today && (apt.status === 'upcoming' || apt.status === 'confirmed' || apt.status === 'pending')
         );
         break;
       case 'completed':
@@ -101,6 +100,7 @@ export default function PatientAppointmentsPage() {
     switch (status) {
       case 'upcoming': return 'default';
       case 'confirmed': return 'default';
+      case 'pending': return 'outline';
       case 'completed': return 'secondary';
       case 'cancelled': return 'destructive';
       default: return 'default';
@@ -111,6 +111,7 @@ export default function PatientAppointmentsPage() {
     switch (status) {
       case 'upcoming': return 'Upcoming';
       case 'confirmed': return 'Confirmed';
+      case 'pending': return 'Payment Pending';
       case 'completed': return 'Completed';
       case 'cancelled': return 'Cancelled';
       default: return status;
@@ -297,21 +298,24 @@ export default function PatientAppointmentsPage() {
   );
 }
 
-function AppointmentCard({ 
-  appointment, 
-  onJoin, 
+function AppointmentCard({
+  appointment,
+  onJoin,
   onCancel,
   onReschedule
-}: { 
+}: {
   appointment: Appointment;
   onJoin: (id: string) => void;
   onCancel: (id: string) => void;
   onReschedule: (id: string) => void;
 }) {
+  const router = useRouter();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming': return 'default';
       case 'confirmed': return 'default';
+      case 'pending': return 'outline';
       case 'completed': return 'secondary';
       case 'cancelled': return 'destructive';
       default: return 'default';
@@ -322,6 +326,7 @@ function AppointmentCard({
     switch (status) {
       case 'upcoming': return 'Upcoming';
       case 'confirmed': return 'Confirmed';
+      case 'pending': return 'Payment Pending';
       case 'completed': return 'Completed';
       case 'cancelled': return 'Cancelled';
       default: return status;
@@ -329,6 +334,7 @@ function AppointmentCard({
   };
 
   const isUpcoming = appointment.status === 'upcoming' || appointment.status === 'confirmed';
+  const isPending = appointment.status === 'pending';
   const isToday = appointment.date === new Date().toISOString().split('T')[0];
 
   return (
@@ -385,6 +391,17 @@ function AppointmentCard({
             </div>
           </div>
           <div className="flex flex-col space-y-2 ml-4">
+            {isPending && (
+              <>
+                <Button size="sm" onClick={() => router.push(`/patient/payment/${appointment.id}`)}>
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  Pay Now
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => onCancel(appointment.id)}>
+                  Cancel
+                </Button>
+              </>
+            )}
             {isUpcoming && isToday && (
               <Button size="sm" onClick={() => onJoin(appointment.id)}>
                 <Video className="w-4 h-4 mr-1" />

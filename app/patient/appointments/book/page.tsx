@@ -122,21 +122,20 @@ export default function BookAppointmentPage() {
       date: selectedDate,
       time: selectedTime,
       type: consultationType,
-      status: 'confirmed' as const,
+      status: 'pending' as const,
       symptoms: selectedSymptoms,
       consultationFee: selectedDoctor.consultationFee,
       additionalNotes,
       avatar: selectedDoctor.avatar,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      paymentStatus: 'pending' as const
     };
 
-    // Save to localStorage (in production, this would be an API call)
     const existingAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
     existingAppointments.push(appointment);
     localStorage.setItem('appointments', JSON.stringify(existingAppointments));
 
-    showNotification('Appointment booked successfully!', 'success');
-    router.push('/patient/appointments');
+    router.push(`/patient/payment/${appointmentId}`);
   };
 
   const filteredDoctors = availableDoctors.filter(doctor =>
@@ -544,7 +543,7 @@ export default function BookAppointmentPage() {
 
               <Button onClick={handleBookAppointment} className="w-full" size="lg">
                 <CheckCircle className="w-5 h-5 mr-2" />
-                Confirm & Book Appointment
+                Proceed to Payment
               </Button>
             </CardContent>
           </Card>
