@@ -45,20 +45,52 @@ interface Appointment {
 }
 
 
+interface PatientProfile {
+  fullName: string;
+  phone: string;
+  email: string;
+  dateOfBirth: string;
+  gender: string;
+  address: string;
+  bloodGroup: string;
+  height: string;
+  weight: string;
+  emergencyContact: string;
+  allergies: string;
+  currentMedications: string;
+  completedAt: string;
+  userId: string;
+}
+
 export default function PatientDashboard() {
   const router = useRouter();
   const { user, isAuthenticated, isDoctor } = useAuth();
   const { t } = useLanguage();
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [profileData, setProfileData] = useState<PatientProfile | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || isDoctor) {
       router.push('/');
     } else {
+      // Check if profile is completed
+      const storedProfile = localStorage.getItem(`patient_profile_${user?.id}`);
+      if (!storedProfile) {
+        router.push('/patient/profile-form');
+        return;
+      }
+
+      try {
+        const profile = JSON.parse(storedProfile);
+        setProfileData(profile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+
       // Load appointments from localStorage
       const storedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-      const userAppointments = storedAppointments.filter((apt: Appointment) => 
-        apt.patientId === user?.id && 
+      const userAppointments = storedAppointments.filter((apt: Appointment) =>
+        apt.patientId === user?.id &&
         (apt.status === 'upcoming' || apt.status === 'confirmed')
       );
       setUpcomingAppointments(userAppointments.slice(0, 3)); // Show first 3
@@ -160,6 +192,103 @@ export default function PatientDashboard() {
             </Card>
           ))}
         </div>
+
+        {/* Profile Information */}
+        {profileData && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <User className="w-5 h-5 mr-2" />
+                Profile Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-sm text-muted-foreground">Personal Information</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Full Name</p>
+                      <p className="font-medium">{profileData.fullName}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Phone</p>
+                        <p className="font-medium">{profileData.phone}</p>
+                      </div>
+                      {profileData.email && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Email</p>
+                          <p className="font-medium">{profileData.email}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Date of Birth</p>
+                        <p className="font-medium">{new Date(profileData.dateOfBirth).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Gender</p>
+                        <p className="font-medium capitalize">{profileData.gender}</p>
+                      </div>
+                    </div>
+                    {profileData.address && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Address</p>
+                        <p className="font-medium">{profileData.address}</p>
+                      </div>
+                    )}
+                    {profileData.emergencyContact && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Emergency Contact</p>
+                        <p className="font-medium">{profileData.emergencyContact}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-sm text-muted-foreground">Medical Information</h4>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-4">
+                      {profileData.bloodGroup && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Blood Group</p>
+                          <p className="font-medium">{profileData.bloodGroup}</p>
+                        </div>
+                      )}
+                      {profileData.height && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Height</p>
+                          <p className="font-medium">{profileData.height} cm</p>
+                        </div>
+                      )}
+                      {profileData.weight && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Weight</p>
+                          <p className="font-medium">{profileData.weight} kg</p>
+                        </div>
+                      )}
+                    </div>
+                    {profileData.allergies && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Allergies</p>
+                        <p className="font-medium">{profileData.allergies}</p>
+                      </div>
+                    )}
+                    {profileData.currentMedications && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Current Medications</p>
+                        <p className="font-medium">{profileData.currentMedications}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Upcoming Appointments */}
         <Card className="mb-6">

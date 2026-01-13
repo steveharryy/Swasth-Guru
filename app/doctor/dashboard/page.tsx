@@ -26,18 +26,48 @@ import {
   Phone
 } from 'lucide-react';
 
+interface DoctorProfile {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  specialization: string;
+  experience: string;
+  qualifications: string;
+  consultationFee: string;
+  about: string;
+  completedAt: string;
+  userId: string;
+  rating: number;
+  totalPatients: number;
+  totalConsultations: number;
+}
+
 export default function DoctorDashboard() {
   const router = useRouter();
   const { user, isAuthenticated, isDoctor } = useAuth();
   const { t } = useLanguage();
+  const [profileData, setProfileData] = useState<DoctorProfile | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || !isDoctor) {
       router.push('/');
     } else {
-      // Load appointments from localStorage
+      const storedProfile = localStorage.getItem(`doctor_profile_${user?.id}`);
+      if (!storedProfile) {
+        router.push('/doctor/profile-form');
+        return;
+      }
+
+      try {
+        const profile = JSON.parse(storedProfile);
+        setProfileData(profile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+
       const storedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-      setTodayAppointments(storedAppointments.slice(0, 3)); // Show first 3 for demo
+      setTodayAppointments(storedAppointments.slice(0, 3));
     }
   }, [isAuthenticated, isDoctor, router, user]);
 
@@ -53,15 +83,15 @@ export default function DoctorDashboard() {
     }
   ]);
 
-  if (!isAuthenticated || !user || !isDoctor) {
+  if (!isAuthenticated || !user || !isDoctor || !profileData) {
     return null;
   }
 
   const stats = [
     { label: 'Today\'s Appointments', value: todayAppointments.length.toString(), icon: Calendar, color: 'bg-primary/10 text-primary' },
-    { label: 'Total Patients', value: '156', icon: Users, color: 'bg-secondary/10 text-secondary' },
-    { label: 'This Month', value: '89', icon: TrendingUp, color: 'bg-accent/10 text-accent' },
-    { label: 'Avg Rating', value: '4.8', icon: Activity, color: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' },
+    { label: 'Total Patients', value: profileData.totalPatients.toString(), icon: Users, color: 'bg-secondary/10 text-secondary' },
+    { label: 'Total Consultations', value: profileData.totalConsultations.toString(), icon: TrendingUp, color: 'bg-accent/10 text-accent' },
+    { label: 'Avg Rating', value: profileData.rating.toString(), icon: Activity, color: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' },
   ];
 
   const date = new Date();
@@ -148,6 +178,77 @@ export default function DoctorDashboard() {
             </Card>
           ))}
         </div>
+
+        {/* Professional Profile */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Stethoscope className="w-5 h-5 mr-2" />
+              Professional Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-semibold text-sm text-muted-foreground">Personal Information</h4>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Full Name</p>
+                    <p className="font-medium">{profileData.fullName}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Phone</p>
+                      <p className="font-medium">{profileData.phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="font-medium">{profileData.email}</p>
+                    </div>
+                  </div>
+                  {profileData.address && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Address</p>
+                      <p className="font-medium">{profileData.address}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-semibold text-sm text-muted-foreground">Professional Details</h4>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Specialization</p>
+                      <p className="font-medium">{profileData.specialization}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Experience</p>
+                      <p className="font-medium">{profileData.experience} years</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Qualifications</p>
+                    <p className="font-medium">{profileData.qualifications}</p>
+                  </div>
+                  {profileData.consultationFee && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Consultation Fee</p>
+                      <p className="font-medium">₹{profileData.consultationFee}</p>
+                    </div>
+                  )}
+                  {profileData.about && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">About</p>
+                      <p className="font-medium text-sm">{profileData.about}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Today's Appointments */}
         <Card className="mb-6">
