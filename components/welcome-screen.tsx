@@ -2,16 +2,16 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/language-context';
-import { UserTypeSelector } from '@/components/user-type-selector';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Volume2, Smartphone, Shield, Clock } from 'lucide-react';
 
 export function WelcomeScreen() {
+  const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
-  const [showUserType, setShowUserType] = useState(false);
   const punjabiAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -52,10 +52,6 @@ export function WelcomeScreen() {
       console.warn('Speech Synthesis not supported in this browser.');
     }
   };
-
-  if (showUserType) {
-    return <UserTypeSelector onBack={() => setShowUserType(false)} />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 gradient-bg">
@@ -136,11 +132,11 @@ export function WelcomeScreen() {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-4">
-          <Button onClick={() => setShowUserType(true)} size="lg" className="h-14">
+          <Button onClick={() => router.push('/auth/role-select')} size="lg" className="h-14">
             {t('login')}
           </Button>
           <Button
-            onClick={() => setShowUserType(true)}
+            onClick={() => router.push('/auth/role-select')}
             variant="outline"
             size="lg"
             className="h-14"
