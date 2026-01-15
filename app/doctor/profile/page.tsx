@@ -62,18 +62,52 @@ export default function DoctorProfilePage() {
     if (!isAuthenticated || !isDoctor) {
       router.push('/');
     } else if (user) {
-      setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        specialization: user.specialization || '',
-        experience: '5 years',
-        qualifications: 'MBBS, MD',
-        address: 'Medical Center, Delhi',
-        bio: 'Experienced general physician with expertise in treating common ailments and preventive care.',
-        consultationFee: '11',
-        languages: user.languages || ['english', 'hindi']
-      });
+      const storedProfile = localStorage.getItem(`doctor_profile_${user.id}`);
+
+      if (storedProfile) {
+        try {
+          const profileData = JSON.parse(storedProfile);
+          setFormData({
+            name: profileData.fullName || user.name || '',
+            email: profileData.email || user.email || '',
+            phone: profileData.phone || user.phone || '',
+            specialization: profileData.specialization || user.specialization || '',
+            experience: profileData.experience || '',
+            qualifications: profileData.qualifications || '',
+            address: profileData.address || '',
+            bio: profileData.about || '',
+            consultationFee: profileData.consultationFee || '',
+            languages: user.languages || ['english', 'hindi']
+          });
+        } catch (error) {
+          console.error('Error loading profile:', error);
+          setFormData({
+            name: user.name || '',
+            email: user.email || '',
+            phone: user.phone || '',
+            specialization: user.specialization || '',
+            experience: '',
+            qualifications: '',
+            address: '',
+            bio: '',
+            consultationFee: '',
+            languages: user.languages || ['english', 'hindi']
+          });
+        }
+      } else {
+        setFormData({
+          name: user.name || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          specialization: user.specialization || '',
+          experience: '',
+          qualifications: '',
+          address: '',
+          bio: '',
+          consultationFee: '',
+          languages: user.languages || ['english', 'hindi']
+        });
+      }
     }
   }, [isAuthenticated, isDoctor, router, user]);
 
@@ -82,6 +116,25 @@ export default function DoctorProfilePage() {
   };
 
   const handleSave = () => {
+    const profileData = {
+      fullName: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      specialization: formData.specialization,
+      experience: formData.experience,
+      qualifications: formData.qualifications,
+      consultationFee: formData.consultationFee,
+      about: formData.bio,
+      completedAt: new Date().toISOString(),
+      userId: user?.id,
+      rating: 4.5,
+      totalPatients: 0,
+      totalConsultations: 0
+    };
+
+    localStorage.setItem(`doctor_profile_${user?.id}`, JSON.stringify(profileData));
+
     updateUser({
       name: formData.name,
       email: formData.email,

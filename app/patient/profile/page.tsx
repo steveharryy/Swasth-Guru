@@ -66,21 +66,61 @@ export default function PatientProfilePage() {
     if (!isAuthenticated || isDoctor) {
       router.push('/');
     } else if (user) {
-      setFormData({
-        name: user.name || '',
-        phone: user.phone || '',
-        email: user.email || '',
-        address: 'Village Rampur, District Nabha, Punjab 147201',
-        dateOfBirth: '1992-05-15',
-        gender: 'Male',
-        bloodGroup: 'O+',
-        height: '175 cm',
-        weight: '70 kg',
-        emergencyContact: '+91 98765 43211',
-        medicalHistory: 'No significant medical history',
-        allergies: 'None known',
-        currentMedications: 'None'
-      });
+      const storedProfile = localStorage.getItem(`patient_profile_${user.id}`);
+
+      if (storedProfile) {
+        try {
+          const profileData = JSON.parse(storedProfile);
+          setFormData({
+            name: profileData.fullName || user.name || '',
+            phone: profileData.phone || user.phone || '',
+            email: profileData.email || user.email || '',
+            address: profileData.address || '',
+            dateOfBirth: profileData.dateOfBirth || '',
+            gender: profileData.gender || '',
+            bloodGroup: profileData.bloodGroup || '',
+            height: profileData.height || '',
+            weight: profileData.weight || '',
+            emergencyContact: profileData.emergencyContact || '',
+            medicalHistory: '',
+            allergies: profileData.allergies || '',
+            currentMedications: profileData.currentMedications || ''
+          });
+        } catch (error) {
+          console.error('Error loading profile:', error);
+          setFormData({
+            name: user.name || '',
+            phone: user.phone || '',
+            email: user.email || '',
+            address: '',
+            dateOfBirth: '',
+            gender: '',
+            bloodGroup: '',
+            height: '',
+            weight: '',
+            emergencyContact: '',
+            medicalHistory: '',
+            allergies: '',
+            currentMedications: ''
+          });
+        }
+      } else {
+        setFormData({
+          name: user.name || '',
+          phone: user.phone || '',
+          email: user.email || '',
+          address: '',
+          dateOfBirth: '',
+          gender: '',
+          bloodGroup: '',
+          height: '',
+          weight: '',
+          emergencyContact: '',
+          medicalHistory: '',
+          allergies: '',
+          currentMedications: ''
+        });
+      }
     }
   }, [isAuthenticated, isDoctor, router, user]);
 
@@ -89,6 +129,25 @@ export default function PatientProfilePage() {
   };
 
   const handleSave = () => {
+    const profileData = {
+      fullName: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+      dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
+      address: formData.address,
+      bloodGroup: formData.bloodGroup,
+      height: formData.height,
+      weight: formData.weight,
+      emergencyContact: formData.emergencyContact,
+      allergies: formData.allergies,
+      currentMedications: formData.currentMedications,
+      completedAt: new Date().toISOString(),
+      userId: user?.id
+    };
+
+    localStorage.setItem(`patient_profile_${user?.id}`, JSON.stringify(profileData));
+
     updateUser({
       name: formData.name,
       phone: formData.phone,
