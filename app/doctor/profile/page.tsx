@@ -13,12 +13,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { 
-  ArrowLeft, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  ArrowLeft,
+  User,
+  Mail,
+  Phone,
+  MapPin,
   Stethoscope,
   Clock,
   Star,
@@ -30,6 +30,7 @@ import {
   Save,
   Camera
 } from 'lucide-react';
+import { MEDICAL_SPECIALIZATIONS } from '@/lib/specializations';
 
 export default function DoctorProfilePage() {
   const router = useRouter();
@@ -331,11 +332,18 @@ export default function DoctorProfilePage() {
               <div>
                 <label className="text-sm font-medium">Specialization</label>
                 {isEditing ? (
-                  <Input
+                  <select
                     value={formData.specialization}
                     onChange={(e) => handleInputChange('specialization', e.target.value)}
-                    className="mt-1"
-                  />
+                    className="mt-1 w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="">Select a specialization</option>
+                    {MEDICAL_SPECIALIZATIONS.map((spec) => (
+                      <option key={spec.id} value={spec.name}>
+                        {spec.name}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <p className="mt-1 text-sm">{formData.specialization}</p>
                 )}

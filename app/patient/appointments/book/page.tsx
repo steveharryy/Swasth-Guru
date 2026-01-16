@@ -29,6 +29,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
   CheckCircle
 } from 'lucide-react';
 import { doctorsData, getAvailableDoctors, type Doctor } from '@/lib/doctors-data';
+import { MEDICAL_SPECIALIZATIONS } from '@/lib/specializations';
 
 interface BookingStep {
   step: number;
@@ -67,6 +68,7 @@ export default function BookAppointmentPage() {
   const [consultationType, setConsultationType] = useState<'video' | 'phone'>('video');
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSpecialization, setSelectedSpecialization] = useState('');
 
   useEffect(() => {
     if (!isAuthenticated || isDoctor) {
@@ -139,9 +141,10 @@ export default function BookAppointmentPage() {
   };
 
   const filteredDoctors = availableDoctors.filter(doctor =>
-    searchQuery === '' || 
+    (selectedSpecialization === '' || doctor.specialization === selectedSpecialization) &&
+    (searchQuery === '' ||
     doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doctor.specialization.toLowerCase().includes(searchQuery.toLowerCase())
+    doctor.specialization.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const getNextAvailableDates = () => {
@@ -278,14 +281,31 @@ export default function BookAppointmentPage() {
             <Card>
               <CardHeader>
                 <CardTitle>{t('availableDoctors')}</CardTitle>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search doctors..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Filter by Specialization:</label>
+                    <select
+                      value={selectedSpecialization}
+                      onChange={(e) => setSelectedSpecialization(e.target.value)}
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    >
+                      <option value="">All Specializations</option>
+                      {MEDICAL_SPECIALIZATIONS.map((spec) => (
+                        <option key={spec.id} value={spec.name}>
+                          {spec.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search doctors..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
               </CardHeader>
             </Card>

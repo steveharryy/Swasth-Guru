@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Stethoscope, Award, IndianRupee } from 'lucide-react';
+import { MEDICAL_SPECIALIZATIONS } from '@/lib/specializations';
 
 export default function DoctorProfileForm() {
   const router = useRouter();
@@ -153,13 +154,20 @@ export default function DoctorProfileForm() {
 
                   <div className="space-y-2">
                     <Label htmlFor="specialization">Specialization *</Label>
-                    <Input
+                    <select
                       id="specialization"
                       value={formData.specialization}
                       onChange={(e) => handleInputChange('specialization', e.target.value)}
-                      placeholder="General Physician"
                       required
-                    />
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    >
+                      <option value="">Select a specialization</option>
+                      {MEDICAL_SPECIALIZATIONS.map((spec) => (
+                        <option key={spec.id} value={spec.name}>
+                          {spec.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
