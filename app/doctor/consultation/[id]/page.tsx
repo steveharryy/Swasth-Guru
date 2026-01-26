@@ -1,4 +1,6 @@
-'use client';
+"use client";
+
+import { getSocket } from "@/lib/socket"
 
 export const dynamic = "force-dynamic";
 
@@ -50,8 +52,8 @@ export default function DoctorConsultationPage() {
 
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-  const peerRef = useRef<RTCPeerConnection | null>(null);
-  const channelRef = useRef<BroadcastChannel | null>(null);
+const peerRef = useRef<RTCPeerConnection | null>(null);
+const socket = getSocket();
 
 
   const appointmentId = params.id as string;
@@ -65,10 +67,11 @@ export default function DoctorConsultationPage() {
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        channelRef.current?.postMessage({
-          type: 'ice',
-          candidate: event.candidate
-        });
+       socket.emit("ice-candidate", {
+  roomId: appointmentId,
+  candidate: event.candidate,
+});
+
       }
     };
 
@@ -144,39 +147,9 @@ useEffect(() => {
     }
     return () => clearInterval(interval);
   }, [isCallActive]);
-  useEffect(() => {
-    channelRef.current = new BroadcastChannel(`consultation-${appointmentId}`);
 
-    channelRef.current.onmessage = async (event) => {
-      const pc = peerRef.current;
-      if (!pc) return;
 
-      const data = event.data;
-
-      if (data.type === 'offer') {
-        await pc.setRemoteDescription(data.offer);
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-
-        channelRef.current?.postMessage({
-          type: 'answer',
-          answer
-        });
-      }
-
-      if (data.type === 'answer') {
-        await pc.setRemoteDescription(data.answer);
-      }
-
-      if (data.type === 'ice') {
-        await pc.addIceCandidate(data.candidate);
-      }
-    };
-
-    return () => {
-      channelRef.current?.close();
-    };
-  }, [appointmentId]);
+  
 
 
   const formatDuration = (seconds: number) => {
@@ -193,10 +166,8 @@ useEffect(() => {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
-    channelRef.current?.postMessage({
-      type: 'offer',
-      offer
-    });
+   socket.emit("offer", { roomId: appointmentId, offer });
+
 
     setIsCallActive(true);
     showNotification('Consultation started', 'success');
