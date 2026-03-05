@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+build
+backend/node_modules
+backend/dist
+.env
+.env*.local
+.git
+.gitignore
+README.md
+Dockerfile
+docker-compose.yml
