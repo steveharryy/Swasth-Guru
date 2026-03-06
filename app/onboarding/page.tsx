@@ -41,6 +41,11 @@ export default function OnboardingPage() {
         consultationFee: "",
         bio: "",
         address: "",
+        bloodGroup: "",
+        height: "",
+        weight: "",
+        allergies: "",
+        currentMedications: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -269,6 +274,87 @@ export default function OnboardingPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
+
+                                    {role === "patient" && (
+                                        <div className="space-y-6 pt-4 animate-in fade-in duration-500">
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="address" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">पता (Address)</Label>
+                                                <Input
+                                                    id="address"
+                                                    name="address"
+                                                    placeholder="Enter your full address"
+                                                    required
+                                                    className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
+                                                    value={formData.address}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">ब्लड ग्रुप (Blood Group)</Label>
+                                                    <Select onValueChange={(val) => handleSelectChange("bloodGroup", val)}>
+                                                        <SelectTrigger className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all">
+                                                            <SelectValue placeholder="Select" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-xl border shadow-xl">
+                                                            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(v => (
+                                                                <SelectItem key={v} value={v} className="text-sm font-bold py-2">{v}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label htmlFor="height" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">ऊंचाई (Height cm)</Label>
+                                                    <Input
+                                                        id="height"
+                                                        name="height"
+                                                        type="number"
+                                                        placeholder="e.g. 170"
+                                                        className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
+                                                        value={formData.height}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label htmlFor="weight" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">वजन (Weight kg)</Label>
+                                                    <Input
+                                                        id="weight"
+                                                        name="weight"
+                                                        type="number"
+                                                        placeholder="e.g. 70"
+                                                        className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
+                                                        value={formData.weight}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="allergies" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">एलर्जी (Allergies)</Label>
+                                                <Input
+                                                    id="allergies"
+                                                    name="allergies"
+                                                    placeholder="Any allergies (e.g. Penicillin, Peanuts) or 'None'"
+                                                    className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
+                                                    value={formData.allergies}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="currentMedications" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">दवाइयाँ (Current Medications)</Label>
+                                                <Input
+                                                    id="currentMedications"
+                                                    name="currentMedications"
+                                                    placeholder="Medications you take daily or 'None'"
+                                                    className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
+                                                    value={formData.currentMedications}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {role === "doctor" && (
                                         <div className="space-y-6 pt-4">

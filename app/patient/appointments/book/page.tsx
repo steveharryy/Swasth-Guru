@@ -76,6 +76,7 @@ export default function BookAppointmentPage() {
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isLoaded && (!isAuthenticated || isDoctor)) {
@@ -125,8 +126,9 @@ export default function BookAppointmentPage() {
   };
 
   const handleBookAppointment = async () => {
-    if (!selectedDoctor || !selectedDate || !selectedTime || !user) return;
+    if (!selectedDoctor || !selectedDate || !selectedTime || !user || isSubmitting) return;
 
+    setIsSubmitting(true);
     const appointmentId = Date.now().toString();
     const appointment = {
       id: appointmentId,
@@ -161,15 +163,17 @@ export default function BookAppointmentPage() {
       if (!response.ok) {
         console.warn("Backend sync failed");
       }
+
+      const existingAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+      existingAppointments.push(appointment);
+      localStorage.setItem('appointments', JSON.stringify(existingAppointments));
+
+      router.push(`/patient/payment/${appointmentId}`);
     } catch (error) {
       console.error("Error syncing appointment with backend:", error);
+      showNotification("Failed to book appointment. Please try again.", "error");
+      setIsSubmitting(false);
     }
-
-    const existingAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-    existingAppointments.push(appointment);
-    localStorage.setItem('appointments', JSON.stringify(existingAppointments));
-
-    router.push(`/patient/payment/${appointmentId}`);
   };
 
   const filteredDoctors = availableDoctors.filter(doctor =>
@@ -444,8 +448,19 @@ export default function BookAppointmentPage() {
                   <div className="p-4 bg-blue-50/50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 flex items-center gap-4"><Calendar className="w-6 h-6 text-blue-600" /><div><p className="text-[9px] uppercase">Date</p><p className="text-sm font-bold">{selectedDate}</p></div></div>
                   <div className="p-4 bg-green-50/50 dark:bg-green-500/5 rounded-2xl border border-green-100 flex items-center gap-4"><Clock className="w-6 h-6 text-green-600" /><div><p className="text-[9px] uppercase">Time</p><p className="text-sm font-bold">{selectedTime}</p></div></div>
                 </div>
-                <Button onClick={handleBookAppointment} className="w-full h-14 text-xl font-bold rounded-2xl shadow-xl mt-2 bg-gradient-to-r from-primary to-[#81D4FA] text-white">
-                  Confirm & Pay Now
+                <Button
+                  onClick={handleBookAppointment}
+                  className="w-full h-14 text-xl font-bold rounded-2xl shadow-xl mt-2 bg-gradient-to-r from-primary to-[#81D4FA] text-white"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-6 h-6 mr-3 animate-spin" />
+                      Booking...
+                    </>
+                  ) : (
+                    "Confirm & Pay Now"
+                  )}
                 </Button>
               </CardContent>
             </Card>
