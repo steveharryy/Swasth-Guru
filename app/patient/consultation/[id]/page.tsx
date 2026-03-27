@@ -64,6 +64,17 @@ export default function PatientConsultationPage() {
   const [appointment, setAppointment] = useState<any>(null);
   const [timeStatus, setTimeStatus] = useState<'early' | 'ready' | 'over'>('early');
 
+  const isCallActiveRef = useRef(false);
+  const localStreamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    isCallActiveRef.current = isCallActive;
+  }, [isCallActive]);
+
+  useEffect(() => {
+    localStreamRef.current = localStream;
+  }, [localStream]);
+
   useEffect(() => {
     if (!isAuthenticated || isDoctor) {
       if (isLoaded) router.push('/');
@@ -109,11 +120,16 @@ export default function PatientConsultationPage() {
     };
 
     loadAppointment();
+  }, [isAuthenticated, isDoctor, router, isLoaded, appointmentId]);
+
+  // Separate Socket signaling logic
+  useEffect(() => {
+    if (!socket || !appointmentId) return;
 
     // Socket listeners
-    socket.on('user-connected', async (userId) => {
+    socket.on('user-connected', async (userId: string) => {
       console.log('User connected to room:', userId);
-      if (isCallActive) {
+      if (isCallActiveRef.current) {
         try {
           const offer = await createOffer();
           socket.emit('offer', { roomId: appointmentId, offer });
@@ -158,10 +174,15 @@ export default function PatientConsultationPage() {
       socket.off('offer');
       socket.off('answer');
       socket.off('ice-candidate');
+      socket.off('chat-message');
+      
+      // Cleanup peer connection only on unmount
       closePeerConnection();
-      localStream?.getTracks().forEach(track => track.stop());
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+      }
     };
-  }, [isAuthenticated, isDoctor, router, socket, appointmentId, isCallActive, localStream, isLoaded]);
+  }, [socket, appointmentId]);
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {

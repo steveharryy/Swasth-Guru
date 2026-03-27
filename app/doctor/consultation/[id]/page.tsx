@@ -117,12 +117,13 @@ export default function DoctorConsultationPage() {
       const status = getAppointmentTimeStatus(currentApt.date, currentApt.time);
       setTimeStatus(status);
 
-      if (status === 'ready') {
+      if (status === 'ready' && !mediaStreamRef.current) {
         initializeCamera();
       }
     };
 
     const initializeCamera = async () => {
+      if (mediaStreamRef.current) return;
       try {
         const hasPermission = await requestCameraPermission();
         if (!hasPermission) {
@@ -141,11 +142,16 @@ export default function DoctorConsultationPage() {
     };
 
     loadAppointment();
+  }, [isAuthenticated, isDoctor, router, isLoaded, appointmentId]);
+
+  // Separate Socket signaling logic
+  useEffect(() => {
+    if (!socket || !appointmentId) return;
 
     // Socket listeners for signaling
-    socket.on('user-connected', async (userId) => {
+    socket.on('user-connected', async (userId: string) => {
       console.log('Remote user connected:', userId);
-      if (isCallActive) {
+      if (isCallActiveRef.current) {
         try {
           const offer = await createOffer();
           socket.emit("offer", { roomId: appointmentId, offer });
@@ -190,12 +196,15 @@ export default function DoctorConsultationPage() {
       socket.off('offer');
       socket.off('answer');
       socket.off('ice-candidate');
-      if (mediaStream) {
-        stopCamera(mediaStream);
-      }
+      socket.off('chat-message');
+      
+      // Cleanup peer connection only on unmount
       closePeerConnection();
+      if (mediaStreamRef.current) {
+        stopCamera(mediaStreamRef.current);
+      }
     };
-  }, [isAuthenticated, isDoctor, router, socket, appointmentId, isCallActive, mediaStream, isLoaded]);
+  }, [socket, appointmentId]);
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
