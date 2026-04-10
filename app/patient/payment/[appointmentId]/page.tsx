@@ -163,7 +163,7 @@ export default function PaymentPage() {
 
       setTimeout(() => {
         showNotification('Payment successful! Appointment confirmed.', 'success');
-        router.push('/patient/appointments');
+        router.push('/patient/dashboard');
       }, 2000);
     }, 3000);
   };

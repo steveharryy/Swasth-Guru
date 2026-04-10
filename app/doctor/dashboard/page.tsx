@@ -98,9 +98,13 @@ export default function DoctorDashboard() {
 
           const today = new Date().toISOString().split('T')[0];
 
-          // Fetch appointments from API
-          const aptRes = await fetch(`${apiUrl}/appointments/doctor/${user.id}`);
+          // Fetch appointments from API and Local Storage (for Hackathon Demo)
+          const storedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+          const hackathonApts = storedAppointments.filter((apt: any) => apt.date === 'hackathon');
+
           let doctorAppointments = [];
+          const aptRes = await fetch(`${apiUrl}/appointments/doctor/${user.id}`);
+          
           if (aptRes.ok) {
             doctorAppointments = await aptRes.json();
             // Map keys
@@ -116,23 +120,26 @@ export default function DoctorDashboard() {
               date: apt.date,
               time: apt.time
             }));
-
-            // Deduplicate by ID
-            const uniqueAppointments = doctorAppointments.reduce((acc: any[], current: any) => {
-              if (!acc.find(item => item.id === current.id)) {
-                return acc.concat([current]);
-              }
-              return acc;
-            }, []);
-
-            setRecentAppointments(uniqueAppointments.slice(0, 5));
-            localStorage.setItem('appointments', JSON.stringify(doctorAppointments));
           } else {
-            const storedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
             doctorAppointments = storedAppointments.filter((apt: any) =>
-              apt.doctorId === user.id || (remoteProfile.id && apt.doctorId?.toString() === remoteProfile.id.toString())
+              apt.doctorId === user.id || 
+              (remoteProfile.id && apt.doctorId?.toString() === remoteProfile.id.toString())
             );
           }
+
+          // Always merge hackathon appointments for the demo
+          doctorAppointments = [...doctorAppointments, ...hackathonApts];
+
+          // Deduplicate by ID
+          const uniqueAppointments = doctorAppointments.reduce((acc: any[], current: any) => {
+            if (!acc.find(item => item.id === current.id)) {
+              return acc.concat([current]);
+            }
+            return acc;
+          }, []);
+
+          setRecentAppointments(uniqueAppointments.slice(0, 5));
+          localStorage.setItem('appointments', JSON.stringify(doctorAppointments));
 
           // Better helper for date comparison
           const normalizeDate = (d: string) => {
@@ -150,7 +157,7 @@ export default function DoctorDashboard() {
 
           const activeAppointments = doctorAppointments.filter((apt: any) => apt.status !== 'cancelled');
           const todayApts = activeAppointments.filter((apt: any) => {
-            if (apt.doctorName?.toLowerCase().includes("gajraj pandey") || apt.date === 'hackathon') return true;
+            if (apt.date === 'hackathon') return true;
             const isToday = normalizeDate(apt.date) === normalizeDate(today);
             const isOver = getAppointmentTimeStatus(apt.date, apt.time) === 'over';
             return isToday && apt.status !== 'completed' && !isOver;
@@ -459,11 +466,11 @@ export default function DoctorDashboard() {
                         {getAppointmentTimeStatus(appointment.date, appointment.time) === 'ready' && (
                           <Button
                             variant="premium"
-                            className="h-9 px-6 text-sm font-bold rounded-xl flex items-center shadow-md border-2 border-primary/20"
+                            className="h-9 px-6 text-sm font-bold rounded-xl flex items-center shadow-md border-2 border-primary/20 bg-green-500 hover:bg-green-600 border-none text-white transition-all transform hover:scale-105"
                             onClick={() => router.push(`/doctor/consultation/${appointment.id}`)}
                           >
-                            <Video className="w-4 h-4 mr-2 text-primary" />
-                            Join Call
+                            <Video className="w-4 h-4 mr-2 text-white" />
+                            Direct Join (Demo)
                           </Button>
                         )}
                         <Button

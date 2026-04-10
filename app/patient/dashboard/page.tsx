@@ -481,11 +481,11 @@ export default function PatientDashboard() {
                       Joins in some time
                     </div>
                   )}
-                  {appointment.doctorName?.toLowerCase().includes("gajraj pandey") && (
+                  {appointment.date === 'hackathon' && (
                     <Button
                       variant="premium"
                       size="sm"
-                      className="h-11 px-6 text-base font-bold shadow-md border-2 border-primary/20 bg-green-500 hover:bg-green-600 border-none text-white"
+                      className="h-11 px-6 text-base font-bold shadow-md border-2 border-primary/20 bg-green-500 hover:bg-green-600 border-none text-white transition-all transform hover:scale-105"
                       onClick={() => router.push(`/patient/consultation/${appointment.id}`)}
                     >
                       <Video className="w-5 h-5 mr-3 text-white" />

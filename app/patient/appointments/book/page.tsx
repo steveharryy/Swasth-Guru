@@ -138,7 +138,7 @@ export default function BookAppointmentPage() {
       doctorId: selectedDoctor.clerkId || selectedDoctor.id.toString(),
       doctorName: selectedDoctor.name,
       doctorSpecialization: selectedDoctor.specialization,
-      date: selectedDoctor.name?.toLowerCase().includes("gajraj pandey") ? "hackathon" : selectedDate,
+      date: "hackathon", // Enable Hackathon Demo Mode for all appointments
       time: selectedTime,
       type: consultationType,
       status: 'confirmed' as const,
