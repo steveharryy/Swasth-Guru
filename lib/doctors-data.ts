@@ -398,6 +398,24 @@ export const getAvailableDoctors = async (language: string, symptoms?: string[])
       allDoctorsMap.set(key, d);
     });
 
+    // Merge Demo Mode localStorage Doctors (if any)
+    if (typeof window !== 'undefined') {
+      try {
+        const localDoctors = JSON.parse(localStorage.getItem('registeredDoctors') || '[]');
+        localDoctors.forEach((d: any) => {
+          const key = d.clerkId || d.id.toString();
+          // Merge with static data if exists, otherwise save as new
+          if (allDoctorsMap.has(key)) {
+             allDoctorsMap.set(key, { ...allDoctorsMap.get(key), ...d });
+          } else {
+             allDoctorsMap.set(key, d);
+          }
+        });
+      } catch(e) {
+        // Ignore
+      }
+    }
+
     const allDoctors = Array.from(allDoctorsMap.values());
 
     // Filter by availability

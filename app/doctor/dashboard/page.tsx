@@ -123,7 +123,7 @@ export default function DoctorDashboard() {
           } else {
             doctorAppointments = storedAppointments.filter((apt: any) =>
               apt.doctorId === user.id || 
-              (remoteProfile.id && apt.doctorId?.toString() === remoteProfile.id.toString())
+              (remoteProfile?.id && apt.doctorId?.toString() === remoteProfile?.id.toString())
             );
           }
 

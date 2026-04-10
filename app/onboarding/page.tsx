@@ -121,6 +121,24 @@ export default function OnboardingPage() {
 
             if (!response.ok) {
                 console.warn("Backend sync failed, but metadata updated.");
+                
+                // Demo Mode Fallback: Save local doctor
+                if (role === 'doctor') {
+                    const localDoctors = JSON.parse(localStorage.getItem('registeredDoctors') || '[]');
+                    localDoctors.push({
+                        id: user.id,
+                        clerkId: user.id,
+                        name: user.fullName || "New Doctor",
+                        email: user.primaryEmailAddress?.emailAddress,
+                        specialization: formData.specialization,
+                        experience: formData.experience,
+                        consultationFee: formData.consultationFee,
+                        rating: 5.0,
+                        availability: true,
+                        isLive: true
+                    });
+                    localStorage.setItem('registeredDoctors', JSON.stringify(localDoctors));
+                }
             }
 
             toast.success("Profile Setup Complete!");

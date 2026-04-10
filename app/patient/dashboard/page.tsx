@@ -215,7 +215,8 @@ export default function PatientDashboard() {
           const today = new Date().toISOString().split('T')[0];
           const upcoming = userAppointments.filter((apt: any) => {
             const status = apt.status?.toLowerCase();
-            return (status === 'upcoming' || status === 'confirmed' || status === 'pending') && apt.date >= today;
+            const isHackathon = apt.date === 'hackathon' || apt.doctorName?.toLowerCase().includes("gajraj pandey");
+            return isHackathon || ((status === 'upcoming' || status === 'confirmed' || status === 'pending') && apt.date >= today);
           });
           setUpcomingAppointments(upcoming.slice(0, 3));
           setStatsData(prev => ({
