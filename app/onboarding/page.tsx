@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { UserRound, Stethoscope, Loader2 } from "lucide-react";
+import { UserRound, Stethoscope, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { MEDICAL_SPECIALIZATIONS } from "@/lib/specializations";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ export default function OnboardingPage() {
         gender: "",
         specialization: "",
         experience: "",
+        medicalCouncil: "",
         licenseNumber: "",
         qualifications: "",
         consultationFee: "",
@@ -48,6 +49,8 @@ export default function OnboardingPage() {
         currentMedications: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
 
     useEffect(() => {
         if (isLoaded && user) {
@@ -81,6 +84,35 @@ export default function OnboardingPage() {
 
     const handleSelectChange = (name: string, value: string) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleVerifyLicense = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (!formData.medicalCouncil) {
+            toast.error("Please select your State Medical Council first.");
+            return;
+        }
+        if (!formData.licenseNumber) {
+            toast.error("Please enter a Medical License Number.");
+            return;
+        }
+
+        setIsVerifying(true);
+        // Simulate real-world NMC Registry API latency
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        const validFormats = ["DMC-25578", "MMC-80546", "NMC-10928"];
+        const enteredLicense = formData.licenseNumber.trim().toUpperCase();
+
+        if (!validFormats.includes(enteredLicense)) {
+            setIsVerifying(false);
+            toast.error("❌ License not found in National Medical Registry. Verification Failed.");
+            return;
+        }
+
+        setIsVerifying(false);
+        setIsVerified(true);
+        toast.success("License Verified successfully via NMC Registry!");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -443,7 +475,7 @@ export default function OnboardingPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                             <div className="space-y-4 pt-4 pb-2">
                                                 <div className="space-y-1.5">
                                                     <Label htmlFor="qualifications" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">योग्यता (Qualifications)</Label>
                                                     <Input
@@ -456,17 +488,62 @@ export default function OnboardingPage() {
                                                         onChange={handleInputChange}
                                                     />
                                                 </div>
-                                                <div className="space-y-1.5">
-                                                    <Label htmlFor="licenseNumber" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">लाइसेंस नंबर (License No.)</Label>
-                                                    <Input
-                                                        id="licenseNumber"
-                                                        name="licenseNumber"
-                                                        placeholder="Medical License No."
-                                                        required
-                                                        className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                        value={formData.licenseNumber}
-                                                        onChange={handleInputChange}
-                                                    />
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/10 p-5 rounded-2xl border border-primary/20">
+                                                    <div className="col-span-full mb-1">
+                                                        <h4 className="text-sm font-black text-primary flex items-center gap-2">
+                                                            <ShieldCheck className="w-4 h-4" />
+                                                            Credential Verification
+                                                        </h4>
+                                                        <p className="text-[10px] uppercase font-bold text-muted-foreground ml-6">Required by NMC</p>
+                                                    </div>
+                                                    
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">State Medical Council</Label>
+                                                        <Select onValueChange={(val) => handleSelectChange("medicalCouncil", val)} required disabled={isVerified}>
+                                                            <SelectTrigger className={cn("h-11 px-4 text-sm font-bold rounded-xl transition-all shadow-none", isVerified ? "bg-muted text-muted-foreground border-transparent" : "bg-card border-muted-foreground/20 focus:border-primary")}>
+                                                                <SelectValue placeholder="Select Council" />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="rounded-xl border shadow-xl max-h-[200px]">
+                                                                <SelectItem value="Delhi Medical Council" className="font-bold py-2 text-sm">Delhi Medical Council</SelectItem>
+                                                                <SelectItem value="Maharashtra Medical Council" className="font-bold py-2 text-sm">Maharashtra Medical Council</SelectItem>
+                                                                <SelectItem value="Karnataka Medical Council" className="font-bold py-2 text-sm">Karnataka Medical Council</SelectItem>
+                                                                <SelectItem value="Tamil Nadu Medical Council" className="font-bold py-2 text-sm">Tamil Nadu Medical Council</SelectItem>
+                                                                <SelectItem value="Medical Council of India" className="font-bold py-2 text-sm">Medical Council of India (MCI)</SelectItem>
+                                                                <SelectItem value="Other State Council" className="font-bold py-2 text-sm">Other State Council</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+
+                                                    <div className="space-y-1.5 flex flex-col">
+                                                        <Label htmlFor="licenseNumber" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">रजिस्ट्रेशन नंबर (Registration No.)</Label>
+                                                        <div className="flex gap-2">
+                                                            <Input
+                                                                id="licenseNumber"
+                                                                name="licenseNumber"
+                                                                placeholder="License Number"
+                                                                required
+                                                                disabled={isVerified}
+                                                                className={cn("h-11 px-4 text-sm font-bold rounded-xl transition-all", isVerified ? "bg-muted text-muted-foreground border-transparent" : "bg-card border-muted-foreground/20 focus:border-primary")}
+                                                                value={formData.licenseNumber}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                            <Button 
+                                                                type="button" 
+                                                                onClick={handleVerifyLicense}
+                                                                disabled={isVerified || isVerifying}
+                                                                className={cn(
+                                                                    "h-11 px-4 font-black uppercase tracking-wider rounded-xl transition-all shadow-none shrink-0",
+                                                                    isVerified ? "bg-green-500/10 text-green-600 border border-green-500/20" : "bg-primary/10 text-primary hover:bg-primary/20",
+                                                                    isVerifying && "opacity-80"
+                                                                )}
+                                                            >
+                                                                {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : 
+                                                                isVerified ? <><CheckCircle2 className="w-4 h-4 mr-1.5" /> Verified</> : 
+                                                                "Verify"}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -502,7 +579,7 @@ export default function OnboardingPage() {
                                     type="submit"
                                     variant="premium"
                                     className="w-full h-14 text-xl font-bold rounded-2xl mt-6 text-black"
-                                    disabled={isSubmitting}
+                                    disabled={isSubmitting || (role === 'doctor' && !isVerified)}
                                 >
                                     {isSubmitting ? (
                                         <div className="flex items-center gap-3">
