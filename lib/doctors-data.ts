@@ -14,6 +14,7 @@ export interface Doctor {
   specialties: string[];
   clerkId?: string;
   isLive?: boolean;
+  gender?: 'male' | 'female';
 }
 
 export const doctorsData: Doctor[] = [
@@ -30,7 +31,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Senior Cardiologist with expertise in preventive cardiology and heart failure management.",
     availableSlots: ["10:00 AM", "2:00 PM"],
-    specialties: ["Chest pain", "High blood pressure", "Heart problems", "Shortness of breath"]
+    specialties: ["Chest pain", "High blood pressure", "Heart problems", "Shortness of breath"],
+    gender: 'female'
   },
   {
     id: 201, // Shifted from 101
@@ -44,7 +46,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Interventional Cardiologist specialized in angiography and angioplasty.",
     availableSlots: ["11:00 AM", "5:00 PM"],
-    specialties: ["Palpitations", "Heart problems", "Cholesterol"]
+    specialties: ["Palpitations", "Heart problems", "Cholesterol"],
+    gender: 'female'
   },
 
   // Dermatologists (Skin, Hair)
@@ -60,7 +63,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Specialist in clinical and cosmetic dermatology.",
     availableSlots: ["11:00 AM", "4:00 PM"],
-    specialties: ["Skin rash", "Acne", "Hair Fall", "Itching"]
+    specialties: ["Skin rash", "Acne", "Hair Fall", "Itching"],
+    gender: 'male'
   },
   {
     id: 202,
@@ -74,7 +78,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Expert in treating skin allergies and laser treatments.",
     availableSlots: ["10:30 AM", "3:30 PM"],
-    specialties: ["Skin rash", "Eczema", "Psoriasis"]
+    specialties: ["Skin rash", "Eczema", "Psoriasis"],
+    gender: 'female'
   },
 
   // Pediatricians (Child)
@@ -90,7 +95,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Compassionate pediatrician dedicated to child health and development.",
     availableSlots: ["9:00 AM", "1:00 PM"],
-    specialties: ["Child fever", "Vaccination", "Growth Issues"]
+    specialties: ["Child fever", "Vaccination", "Growth Issues"],
+    gender: 'female'
   },
   {
     id: 203,
@@ -104,7 +110,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Friendly doctor specializing in newborn care and immunizations.",
     availableSlots: ["4:00 PM", "7:00 PM"],
-    specialties: ["Child fever", "Cold", "Flu"]
+    specialties: ["Child fever", "Cold", "Flu"],
+    gender: 'male'
   },
 
   // General Physicians (Fever, Cough, Headache, etc.)
@@ -120,7 +127,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Experienced physician treating all common illnesses and chronic conditions.",
     availableSlots: ["8:00 AM", "12:00 PM"],
-    specialties: ["Fever", "Headache", "Body ache", "Weakness", "Fatigue", "Diabetes"]
+    specialties: ["Fever", "Headache", "Body ache", "Weakness", "Fatigue", "Diabetes"],
+    gender: 'male'
   },
   {
     id: 205,
@@ -134,7 +142,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Family doctor focusing on holistic health.",
     availableSlots: ["9:00 AM", "6:00 PM"],
-    specialties: ["Cough", "Sore throat", "Runny nose", "Viral Fever"]
+    specialties: ["Cough", "Sore throat", "Runny nose", "Viral Fever"],
+    gender: 'female'
   },
 
   // Gastroenterologists (Stomach)
@@ -150,7 +159,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Expert in digestive disorders and liver diseases.",
     availableSlots: ["11:00 AM", "3:00 PM"],
-    specialties: ["Stomach pain", "Nausea", "Diarrhea", "Constipation", "Acidity"]
+    specialties: ["Stomach pain", "Nausea", "Diarrhea", "Constipation", "Acidity"],
+    gender: 'male'
   },
 
   // Orthopedics (Joints, Back)
@@ -166,7 +176,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Specializing in joint replacement and sports injuries.",
     availableSlots: ["10:00 AM", "2:00 PM"],
-    specialties: ["Joint pain", "Back pain", "Fracture", "Arthritis"]
+    specialties: ["Joint pain", "Back pain", "Fracture", "Arthritis"],
+    gender: 'male'
   },
 
   // ENT Specialists (Ear, Nose, Throat)
@@ -182,7 +193,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Treating all ear, nose, and throat conditions.",
     availableSlots: ["5:00 PM", "8:00 PM"],
-    specialties: ["Ear pain", "Sore throat", "Runny nose", "Sinus"]
+    specialties: ["Ear pain", "Sore throat", "Runny nose", "Sinus"],
+    gender: 'female'
   },
 
   // Psychiatrists (Mental Health)
@@ -198,7 +210,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Helping patients with mental health and emotional well-being.",
     availableSlots: ["12:00 PM", "4:00 PM"],
-    specialties: ["Anxiety", "Depression", "Sleep problems", "Stress"]
+    specialties: ["Anxiety", "Depression", "Sleep problems", "Stress"],
+    gender: 'male'
   },
 
   // Gynecologists (Pregnancy)
@@ -214,7 +227,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Care for women's health, pregnancy, and childbirth.",
     availableSlots: ["9:00 AM", "1:00 PM"],
-    specialties: ["Pregnancy care", "PCOS", "Irregular periods"]
+    specialties: ["Pregnancy care", "PCOS", "Irregular periods"],
+    gender: 'female'
   },
 
   // Ophthalmologists (Eye)
@@ -230,7 +244,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Eye care specialist for vision problems and eye surgeries.",
     availableSlots: ["10:00 AM", "2:00 PM"],
-    specialties: ["Eye problems", "Vision loss", "Red eye"]
+    specialties: ["Eye problems", "Vision loss", "Red eye"],
+    gender: 'male'
   },
 
   // Dentists (Dental)
@@ -246,7 +261,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Gentle dental care for all ages.",
     availableSlots: ["9:00 AM", "5:00 PM"],
-    specialties: ["Dental pain", "Cavities", "Root canal"]
+    specialties: ["Dental pain", "Cavities", "Root canal"],
+    gender: 'female'
   },
 
   // Pulmonologists (Lungs)
@@ -262,7 +278,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Expert in respiratory diseases and asthma.",
     availableSlots: ["2:00 PM", "6:00 PM"],
-    specialties: ["Shortness of breath", "Asthma", "Cough"]
+    specialties: ["Shortness of breath", "Asthma", "Cough"],
+    gender: 'male'
   },
   {
     id: 999,
@@ -276,7 +293,8 @@ export const doctorsData: Doctor[] = [
     consultationFee: 11,
     about: "Hackathon Special Guest - Direct Consultation enabled.",
     availableSlots: ["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM", "06:00 PM"],
-    specialties: ["General Health", "Fever", "Hackathon Demo"]
+    specialties: ["General Health", "Fever", "Hackathon Demo"],
+    gender: 'male'
   }
 ];
 
@@ -346,7 +364,7 @@ const SYMPTOM_SPECIALIZATION_MAP: Record<string, string[]> = {
 
 export const getAvailableDoctors = async (language: string, symptoms?: string[]) => {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
     let apiDoctors: Doctor[] = [];
 
     try {
@@ -422,6 +440,39 @@ export const getAvailableDoctors = async (language: string, symptoms?: string[])
     let filtered = allDoctors.filter(doctor => doctor.availability !== false);
 
     if (symptoms && symptoms.length > 0) {
+      // 1. Try LLM matching via Python Backend (Dhanvantri Core)
+      try {
+        const dhanvantriUrl = process.env.NEXT_PUBLIC_DHANVANTRI_API_URL || 'http://localhost:8000';
+        console.log("Attempting LLM matching at:", dhanvantriUrl);
+        
+        const llmRes = await fetch(`${dhanvantriUrl}/doctor-match`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symptoms })
+        });
+        
+        if (llmRes.ok) {
+           const { specialist_needed } = await llmRes.json();
+           console.log("LLM Analysis Result:", specialist_needed);
+           
+           // If LLM identifies a specific specialization, filter by it
+           if (specialist_needed && specialist_needed !== "General Physician") {
+             const llmFiltered = filtered.filter(doctor =>
+               doctor.specialization.toLowerCase().includes(specialist_needed.toLowerCase()) ||
+               specialist_needed.toLowerCase().includes(doctor.specialization.toLowerCase())
+             );
+             
+             // If we found doctors with the LLM recommended specialization, return them
+             if (llmFiltered.length > 0) {
+               return llmFiltered.sort((a, b) => b.rating - a.rating);
+             }
+           }
+        }
+      } catch (e) {
+        console.warn("LLM Matching unavailable, using static mapping fallback:", e);
+      }
+
+      // 2. Fallback to static mapping logic
       filtered = filtered.filter(doctor =>
         symptoms.some(symptom => {
           const lowerSymptom = symptom.toLowerCase();
@@ -459,6 +510,7 @@ export const getAvailableDoctors = async (language: string, symptoms?: string[])
       );
     }
 
+
     return filtered.sort((a, b) => b.rating - a.rating);
   } catch (error) {
     console.error('Error in getAvailableDoctors:', error);
@@ -468,7 +520,7 @@ export const getAvailableDoctors = async (language: string, symptoms?: string[])
 
 export const getDoctorById = async (id: number) => {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
     const res = await fetch(`${apiUrl}/doctors/${id}`);
 
     if (res.ok) {
@@ -482,4 +534,39 @@ export const getDoctorById = async (id: number) => {
     console.error('Error fetching doctor by id:', error);
     return doctorsData.find(d => d.id === Number(id));
   }
+};
+
+export const getDoctorAvatar = (doctor: Doctor): string => {
+  if (doctor.avatar) return doctor.avatar;
+  
+  // Specific image mappings based on verified assets in /public/Doctors/
+  // Male Assets: 1, 3, 4, 5, 7
+  // Female Assets: 2, 6, 8
+  const maleAvatars = [
+    '/Doctors/doctor 1.jpg',
+    '/Doctors/doctor  3.jpg',
+    '/Doctors/doctor  4.jpg',
+    '/Doctors/doctor  5.jpg',
+    '/Doctors/doctor  7.jpg'
+  ];
+  
+  const femaleAvatars = [
+    '/Doctors/doctor  2.jpg',
+    '/Doctors/doctor  6.jpg',
+    '/Doctors/doctor  8.jpg'
+  ];
+  
+  // Use a name-based heuristic if gender is missing (fallback)
+  let gender = doctor.gender;
+  if (!gender) {
+    const femalePrefixes = ['dr. sarah', 'dr. anjali', 'dr. priya', 'dr. emily', 'dr. meera', 'dr. anita', 'dr. sofia', 'dr. lisa'];
+    const nameLower = doctor.name.toLowerCase();
+    gender = femalePrefixes.some(p => nameLower.includes(p)) ? 'female' : 'male';
+  }
+
+  const avatarList = gender === 'male' ? maleAvatars : femaleAvatars;
+  
+  // Use ID to consistently pick the same photo for the same doctor
+  const index = Math.abs(doctor.id) % avatarList.length;
+  return avatarList[index];
 };

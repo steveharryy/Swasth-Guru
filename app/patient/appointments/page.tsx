@@ -67,7 +67,7 @@ export default function PatientAppointmentsPage() {
 
   const fetchAppointments = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const res = await fetch(`${apiUrl}/appointments/patient/${user?.id}`);
       if (res.ok) {
         const remoteAppointments = await res.json();
@@ -183,7 +183,7 @@ export default function PatientAppointmentsPage() {
 
   const handleCancelAppointment = async (appointmentId: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const res = await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

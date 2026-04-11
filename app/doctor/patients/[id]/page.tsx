@@ -58,7 +58,7 @@ export default function PatientDetailPage() {
     const fetchPatientData = async () => {
       try {
         setLoading(true);
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
 
         // Fetch patient profile
         const res = await fetch(`${apiUrl}/users/patient/${params.id}`);

@@ -56,7 +56,7 @@ export default function DoctorAppointmentsPage() {
 
   const fetchDoctorAppointments = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
 
       // First get numeric doctor ID
       let numericId: number | null = null;
@@ -196,7 +196,7 @@ export default function DoctorAppointmentsPage() {
 
   const handleUpdateStatus = async (appointmentId: string, status: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const res = await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

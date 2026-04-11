@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+const DHANVANTRI_API_URL = process.env.NEXT_PUBLIC_DHANVANTRI_API_URL || 'http://localhost:8000';
 
 export interface MedicineInfo {
     name: string;
@@ -19,6 +20,12 @@ export interface SymptomAnalysis {
     description: string;
     precautions: string[];
     recommendation: string;
+}
+
+export interface TriageAnalysis {
+    level: 'Low' | 'Medium' | 'High';
+    explanation: string;
+    symptoms: string[];
 }
 
 export interface PharmacyAvailability {
@@ -142,6 +149,42 @@ export async function findMedicineAlternatives(medicineName: string, symptoms: s
 }
 
 export async function analyzeSymptomImage(imageBase64: string): Promise<SymptomAnalysis> {
+    // 1. Try Dhanvantri AI (Local LLM/ML)
+    try {
+        const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, "");
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "image/jpeg" });
+        const formData = new FormData();
+        formData.append("image", blob, "symptom.jpg");
+
+        const response = await fetch(`${DHANVANTRI_API_URL}/analyze-image`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return {
+                possibleCondition: data.possible_condition || "Unknown Condition",
+                description: `Analysis complete with ${Math.round((data.confidence || 0) * 100)}% confidence using Dhanvantri AI.`,
+                precautions: [
+                    "Consult a professional for verification",
+                    "Keep the affected area clean",
+                    "Monitor for any spreading"
+                ],
+                recommendation: data.recommendation || "Maintain observation and visit a clinic if symptoms persist.",
+            };
+        }
+    } catch (e) {
+        console.warn("Dhanvantri AI unreachable, falling back to Gemini.", e);
+    }
+
+    // 2. Fallback to Gemini Vision
     const prompt = `Analyze health concern image. Insights only, NOT diagnosis. Strict JSON:
   { "possibleCondition": "string", "description": "string", "precautions": ["string"], "recommendation": "string" }`;
 
@@ -155,3 +198,79 @@ export async function analyzeSymptomImage(imageBase64: string): Promise<SymptomA
 
     return MOCK_SYMPTOM_ANALYSES[0];
 }
+
+export async function analyzeSymptomsAndTriage(text: string): Promise<TriageAnalysis> {
+    // 1. Try Dhanvantri AI (Local NLP/Triage)
+    try {
+        // Step A: Extract Symptoms
+        const extractRes = await fetch(`${DHANVANTRI_API_URL}/extract-symptoms`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+        });
+        
+        const extractData = extractRes.ok ? await extractRes.json() : { symptoms: [] };
+
+        // Step B: Assessment
+        const triageRes = await fetch(`${DHANVANTRI_API_URL}/triage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symptoms: extractData.symptoms }),
+        });
+
+        if (triageRes.ok) {
+            const data = await triageRes.json();
+            return {
+                level: data.level || 'Low',
+                explanation: data.explanation || "System assessment complete.",
+                symptoms: extractData.symptoms || [],
+            };
+        }
+    } catch (e) {
+        console.warn("Dhanvantri Triage unreachable.", e);
+    }
+
+    // Fallback: Basic logic
+    return {
+        level: 'Medium',
+        explanation: "Dynamic analysis currently unavailable. Please consult a professional for a definitive assessment.",
+        symptoms: [],
+    };
+}
+
+export async function analyzeMedicineImage(imageBase64: string): Promise<any> {
+    try {
+        const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, "");
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "image/jpeg" });
+        const formData = new FormData();
+        formData.append("file", blob, "medicine.jpg");
+
+        const response = await fetch(`${DHANVANTRI_API_URL}/analyze-medicine`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        console.log(`[AI-API] Medicine analysis response status: ${response.status}`);
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log(`[AI-API] Medicine analysis successful:`, result);
+            return result;
+        } else {
+            const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+            console.error(`[AI-API] Medicine analysis failed:`, error);
+            throw new Error(error.detail || 'Failed to analyze medicine image');
+        }
+    } catch (e: any) {
+        console.error("Error in analyzeMedicineImage:", e);
+        throw e;
+    }
+}
+
+

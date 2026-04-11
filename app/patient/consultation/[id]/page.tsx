@@ -89,7 +89,7 @@ export default function PatientConsultationPage() {
 
       if (!currentApt) {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
           const res = await fetch(`${apiUrl}/appointments/${appointmentId}`);
           if (res.ok) {
             const data = await res.json();
@@ -169,6 +169,24 @@ export default function PatientConsultationPage() {
       setChatMessages(prev => [...prev, data.message]);
     });
 
+    socket.on('call-ended', () => {
+      console.log('Call ended by remote user');
+      showNotification('Consultation ended by doctor', 'info');
+      
+      // Local cleanup
+      setIsCallActive(false);
+      setCallDuration(0);
+      closePeerConnection();
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      setLocalStream(null);
+      setRemoteStream(null);
+      
+      router.push('/patient/appointments');
+    });
+
+
     return () => {
       socket.off('user-connected');
       socket.off('offer');
@@ -245,7 +263,7 @@ export default function PatientConsultationPage() {
 
   const handleEndCall = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -256,6 +274,7 @@ export default function PatientConsultationPage() {
       console.error('Error marking appointment as completed:', error);
     }
 
+    socket.emit('call-ended', { roomId: appointmentId });
     setIsCallActive(false);
     setCallDuration(0);
     closePeerConnection();
@@ -263,6 +282,7 @@ export default function PatientConsultationPage() {
     setLocalStream(null);
     setRemoteStream(null);
     router.push('/patient/appointments');
+
   };
 
   const handleSendMessage = () => {

@@ -4,16 +4,16 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UserRound, Stethoscope, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { VibrantBackground } from "@/components/ui/vibrant-background";
+import { UserRound, Stethoscope, Loader2, CheckCircle2, ShieldCheck, ArrowRight, X } from "lucide-react";
 import { toast } from "sonner";
 import { MEDICAL_SPECIALIZATIONS } from "@/lib/specializations";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 
 interface UserMetadata {
@@ -98,21 +98,20 @@ export default function OnboardingPage() {
         }
 
         setIsVerifying(true);
-        // Simulate real-world NMC Registry API latency
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const validFormats = ["DMC-25578", "MMC-80546", "NMC-10928"];
+        const validFormats = ["DMC-25578", "MMC-80546", "NMC-10928", "NMC-10925"];
         const enteredLicense = formData.licenseNumber.trim().toUpperCase();
 
         if (!validFormats.includes(enteredLicense)) {
             setIsVerifying(false);
-            toast.error("❌ License not found in National Medical Registry. Verification Failed.");
+            toast.error("❌ License not found in National Medical Registry.");
             return;
         }
 
         setIsVerifying(false);
         setIsVerified(true);
-        toast.success("License Verified successfully via NMC Registry!");
+        toast.success("License Verified successfully!");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -133,51 +132,26 @@ export default function OnboardingPage() {
                 },
             });
 
-            // Sync with backend
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const response = await fetch(`${apiUrl}/users`, {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+            await fetch(`${apiUrl}/users`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     clerkId: user.id,
                     role,
                     email: user.primaryEmailAddress?.emailAddress,
                     name: user.fullName,
                     ...formData,
-                    about: formData.bio, // Map bio to 'about' field in schema
-                    languages: ['English', 'Hindi'] // Default languages or add input for it
+                    about: formData.bio,
+                    languages: ['English', 'Hindi']
                 }),
             });
-
-            if (!response.ok) {
-                console.warn("Backend sync failed, but metadata updated.");
-                
-                // Demo Mode Fallback: Save local doctor
-                if (role === 'doctor') {
-                    const localDoctors = JSON.parse(localStorage.getItem('registeredDoctors') || '[]');
-                    localDoctors.push({
-                        id: user.id,
-                        clerkId: user.id,
-                        name: user.fullName || "New Doctor",
-                        email: user.primaryEmailAddress?.emailAddress,
-                        specialization: formData.specialization,
-                        experience: formData.experience,
-                        consultationFee: formData.consultationFee,
-                        rating: 5.0,
-                        availability: true,
-                        isLive: true
-                    });
-                    localStorage.setItem('registeredDoctors', JSON.stringify(localDoctors));
-                }
-            }
 
             toast.success("Profile Setup Complete!");
             router.push(`/${role}/dashboard`);
         } catch (error) {
-            console.error("Error updating user metadata:", error);
-            toast.error("Failed to update profile. Please try again.");
+            console.error(error);
+            toast.error("Failed to update profile.");
         } finally {
             setIsSubmitting(false);
         }
@@ -185,416 +159,272 @@ export default function OnboardingPage() {
 
     if (!isLoaded) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex h-screen items-center justify-center bg-background">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
             </div>
         );
     }
 
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-foreground relative overflow-hidden">
-            <div className="absolute top-6 right-6 z-50">
-                <ThemeToggle />
-            </div>
 
-            <div className="w-full max-w-2xl space-y-8 py-10 relative z-10">
-                <div className="text-center space-y-3">
-                    <h1 className="text-3xl font-black tracking-tight text-primary">
-                        नमस्ते (Welcome)
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
+            <VibrantBackground />
+
+
+            <motion.div 
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.4 }}
+               className="w-full max-w-3xl space-y-12 py-20 relative z-10"
+            >
+
+                <div className="text-center space-y-6">
+                    <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="flex items-center justify-center mb-8"
+                    >
+                       <div className="w-20 h-20 bg-white/5 backdrop-blur-2xl rounded-3xl flex items-center justify-center border border-white/10 shadow-2xl">
+                          <img src="/logo.png" className="w-12 h-12 object-contain" alt="Logo" />
+                       </div>
+                    </motion.div>
+                    <h1 className="text-6xl font-black logo-text tracking-tighter">
+                        Profile Setup
                     </h1>
-                    <p className="text-base font-bold text-muted-foreground italic">
-                        Let's set up your profile to get started
+                    <p className="text-lg font-bold text-slate-400">
+                        Initializing your healthcare node
                     </p>
                 </div>
 
-                <Card className="border shadow-xl rounded-3xl overflow-hidden bg-card">
-                    <CardHeader className="p-6 border-b flex flex-row items-center justify-between">
-                        <div className="space-y-1">
-                            <CardTitle className="text-xl font-bold">आपका विवरण (Your Details)</CardTitle>
-                            <CardDescription className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                                Choose your role to continue
-                            </CardDescription>
+
+                <div className="bg-white/80 backdrop-blur-3xl border border-slate-100 shadow-[0_30px_60px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-12 relative overflow-hidden w-full max-w-4xl">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-8 mb-16 border-b border-slate-50 pb-10">
+                        <div className="space-y-2 text-center sm:text-left">
+                            <h3 className="text-4xl font-black text-slate-900 tracking-tight">Identity Specification</h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Establish Your Role</p>
                         </div>
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-3 text-[10px] font-bold text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                            onClick={async () => {
-                                if (confirm("This will clear your local data and reset onboarding. Continue?")) {
-                                    localStorage.clear();
-                                    try {
-                                        await user?.update({
-                                            unsafeMetadata: {}
-                                        });
-                                        window.location.reload();
-                                    } catch (err) {
-                                        toast.error("Failed to reset. You can still proceed.");
-                                        window.location.reload();
-                                    }
-                                }
-                            }}
+                            className="h-12 px-8 text-[10px] font-black text-rose-500 hover:bg-rose-50 rounded-2xl transition-all uppercase tracking-widest border border-rose-100"
+                            onClick={() => window.location.reload()}
                         >
-                            RESET & START FRESH
+                            <X className="w-4 h-4 mr-2" /> Reset Session
                         </Button>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div
-                                onClick={() => handleRoleSelect("patient")}
-                                className={cn(
-                                    "group cursor-pointer rounded-2xl border-2 p-4 transition-all duration-300",
-                                    role === "patient"
-                                        ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                                        : "border-muted bg-muted/20 hover:border-primary/20"
-                                )}
-                            >
-                                <div className="flex flex-col items-center space-y-3">
-                                    <div className={cn(
-                                        "p-3 rounded-xl transition-all duration-300",
-                                        role === "patient" ? "bg-primary text-black" : "bg-card text-muted-foreground shadow-sm"
-                                    )}>
-                                        <UserRound className="h-6 w-6" />
-                                    </div>
-                                    <div className="text-center">
-                                        <h3 className={cn(
-                                            "text-lg font-bold",
-                                            role === "patient" ? "text-primary" : "text-foreground"
-                                        )}>रोगी (Patient)</h3>
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">I need medical care</p>
-                                    </div>
-                                </div>
-                            </div>
+                    </div>
 
-                            <div
-                                onClick={() => handleRoleSelect("doctor")}
-                                className={cn(
-                                    "group cursor-pointer rounded-2xl border-2 p-4 transition-all duration-300",
-                                    role === "doctor"
-                                        ? "border-secondary bg-secondary/5 shadow-lg shadow-secondary/10"
-                                        : "border-muted bg-muted/20 hover:border-secondary/20"
-                                )}
-                            >
-                                <div className="flex flex-col items-center space-y-3">
-                                    <div className={cn(
-                                        "p-3 rounded-xl transition-all duration-300",
-                                        role === "doctor" ? "bg-secondary text-white" : "bg-card text-muted-foreground shadow-sm"
-                                    )}>
-                                        <Stethoscope className="h-6 w-6" />
-                                    </div>
-                                    <div className="text-center">
-                                        <h3 className={cn(
-                                            "text-lg font-bold",
-                                            role === "doctor" ? "text-secondary" : "text-foreground"
-                                        )}>डॉक्टर (Doctor)</h3>
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">I provide medical care</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        {role && (
-                            <form onSubmit={handleSubmit} className="space-y-6 pt-4 border-t animate-in fade-in slide-in-from-top-4 duration-500">
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="phone" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">फ़ोन नंबर (Phone Number)</Label>
-                                            <Input
-                                                id="phone"
-                                                name="phone"
-                                                placeholder="+91 9876543210"
-                                                required
-                                                className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                value={formData.phone}
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="age" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">आयु (Age)</Label>
-                                            <Input
-                                                id="age"
-                                                name="age"
-                                                type="number"
-                                                min="0"
-                                                placeholder="Enter Age"
-                                                required
-                                                className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                onKeyDown={preventNegative}
-                                                value={formData.age}
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">लिंग (Gender)</Label>
-                                        <Select onValueChange={(val) => handleSelectChange("gender", val)} required>
-                                            <SelectTrigger className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all">
-                                                <SelectValue placeholder="Select Gender" />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-xl border shadow-xl">
-                                                <SelectItem value="male" className="text-sm font-bold py-2">Male</SelectItem>
-                                                <SelectItem value="female" className="text-sm font-bold py-2">Female</SelectItem>
-                                                <SelectItem value="other" className="text-sm font-bold py-2">Other</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    {role === "patient" && (
-                                        <div className="space-y-6 pt-4 animate-in fade-in duration-500">
-                                            <div className="space-y-1.5">
-                                                <Label htmlFor="address" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">पता (Address)</Label>
-                                                <Input
-                                                    id="address"
-                                                    name="address"
-                                                    placeholder="Enter your full address"
-                                                    required
-                                                    className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                    value={formData.address}
-                                                    onChange={handleInputChange}
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div className="space-y-1.5">
-                                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">ब्लड ग्रुप (Blood Group)</Label>
-                                                    <Select onValueChange={(val) => handleSelectChange("bloodGroup", val)}>
-                                                        <SelectTrigger className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all">
-                                                            <SelectValue placeholder="Select" />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="rounded-xl border shadow-xl">
-                                                            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(v => (
-                                                                <SelectItem key={v} value={v} className="text-sm font-bold py-2">{v}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <Label htmlFor="height" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">ऊंचाई (Height cm)</Label>
-                                                    <Input
-                                                        id="height"
-                                                        name="height"
-                                                        type="number"
-                                                        min="0"
-                                                        placeholder="e.g. 170"
-                                                        className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                        onKeyDown={preventNegative}
-                                                        value={formData.height}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <Label htmlFor="weight" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">वजन (Weight kg)</Label>
-                                                    <Input
-                                                        id="weight"
-                                                        name="weight"
-                                                        type="number"
-                                                        min="0"
-                                                        placeholder="e.g. 70"
-                                                        className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                        onKeyDown={preventNegative}
-                                                        value={formData.weight}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-1.5">
-                                                <Label htmlFor="allergies" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">एलर्जी (Allergies)</Label>
-                                                <Input
-                                                    id="allergies"
-                                                    name="allergies"
-                                                    placeholder="Any allergies (e.g. Penicillin, Peanuts) or 'None'"
-                                                    className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                    value={formData.allergies}
-                                                    onChange={handleInputChange}
-                                                />
-                                            </div>
-
-                                            <div className="space-y-1.5">
-                                                <Label htmlFor="currentMedications" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">दवाइयाँ (Current Medications)</Label>
-                                                <Input
-                                                    id="currentMedications"
-                                                    name="currentMedications"
-                                                    placeholder="Medications you take daily or 'None'"
-                                                    className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                    value={formData.currentMedications}
-                                                    onChange={handleInputChange}
-                                                />
-                                            </div>
-                                        </div>
+                    <CardContent className="p-0 space-y-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {[
+                                { 
+                                    id: "patient", 
+                                    label: "Patient", 
+                                    sub: "I seek care", 
+                                    icon: UserRound, 
+                                    color: "from-blue-500/20 to-indigo-600/20",
+                                    iconColor: "text-blue-400"
+                                },
+                                { 
+                                    id: "doctor", 
+                                    label: "Doctor", 
+                                    sub: "I provide care", 
+                                    icon: Stethoscope, 
+                                    color: "from-emerald-500/20 to-teal-600/20",
+                                    iconColor: "text-emerald-400"
+                                }
+                            ].map((item) => (
+                                <motion.div
+                                    key={item.id}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleRoleSelect(item.id as any)}
+                                    className={cn(
+                                        "group cursor-pointer rounded-[2.5rem] border-2 p-10 transition-all duration-300 relative overflow-hidden",
+                                        role === item.id
+                                            ? "border-primary bg-primary/5 shadow-3xl shadow-primary/10"
+                                            : "border-slate-50 bg-slate-50 hover:border-primary/20 hover:bg-white"
                                     )}
 
-                                    {role === "doctor" && (
-                                        <div className="space-y-6 pt-4">
-                                            <div className="space-y-1.5">
-                                                <Label htmlFor="specialization" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">विशेषज्ञता (Specialization)</Label>
-                                                <Select onValueChange={(val) => handleSelectChange("specialization", val)} required>
-                                                    <SelectTrigger className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all">
-                                                        <SelectValue placeholder="Select Specialization" />
+                                >
+                                    <div className={cn(
+                                       "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-700",
+                                       item.color
+                                    )} />
+                                    
+                                    <div className="flex flex-col items-center justify-center space-y-8 relative z-10 text-center">
+                                        <div className={cn(
+                                            "w-24 h-24 rounded-3xl flex items-center justify-center transition-all duration-300 shadow-xl border border-white",
+                                            role === item.id ? "bg-primary text-white scale-110" : "bg-white text-slate-300"
+                                        )}>
+
+                                            <item.icon className="w-12 h-12" />
+                                        </div>
+                                        <div>
+                                            <h3 className={cn(
+                                                "text-3xl font-black tracking-tight",
+                                                role === item.id ? "text-slate-900" : "text-slate-400"
+                                            )}>{item.label}</h3>
+                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2">{item.sub}</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                            ))}
+                        </div>
+
+                        <AnimatePresence>
+                        {role && (
+                            <motion.form 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                onSubmit={handleSubmit} 
+                                className="space-y-10 pt-10 border-t border-white/5"
+                            >
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Phone Number</Label>
+                                        <Input
+                                            name="phone"
+                                            placeholder="+91 XXXXX XXXXX"
+                                            required
+                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all shadow-inner"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                    <div className="space-y-4">
+                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Age Entity</Label>
+                                        <Input
+                                            name="age"
+                                            type="number"
+                                            placeholder="Enter Age"
+                                            required
+                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all"
+                                            value={formData.age}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Gender Classification</Label>
+                                    <Select onValueChange={(val) => handleSelectChange("gender", val)} required>
+                                        <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all">
+                                            <SelectValue placeholder="Select Gender" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl border-slate-100 bg-white shadow-2xl overflow-hidden">
+                                            <SelectItem value="male" className="font-black py-4">Male</SelectItem>
+                                            <SelectItem value="female" className="font-black py-4">Female</SelectItem>
+                                            <SelectItem value="other" className="font-black py-4">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+
+                                {role === "doctor" && (
+                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+                                        <div className="space-y-3">
+                                            <Label className="text-xs font-black text-white/40 uppercase tracking-wider ml-2">Specialization Field</Label>
+                                            <Select onValueChange={(val) => handleSelectChange("specialization", val)} required>
+                                                <SelectTrigger className="h-14 px-6 text-md font-bold rounded-2xl bg-white/5 border-white/10 focus:border-primary text-white transition-all">
+                                                    <SelectValue placeholder="Select Specialization" />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-2xl border-white/10 bg-[#030712]/95 backdrop-blur-xl shadow-2xl max-h-[300px]">
+                                                    {MEDICAL_SPECIALIZATIONS.map((spec) => (
+                                                        <SelectItem key={spec.id} value={spec.name} className="font-bold py-4">
+                                                            {spec.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-primary/5 p-8 rounded-[2rem] border border-primary/20 relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                               <ShieldCheck className="w-20 h-20 text-primary" />
+                                            </div>
+                                            <div className="col-span-full mb-4">
+                                                <h4 className="text-sm font-black text-primary flex items-center gap-3">
+                                                    <ShieldCheck className="w-5 h-5" />
+                                                    Credential Matrix Verification
+                                                </h4>
+                                            </div>
+                                            
+                                            <div className="space-y-3">
+                                                <Label className="text-xs font-black text-white/40 uppercase tracking-wider">Medical Council</Label>
+                                                <Select onValueChange={(val) => handleSelectChange("medicalCouncil", val)} required disabled={isVerified}>
+                                                    <SelectTrigger className="h-14 px-4 font-bold rounded-xl bg-slate-950/50 border-white/10">
+                                                        <SelectValue placeholder="Select Council" />
                                                     </SelectTrigger>
-                                                    <SelectContent className="rounded-xl border shadow-xl max-h-[250px]">
-                                                        {MEDICAL_SPECIALIZATIONS.map((spec) => (
-                                                            <SelectItem key={spec.id} value={spec.name} className="text-sm font-bold py-2">
-                                                                {spec.name}
-                                                            </SelectItem>
-                                                        ))}
+                                                    <SelectContent>
+                                                        <SelectItem value="Delhi Medical Council">Delhi Medical Council</SelectItem>
+                                                        <SelectItem value="Maharashtra Medical Council">Maharashtra Medical Council</SelectItem>
+                                                        <SelectItem value="Other State Council">Other State Council</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="space-y-1.5">
-                                                    <Label htmlFor="experience" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">अनुभव (Experience Yrs)</Label>
+                                            <div className="space-y-3">
+                                                <Label className="text-xs font-black text-white/40 uppercase tracking-wider">License ID</Label>
+                                                <div className="flex gap-3">
                                                     <Input
-                                                        id="experience"
-                                                        name="experience"
-                                                        type="number"
-                                                        min="0"
-                                                        placeholder="e.g. 5"
+                                                        id="licenseNumber"
+                                                        name="licenseNumber"
+                                                        placeholder="NMC-XXXX"
                                                         required
-                                                        className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                        onKeyDown={preventNegative}
-                                                        value={formData.experience}
+                                                        disabled={isVerified}
+                                                        className="h-14 bg-slate-950/50 border-white/10 rounded-xl"
+                                                        value={formData.licenseNumber}
                                                         onChange={handleInputChange}
                                                     />
+                                                    <Button 
+                                                        type="button" 
+                                                        onClick={handleVerifyLicense}
+                                                        disabled={isVerified || isVerifying}
+                                                        className={cn(
+                                                            "h-14 px-6 font-black uppercase rounded-xl transition-all shadow-xl shrink-0",
+                                                            isVerified ? "bg-emerald-500 text-white" : "bg-primary text-white hover:bg-primary/80"
+                                                        )}
+                                                    >
+                                                        {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : 
+                                                        isVerified ? <CheckCircle2 className="w-5 h-5" /> : "Verify"}
+                                                    </Button>
                                                 </div>
-                                                <div className="space-y-1.5">
-                                                    <Label htmlFor="consultationFee" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">परामर्श शुल्क (Fee ₹)</Label>
-                                                    <Input
-                                                        id="consultationFee"
-                                                        name="consultationFee"
-                                                        type="number"
-                                                        min="0"
-                                                        placeholder="e.g. 500"
-                                                        required
-                                                        className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                        onKeyDown={preventNegative}
-                                                        value={formData.consultationFee}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                             <div className="space-y-4 pt-4 pb-2">
-                                                <div className="space-y-1.5">
-                                                    <Label htmlFor="qualifications" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">योग्यता (Qualifications)</Label>
-                                                    <Input
-                                                        id="qualifications"
-                                                        name="qualifications"
-                                                        placeholder="e.g. MBBS, MD"
-                                                        required
-                                                        className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                        value={formData.qualifications}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/10 p-5 rounded-2xl border border-primary/20">
-                                                    <div className="col-span-full mb-1">
-                                                        <h4 className="text-sm font-black text-primary flex items-center gap-2">
-                                                            <ShieldCheck className="w-4 h-4" />
-                                                            Credential Verification
-                                                        </h4>
-                                                        <p className="text-[10px] uppercase font-bold text-muted-foreground ml-6">Required by NMC</p>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-1.5">
-                                                        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">State Medical Council</Label>
-                                                        <Select onValueChange={(val) => handleSelectChange("medicalCouncil", val)} required disabled={isVerified}>
-                                                            <SelectTrigger className={cn("h-11 px-4 text-sm font-bold rounded-xl transition-all shadow-none", isVerified ? "bg-muted text-muted-foreground border-transparent" : "bg-card border-muted-foreground/20 focus:border-primary")}>
-                                                                <SelectValue placeholder="Select Council" />
-                                                            </SelectTrigger>
-                                                            <SelectContent className="rounded-xl border shadow-xl max-h-[200px]">
-                                                                <SelectItem value="Delhi Medical Council" className="font-bold py-2 text-sm">Delhi Medical Council</SelectItem>
-                                                                <SelectItem value="Maharashtra Medical Council" className="font-bold py-2 text-sm">Maharashtra Medical Council</SelectItem>
-                                                                <SelectItem value="Karnataka Medical Council" className="font-bold py-2 text-sm">Karnataka Medical Council</SelectItem>
-                                                                <SelectItem value="Tamil Nadu Medical Council" className="font-bold py-2 text-sm">Tamil Nadu Medical Council</SelectItem>
-                                                                <SelectItem value="Medical Council of India" className="font-bold py-2 text-sm">Medical Council of India (MCI)</SelectItem>
-                                                                <SelectItem value="Other State Council" className="font-bold py-2 text-sm">Other State Council</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-
-                                                    <div className="space-y-1.5 flex flex-col">
-                                                        <Label htmlFor="licenseNumber" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">रजिस्ट्रेशन नंबर (Registration No.)</Label>
-                                                        <div className="flex gap-2">
-                                                            <Input
-                                                                id="licenseNumber"
-                                                                name="licenseNumber"
-                                                                placeholder="License Number"
-                                                                required
-                                                                disabled={isVerified}
-                                                                className={cn("h-11 px-4 text-sm font-bold rounded-xl transition-all", isVerified ? "bg-muted text-muted-foreground border-transparent" : "bg-card border-muted-foreground/20 focus:border-primary")}
-                                                                value={formData.licenseNumber}
-                                                                onChange={handleInputChange}
-                                                            />
-                                                            <Button 
-                                                                type="button" 
-                                                                onClick={handleVerifyLicense}
-                                                                disabled={isVerified || isVerifying}
-                                                                className={cn(
-                                                                    "h-11 px-4 font-black uppercase tracking-wider rounded-xl transition-all shadow-none shrink-0",
-                                                                    isVerified ? "bg-green-500/10 text-green-600 border border-green-500/20" : "bg-primary/10 text-primary hover:bg-primary/20",
-                                                                    isVerifying && "opacity-80"
-                                                                )}
-                                                            >
-                                                                {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : 
-                                                                isVerified ? <><CheckCircle2 className="w-4 h-4 mr-1.5" /> Verified</> : 
-                                                                "Verify"}
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-1.5">
-                                                <Label htmlFor="bio" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">मेरे बारे में (About You)</Label>
-                                                <Input
-                                                    id="bio"
-                                                    name="bio"
-                                                    placeholder="Brief description about your practice..."
-                                                    required
-                                                    className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                    value={formData.bio}
-                                                    onChange={handleInputChange}
-                                                />
-                                            </div>
-
-                                            <div className="space-y-1.5">
-                                                <Label htmlFor="address" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground ml-1">पता (Clinic Address)</Label>
-                                                <Input
-                                                    id="address"
-                                                    name="address"
-                                                    placeholder="Clinic or Hospital Address"
-                                                    className="h-11 px-4 text-sm font-bold rounded-xl bg-muted/20 border-muted-foreground/20 focus:border-primary transition-all"
-                                                    value={formData.address}
-                                                    onChange={handleInputChange}
-                                                />
                                             </div>
                                         </div>
-                                    )}
-                                </div>
+                                    </motion.div>
+                                )}
 
                                 <Button
                                     type="submit"
-                                    variant="premium"
-                                    className="w-full h-14 text-xl font-bold rounded-2xl mt-6 text-black"
+                                    className="glowing-button w-full h-24 text-3xl font-black rounded-[2.5rem] mt-12 flex items-center justify-center group"
                                     disabled={isSubmitting || (role === 'doctor' && !isVerified)}
                                 >
                                     {isSubmitting ? (
-                                        <div className="flex items-center gap-3">
-                                            <Loader2 className="h-6 w-6 animate-spin" />
-                                            <span>प्रोफ़ाइल बना रहे हैं...</span>
+                                        <div className="flex items-center gap-6">
+                                            <Loader2 className="h-10 w-10 animate-spin" />
+                                            <span>Syncing...</span>
                                         </div>
                                     ) : (
-                                        "आगे बढ़ें (Complete Setup)"
+                                        <>
+                                           Complete Onboarding
+                                           <ArrowRight className="ml-4 w-8 h-8 group-hover:translate-x-2 transition-transform" />
+                                        </>
                                     )}
                                 </Button>
-                            </form>
+                            </motion.form>
                         )}
+                        </AnimatePresence>
                     </CardContent>
-                </Card>
+                </div>
+            </motion.div>
+            
+            <div className="text-center text-[10px] text-slate-200 font-black py-10 uppercase tracking-[0.5em] relative z-10">
+                SwasthGuru Core Ecosystem &bull; 2026
             </div>
+
         </div>
     );
 }

@@ -100,7 +100,7 @@ export default function DoctorProfileForm() {
     };
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const response = await fetch(`${apiUrl}/users`, {
         method: 'POST',
         headers: {
@@ -145,7 +145,7 @@ export default function DoctorProfileForm() {
       });
 
       const fileBase64 = await base64Promise;
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
 
       const res = await fetch(`${apiUrl}/doctors/upload-proof`, {
         method: 'POST',

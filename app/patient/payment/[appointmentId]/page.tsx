@@ -124,7 +124,7 @@ export default function PaymentPage() {
 
     try {
       // Sync with backend (Supabase)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const response = await fetch(`${apiUrl}/appointments/${appointment.id}`, {
         method: 'PATCH',
         headers: {

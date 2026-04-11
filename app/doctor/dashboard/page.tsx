@@ -51,6 +51,8 @@ export default function DoctorDashboard() {
   const [profileData, setProfileData] = useState<DoctorProfile | null>(null);
   const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
   const [recentAppointments, setRecentAppointments] = useState<any[]>([]);
+  const [pastAppointments, setPastAppointments] = useState<any[]>([]);
+
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -72,7 +74,7 @@ export default function DoctorDashboard() {
     // Fallback to local storage for demo purposes if metadata isn't fully robust yet
     const loadDoctorData = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
         const res = await fetch(`${apiUrl}/users/doctor/${user.id}`);
         if (res.ok) {
           const remoteProfile = await res.json();
@@ -162,7 +164,16 @@ export default function DoctorDashboard() {
             const isOver = getAppointmentTimeStatus(apt.date, apt.time) === 'over';
             return isToday && apt.status !== 'completed' && !isOver;
           });
+
+          const completedApts = doctorAppointments.filter((apt: any) => {
+            const isOver = getAppointmentTimeStatus(apt.date, apt.time) === 'over';
+            const isPast = normalizeDate(apt.date) < normalizeDate(today);
+            return apt.status === 'completed' || isOver || (isPast && (apt.status === 'upcoming' || apt.status === 'confirmed'));
+          }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
           setTodayAppointments(todayApts);
+          setPastAppointments(completedApts.slice(0, 3));
+
 
           const totalPatients = new Set(activeAppointments.map((apt: any) => apt.patientId)).size;
           const totalConsultations = activeAppointments.length;
@@ -229,7 +240,7 @@ export default function DoctorDashboard() {
 
   const handleUpdateStatus = async (appointmentId: string, status: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const res = await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -253,10 +264,11 @@ export default function DoctorDashboard() {
 
   const stats = [
     { label: 'Today\'s Appointments', value: todayAppointments.length.toString(), icon: Calendar, color: 'bg-primary/10 text-primary' },
-    { label: 'Total Patients', value: profileData.totalPatients.toString(), icon: Users, color: 'bg-secondary/10 text-secondary' },
-    { label: 'Total Consultations', value: profileData.totalConsultations.toString(), icon: TrendingUp, color: 'bg-accent/10 text-accent' },
-    { label: 'Avg Rating', value: profileData.rating.toString(), icon: Activity, color: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' },
+    { label: 'Total Patients', value: profileData.totalPatients.toString(), icon: Users, color: 'bg-emerald-500/10 text-emerald-600' },
+    { label: 'Total Consultations', value: profileData.totalConsultations.toString(), icon: TrendingUp, color: 'bg-indigo-500/10 text-indigo-600' },
+    { label: 'Avg Rating', value: profileData.rating.toString(), icon: Activity, color: 'bg-amber-500/10 text-amber-600' },
   ];
+
 
   const date = new Date();
   const formattedDate = date.toLocaleDateString('en-US', {
@@ -274,28 +286,30 @@ export default function DoctorDashboard() {
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold logo-text">SwasthGuru</h1>
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="text-muted-foreground">
+              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary transition-colors">
                 <Bell className="h-5 w-5" />
               </Button>
-              <ThemeToggle />
-              <div className="h-6 w-[1px] bg-border hidden sm:block"></div>
+              <div className="h-6 w-[1px] bg-slate-100 hidden sm:block"></div>
               <UserButton appearance={{ elements: { userButtonAvatarBox: 'h-8 w-8' } }} />
             </div>
+
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-10 pb-28 max-w-5xl">
         {/* Welcome Section */}
-        <div className="mb-8 p-6 rounded-2xl bg-primary/5 border flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">नमस्ते, Dr. {user.firstName}</h2>
-            <p className="text-lg text-muted-foreground">{formattedDate}</p>
-            <div className="inline-flex items-center px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full text-sm font-medium mt-2 border border-blue-500/20">
-              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
+        <div className="mb-12 p-10 rounded-[2.5rem] bg-white border border-slate-100 shadow-[0_20px_40px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="space-y-3 relative z-10">
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight">नमस्ते, Dr. {user.firstName}</h2>
+            <p className="text-lg font-bold text-slate-400">{formattedDate}</p>
+            <div className="inline-flex items-center px-4 py-1.5 bg-primary/5 text-primary rounded-full text-[10px] font-black uppercase tracking-widest mt-4 border border-primary/10">
+              <span className="w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
               {profileData.specialization} • Specialist
             </div>
           </div>
+
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
             <Button
               onClick={() => router.push('/doctor/appointments')}
@@ -323,21 +337,23 @@ export default function DoctorDashboard() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {stats.map((stat, index) => (
-            <Card key={index} className="border shadow-none bg-card">
-              <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
-                <div className={cn("p-3 rounded-xl", stat.color)}>
+            <Card key={index} className="border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)] bg-white rounded-3xl overflow-hidden hover:-translate-y-1 transition-all duration-300">
+
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                <div className={cn("p-4 rounded-2xl", stat.color)}>
                   <stat.icon className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</p>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+
 
         {/* Professional Profile */}
         <Card className="mb-8 border shadow-none">
@@ -415,48 +431,48 @@ export default function DoctorDashboard() {
         </Card>
 
         {/* Today's Appointments */}
-        <Card className="mb-8 border shadow-none overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between py-4 bg-primary/5 px-6">
-            <CardTitle className="text-lg font-bold">आज की नियुक्तियां (Today's Visits)</CardTitle>
+        <Card className="mb-12 shadow-[0_30px_60px_rgba(0,0,0,0.04)] overflow-hidden border-slate-100 rounded-[2.5rem]">
+          <CardHeader className="flex flex-row items-center justify-between py-10 bg-slate-50/50 px-10 border-b border-slate-100">
+            <CardTitle className="text-3xl font-black text-slate-900 tracking-tight uppercase tracking-widest">आज की नियुक्तियां</CardTitle>
             <Button
               variant="outline"
               size="sm"
-              className="px-4 h-9 text-xs font-bold"
+              className="px-8 h-12 text-[10px] font-black uppercase tracking-widest border-2 rounded-xl"
               onClick={() => router.push('/doctor/appointments')}
             >
               Full Schedule
             </Button>
           </CardHeader>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-10 space-y-8">
             {todayAppointments.map((appointment) => (
-              <div key={appointment.id} className="flex flex-col sm:flex-row items-center justify-between p-4 border rounded-2xl bg-card gap-4 hover:border-primary/20 transition-all">
-                <div className="flex items-center space-x-4 w-full sm:w-auto">
+              <div key={appointment.id} className="flex flex-col sm:flex-row items-center justify-between p-6 border border-slate-100 rounded-[2rem] bg-white gap-6 hover:border-primary/20 hover:shadow-xl transition-all group">
+                <div className="flex items-center space-x-6 w-full sm:w-auto">
                   <div className="relative shrink-0">
-                    <Avatar className="w-16 h-16 border-2">
-                      <AvatarImage src={appointment.avatar} />
-                      <AvatarFallback className="bg-primary/5 text-primary text-lg font-bold">
+                    <Avatar className="w-20 h-20 border-2 border-slate-100 p-1">
+                      <AvatarImage src={appointment.avatar} className="rounded-2xl" />
+                      <AvatarFallback className="bg-slate-50 text-primary text-xl font-black rounded-2xl">
                         {appointment.patientName?.[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-1 -right-1 bg-primary text-black p-1.5 rounded-full shadow-lg border-2 border-background">
-                      <Clock className="w-3.5 h-3.5" />
+                    <div className="absolute -bottom-1 -right-1 bg-primary text-white p-2 rounded-xl shadow-lg border-2 border-white">
+                      <Clock className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="space-y-0.5">
-                    <p className="text-lg font-bold text-foreground">{appointment.patientName}</p>
-                    <p className="text-sm font-medium text-primary italic capitalize">"{appointment.symptoms?.join(', ') || 'General Visit'}"</p>
-                    <div className="flex items-center text-xs text-muted-foreground font-medium mt-1">
-                      <Clock className="w-3.5 h-3.5 mr-2" />
+                  <div className="space-y-1">
+                    <p className="text-xl font-black text-slate-800 tracking-tight">{appointment.patientName}</p>
+                    <p className="text-xs font-bold text-primary italic capitalize">"{appointment.symptoms?.join(', ') || 'General Visit'}"</p>
+                    <div className="flex items-center text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2 gap-2">
+                      <Clock className="w-3.5 h-3.5" />
                       {appointment.time}
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                  <Badge variant={(appointment.status === 'completed' || getAppointmentTimeStatus(appointment.date, appointment.time) === 'over') ? 'destructive' : (appointment.status === 'confirmed' ? 'default' : 'secondary')} className={cn(
-                    "px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-widest border",
-                    (appointment.status === 'completed' || getAppointmentTimeStatus(appointment.date, appointment.time) === 'over') ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400" :
-                      appointment.status === 'cancelled' ? "bg-red-100 text-red-700 border-red-200" :
-                        "bg-primary/5 text-primary border-primary/10 dark:text-primary-foreground"
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                  <Badge className={cn(
+                    "h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest border transition-all",
+                    (appointment.status === 'completed' || getAppointmentTimeStatus(appointment.date, appointment.time) === 'over') ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                      appointment.status === 'cancelled' ? "bg-rose-50 text-rose-600 border-rose-100" :
+                        "bg-primary/5 text-primary border-primary/10"
                   )}>
                     {(appointment.status === 'completed' || getAppointmentTimeStatus(appointment.date, appointment.time) === 'over') ? 'Completed' : appointment.status.toUpperCase()}
                   </Badge>
@@ -466,36 +482,26 @@ export default function DoctorDashboard() {
                         {getAppointmentTimeStatus(appointment.date, appointment.time) === 'ready' && (
                           <Button
                             variant="premium"
-                            className="h-9 px-6 text-sm font-bold rounded-xl flex items-center shadow-md border-2 border-primary/20 bg-green-500 hover:bg-green-600 border-none text-white transition-all transform hover:scale-105"
+                            className="h-14 px-8 text-xs font-black rounded-2xl shadow-xl shadow-emerald-200/50 bg-emerald-500 hover:bg-emerald-600 border-none text-white transition-all transform hover:scale-105"
                             onClick={() => router.push(`/doctor/consultation/${appointment.id}`)}
                           >
-                            <Video className="w-4 h-4 mr-2 text-white" />
-                            Direct Join (Demo)
+                            <Video className="w-5 h-5 mr-3" />
+                            Direct Join
                           </Button>
                         )}
                         <Button
-                          variant="outline"
-                          className="h-9 px-4 text-xs font-bold rounded-xl border-green-500/30 text-green-500 hover:bg-green-500/10"
+                          variant="ghost"
+                          className="h-14 px-6 text-xs font-black rounded-2xl border-2 border-slate-100 text-slate-400 hover:border-emerald-500/30 hover:text-emerald-500 hover:bg-emerald-50/50"
                           onClick={() => handleUpdateStatus(appointment.id, 'completed')}
                         >
-                          Complete
+                          Complete Path
                         </Button>
                       </>
                     )}
-                  {appointment.status === 'completed' && (
-                    <Button
-                      size="sm"
-                      variant="premium"
-                      className="h-11 px-6 text-base font-bold"
-                      onClick={() => router.push(`/doctor/patients/${appointment.patientId}`)}
-                    >
-                      <FileText className="w-5 h-5 mr-3 text-primary" />
-                      Summary
-                    </Button>
-                  )}
                 </div>
               </div>
             ))}
+
             {todayAppointments.length === 0 && (
               <div className="text-center py-20 space-y-8">
                 <div className="w-28 h-28 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
@@ -509,6 +515,37 @@ export default function DoctorDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Recent Past Appointments */}
+        {pastAppointments.length > 0 && (
+          <Card className="mb-12 shadow-[0_30px_60px_rgba(0,0,0,0.04)] overflow-hidden border-slate-100 rounded-[2.5rem]">
+            <CardHeader className="flex flex-row items-center justify-between py-8 bg-slate-50/30 px-10 border-b border-slate-100">
+              <CardTitle className="text-2xl font-black text-slate-900 tracking-tight uppercase">पिछली मुलाक़ातें (Recent Visits)</CardTitle>
+            </CardHeader>
+            <CardContent className="p-10 space-y-6">
+              {pastAppointments.map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between p-5 border border-slate-50 rounded-[1.5rem] bg-white gap-4 opacity-80 hover:opacity-100 transition-opacity">
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="w-12 h-12 border p-0.5">
+                      <AvatarImage src={appointment.avatar} />
+                      <AvatarFallback className="bg-slate-50 text-primary text-sm font-bold">
+                        {appointment.patientName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-bold text-slate-800">{appointment.patientName}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(appointment.date).toLocaleDateString()} • {appointment.time}</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-green-50 text-green-600 border-green-100 uppercase text-[9px] font-black tracking-widest px-3 py-1 rounded-lg">
+                    Completed
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -533,43 +570,45 @@ export default function DoctorDashboard() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t h-16 z-50">
-        <div className="container mx-auto px-4 h-full max-w-5xl">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-slate-100 h-20 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+        <div className="container mx-auto px-10 h-full max-w-5xl">
           <div className="flex justify-around items-center h-full">
             <Button
               variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-primary gap-1 px-2"
+              className="flex flex-col items-center justify-center h-full text-primary gap-1 px-4 group active:bg-primary/5 rounded-none"
             >
-              <Home className="w-5 h-5" />
-              <span className="text-[10px] font-bold">Home</span>
+              <Home className="w-6 h-6 transition-none group-active:scale-90" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
             </Button>
             <Button
               variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1 px-2"
+              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
               onClick={() => router.push('/doctor/appointments')}
             >
-              <CalendarDays className="w-5 h-5" />
-              <span className="text-[10px] font-bold">Visits</span>
+              <CalendarDays className="w-6 h-6 transition-none group-active:scale-90" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Visits</span>
             </Button>
             <Button
               variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1 px-2"
+              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
               onClick={() => router.push('/doctor/patients')}
             >
-              <Users className="w-5 h-5" />
-              <span className="text-[10px] font-bold">Patients</span>
+              <Users className="w-6 h-6 transition-none group-active:scale-90" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Patients</span>
             </Button>
             <Button
               variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1 px-2"
+              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
               onClick={() => router.push('/doctor/profile')}
             >
-              <User className="w-5 h-5" />
-              <span className="text-[10px] font-bold">Me</span>
+              <User className="w-6 h-6 transition-none group-active:scale-90" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Me</span>
             </Button>
           </div>
         </div>
       </nav>
+
+
     </div>
   );
 }

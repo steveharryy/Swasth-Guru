@@ -8,6 +8,7 @@ import doctorRoutes from './routes/doctors';
 import userRoutes from './routes/users';
 import appointmentRoutes from './routes/appointments';
 import recordRoutes from './routes/records';
+import recognizeMedicineRouter from './routes/recognizeMedicine';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/records', recordRoutes);
+app.use('/api/recognize-medicine', recognizeMedicineRouter);
 
 // Socket.IO Logic
 io.on('connection', (socket) => {
@@ -67,7 +69,12 @@ io.on('connection', (socket) => {
     socket.on('chat-message', (data) => {
         socket.to(data.roomId).emit('chat-message', data);
     });
+
+    socket.on('call-ended', (data) => {
+        socket.to(data.roomId).emit('call-ended', data);
+    });
 });
+
 
 const PORT = process.env.PORT || 8888;
 

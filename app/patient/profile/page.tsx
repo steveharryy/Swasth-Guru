@@ -79,7 +79,7 @@ export default function PatientProfilePage() {
       // Fetch profile from backend
       const fetchProfile = async () => {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
           const res = await fetch(`${apiUrl}/users/patient/${user.id}`);
           if (res.ok) {
             const profileData = await res.json();
@@ -152,7 +152,7 @@ export default function PatientProfilePage() {
         medicalHistory: formData.medicalHistory
       };
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const res = await fetch(`${apiUrl}/users`, {
         method: 'POST',
         headers: {

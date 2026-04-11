@@ -43,7 +43,7 @@ export default function PatientProfileForm() {
       // Fetch from API
       const fetchProfile = async () => {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
           const response = await fetch(`${apiUrl}/users/patient/${user?.id}`);
 
           if (response.ok) {
@@ -107,7 +107,7 @@ export default function PatientProfileForm() {
     setIsSubmitting(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const response = await fetch(`${apiUrl}/users`, {
         method: 'POST',
         headers: {

@@ -68,7 +68,7 @@ export default function DoctorProfilePage() {
     } else if (user) {
       const fetchProfile = async () => {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
           const response = await fetch(`${apiUrl}/users/doctor/${user.id}`);
 
           if (response.ok) {
@@ -133,7 +133,7 @@ export default function DoctorProfilePage() {
     // localStorage.setItem(`doctor_profile_${user?.id}`, JSON.stringify(profileData)); // Backup or remove
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       const response = await fetch(`${apiUrl}/users`, {
         method: 'POST', // or PUT if I change the backend to handle updates specifically, but users.ts POST handles updates
         headers: {

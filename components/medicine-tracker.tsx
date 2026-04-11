@@ -20,9 +20,13 @@ import {
   Navigation,
   Bookmark,
   Info,
-  AlertTriangle
+  AlertTriangle,
+  Camera,
+  Upload,
+  ImageIcon
 } from 'lucide-react';
-import { analyzeMedicine, findMedicineAlternatives, isAiAvailable, type MedicineInfo, type PharmacyAvailability } from '@/lib/ai-api';
+import { analyzeMedicine, findMedicineAlternatives, isAiAvailable, type MedicineInfo, type PharmacyAvailability, analyzeMedicineImage } from '@/lib/ai-api';
+
 import { searchMedicineAvailability, checkRealTimeStock, reserveMedicine } from '@/lib/pharmacy-api';
 import { useNotification } from '@/contexts/notification-context';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -37,7 +41,9 @@ export function MedicineTracker() {
   const [selectedTab, setSelectedTab] = useState('search');
   const [isRefreshing, setIsRefreshing] = useState<string | null>(null);
   const [aiAvailable] = useState(isAiAvailable());
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { showNotification } = useNotification();
+
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -115,6 +121,86 @@ export function MedicineTracker() {
     }
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showNotification('Please upload an image file', 'error');
+        return;
+    }
+
+    setIsAnalyzing(true);
+    showNotification('Analyzing medicine image...', 'info');
+
+    try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const base64Image = e.target?.result as string;
+            const result = await analyzeMedicineImage(base64Image);
+            console.log("Medicine Analysis Result:", result);
+            
+            if (result.medicine_name && result.medicine_name !== 'Unknown') {
+                const cleanedName = result.medicine_name.split(' (')[0].split(' tablet')[0].split(' caps')[0].trim();
+                setSearchQuery(result.medicine_name);
+                
+                // 1. Set Detailed Info
+                const detailedInfo = {
+                    name: result.medicine_name,
+                    genericName: result.generic_name || 'Medical Formula',
+                    dosage: result.dosage || result.suggestion || 'Consult doctor',
+                    manufacturer: result.manufacturer || 'Generic',
+                    category: 'AI Vision Analysis',
+                    sideEffects: result.side_effects || [],
+                    interactions: result.interactions || [],
+                    alternatives: []
+                };
+                setMedicineInfo(detailedInfo);
+
+                showNotification(`Identified: ${result.medicine_name}`, 'success');
+                
+                // 2. Fetch Availability & Alternatives
+                setIsSearching(true);
+                try {
+                   // Clean name for better search matching
+                   const searchKey = cleanedName.split(' ')[0];
+                   const availability = await searchMedicineAvailability(searchKey);
+                   setPharmacies(availability);
+                   
+                   const alts = await findMedicineAlternatives(searchKey, ['general']);
+                   setAlternatives(alts);
+                   
+                   // Switch to show both the info and the results
+                   setSelectedTab('results');
+                } catch (err) {
+                   console.error("Search follow-up error:", err);
+                } finally {
+                   setIsSearching(false);
+                }
+            } else if (result.error) {
+
+
+                console.error("Analysis Error:", result.error);
+                showNotification(`Analysis failed: ${result.error}`, 'error');
+            } else {
+                showNotification('Could not identify medicine. Please try searching manually.', 'warning');
+            }
+        };
+        reader.onerror = (error) => {
+            console.error("FileReader Error:", error);
+            showNotification('Error reading image file', 'error');
+        };
+        reader.readAsDataURL(file);
+    } catch (error: any) {
+        console.error("HandleImageUpload Error:", error);
+        showNotification(error.message || 'Analysis failed', 'error');
+    } finally {
+        setIsAnalyzing(false);
+    }
+  };
+
+
+
   return (
     <div className="space-y-10">
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
@@ -157,13 +243,36 @@ export function MedicineTracker() {
                     placeholder="दवा का नाम लिखें (e.g., Paracetamol, Crocin)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-11 pl-12 pr-4 text-base font-medium rounded-xl border bg-muted/30 focus:bg-background transition-all"
+                    className="h-11 pl-12 pr-12 text-base font-medium rounded-xl border bg-muted/30 focus:bg-background transition-all"
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <input
+                      type="file"
+                      id="medicine-photo"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={isAnalyzing}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5"
+                      onClick={() => document.getElementById('medicine-photo')?.click()}
+                      disabled={isAnalyzing}
+                    >
+                      {isAnalyzing ? (
+                        <RefreshCw className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Camera className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 <Button
                   onClick={handleSearch}
-                  disabled={isSearching || !searchQuery.trim()}
+                  disabled={isSearching || isAnalyzing || !searchQuery.trim()}
                   variant="premium"
                   className="h-11 px-6 text-base font-bold rounded-xl shrink-0"
                 >
@@ -178,6 +287,7 @@ export function MedicineTracker() {
                 </Button>
               </div>
 
+
               {medicineInfo && (
                 <Card className="bg-muted/30 border shadow-none rounded-xl p-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <CardContent className="p-0">
@@ -190,11 +300,40 @@ export function MedicineTracker() {
                         <div className="flex flex-wrap gap-2 mb-4">
                           <Badge variant="secondary" className="px-3 py-0.5 text-[10px] font-bold">Generic: {medicineInfo.genericName}</Badge>
                           <Badge variant="outline" className="px-3 py-0.5 text-[10px] font-bold">Category: {medicineInfo.category}</Badge>
+                          {medicineInfo.manufacturer && medicineInfo.manufacturer !== 'Generic' && (
+                             <Badge variant="outline" className="px-3 py-0.5 text-[10px] font-bold border-primary/30 text-primary">Mfg: {medicineInfo.manufacturer}</Badge>
+                          )}
                         </div>
-                        <p className="text-sm font-medium text-muted-foreground leading-relaxed bg-background/50 p-4 rounded-xl border">
-                          {medicineInfo.dosage}
-                        </p>
+                        
+                        <div className="space-y-4">
+                          <div className="bg-background/50 p-4 rounded-xl border">
+                             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Usage & Dosage</h4>
+                             <p className="text-sm font-medium text-foreground leading-relaxed italic">{medicineInfo.dosage}</p>
+                          </div>
+
+                          {(medicineInfo.sideEffects?.length > 0 || medicineInfo.interactions?.length > 0) && (
+                            <div className="grid grid-cols-2 gap-4">
+                               {medicineInfo.sideEffects?.length > 0 && (
+                                 <div className="bg-orange-500/5 p-4 rounded-xl border border-orange-500/10">
+                                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-orange-600 mb-2">Side Effects</h4>
+                                   <ul className="text-xs font-medium text-orange-700/80 list-disc list-inside">
+                                      {medicineInfo.sideEffects.slice(0, 3).map((se, i) => <li key={i}>{se}</li>)}
+                                   </ul>
+                                 </div>
+                               )}
+                               {medicineInfo.interactions?.length > 0 && (
+                                 <div className="bg-red-500/5 p-4 rounded-xl border border-red-500/10">
+                                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-red-600 mb-2">Interactions</h4>
+                                   <ul className="text-xs font-medium text-red-700/80 list-disc list-inside">
+                                      {medicineInfo.interactions.slice(0, 3).map((item, i) => <li key={i}>{item}</li>)}
+                                   </ul>
+                                 </div>
+                               )}
+                            </div>
+                          )}
+                        </div>
                       </div>
+
                     </div>
                   </CardContent>
                 </Card>

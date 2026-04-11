@@ -100,7 +100,7 @@ export default function DoctorConsultationPage() {
 
       if (!currentApt) {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
           const res = await fetch(`${apiUrl}/appointments/${appointmentId}`);
           if (res.ok) {
             const data = await res.json();
@@ -203,6 +203,24 @@ export default function DoctorConsultationPage() {
       setChatMessages(prev => [...prev, data.message]);
     });
 
+    socket.on('call-ended', () => {
+      console.log('Call ended by remote user');
+      showNotification('Consultation ended by patient', 'info');
+      
+      // Local cleanup
+      setIsCallActive(false);
+      setCallDuration(0);
+      closePeerConnection();
+      if (mediaStreamRef.current) {
+        stopCamera(mediaStreamRef.current);
+      }
+      setMediaStream(null);
+      setRemoteStream(null);
+      
+      router.push('/doctor/appointments');
+    });
+
+
     return () => {
       socket.off('user-connected');
       socket.off('offer');
@@ -260,7 +278,7 @@ export default function DoctorConsultationPage() {
 
   const handleEndCall = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
       await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -271,6 +289,7 @@ export default function DoctorConsultationPage() {
       console.error('Error marking appointment as completed:', error);
     }
 
+    socket.emit('call-ended', { roomId: appointmentId });
     setIsCallActive(false);
     setCallDuration(0);
     closePeerConnection();
@@ -281,6 +300,7 @@ export default function DoctorConsultationPage() {
     setRemoteStream(null);
     showNotification('Consultation ended', 'info');
     router.push('/doctor/appointments');
+
   };
 
   const handleToggleVideo = () => {
