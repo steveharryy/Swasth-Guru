@@ -49,7 +49,22 @@ services:
     networks:
       - swasth-network
 
+  core-engine:
+    build:
+      context: ./core-engine
+      dockerfile: Dockerfile
+    container_name: swasth-core-engine
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${NEXT_PUBLIC_GEMINI_API_KEY}
+    env_file:
+      - core-engine/.env
+    networks:
+      - swasth-network
+
 networks:
+
   swasth-network:
     driver: bridge
 
