@@ -41,7 +41,7 @@ import { doctorsData, getAvailableDoctors, getDoctorAvatar, type Doctor } from '
 import { VoiceSymptomLogger } from '@/components/VoiceSymptomLogger';
 
 import { MEDICAL_SPECIALIZATIONS } from '@/lib/specializations';
-import { cn } from '@/lib/utils';
+import { cn, getApiUrl } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
@@ -219,7 +219,7 @@ export default function BookAppointmentPage() {
     };
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/appointments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
