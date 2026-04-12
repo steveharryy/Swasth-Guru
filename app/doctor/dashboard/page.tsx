@@ -201,15 +201,8 @@ export default function DoctorDashboard() {
             return d;
           };
 
-          // Hackathon Demo: Universal Search
-          // Show EVERY appointment that matches either the ID OR the Doctor's name
-          const allMatchingApts = uniqueAppointments.filter((apt: any) => {
-            const aptName = (apt.doctorName || apt.doctor_name || '').toLowerCase().trim();
-            const doctorNameMatch = aptName === nameToMatch;
-            const doctorIdMatch = apt.doctorId === user.id || apt.doctor_id === user.id;
-            const isConfirmed = apt.status !== 'cancelled';
-            return (doctorNameMatch || doctorIdMatch) && isConfirmed;
-          });
+          // Hackathon Demo: Show ALL non-cancelled appointments (already filtered by name/ID above)
+          const allMatchingApts = uniqueAppointments.filter((apt: any) => apt.status !== 'cancelled');
 
           // Sort by creation (latest first)
           const sortedApts = allMatchingApts.sort((a: any, b: any) => 
@@ -234,11 +227,15 @@ export default function DoctorDashboard() {
         } else {
           // Fallback to local storage if API fails
           const storedProfile = localStorage.getItem(`doctor_profile_${user.id}`);
+          const fallbackName = storedProfile
+            ? JSON.parse(storedProfile).fullName
+            : (user.fullName || (user.unsafeMetadata?.fullName as string) || '');
+
           if (storedProfile) {
             setProfileData(JSON.parse(storedProfile));
           } else {
             setProfileData({
-              fullName: user.fullName || (user.unsafeMetadata?.fullName as string) || 'Doctor',
+              fullName: fallbackName || 'Doctor',
               email: user.primaryEmailAddress?.emailAddress || '',
               phone: (user.unsafeMetadata?.phone as string) || '',
               address: (user.unsafeMetadata?.address as string) || '',
@@ -254,16 +251,35 @@ export default function DoctorDashboard() {
               completedAt: new Date().toISOString()
             });
           }
+
+          // CRITICAL: Also load appointments from localStorage even when API fails
+          const allLocalApts = JSON.parse(localStorage.getItem('appointments') || '[]');
+          const nameToMatchFallback = fallbackName.toLowerCase().trim();
+          const localMatched = allLocalApts.filter((apt: any) => {
+            const aptName = (apt.doctorName || apt.doctor_name || '').toLowerCase().trim();
+            return apt.doctorId === user.id ||
+              apt.doctor_id === user.id ||
+              aptName.includes(nameToMatchFallback) ||
+              nameToMatchFallback.includes(aptName);
+          });
+          if (localMatched.length > 0) {
+            setTodayAppointments(localMatched);
+            setRecentAppointments(localMatched.slice(0, 5));
+          }
         }
       } catch (err) {
         console.error("Failed to fetch doctor data:", err);
         // On network error (backend down), use fallback
         const storedProfile = localStorage.getItem(`doctor_profile_${user.id}`);
+        const catchFallbackName = storedProfile
+          ? JSON.parse(storedProfile).fullName
+          : (user.fullName || (user.unsafeMetadata?.fullName as string) || '');
+
         if (storedProfile) {
           setProfileData(JSON.parse(storedProfile));
         } else {
           setProfileData({
-            fullName: user.fullName || (user.unsafeMetadata?.fullName as string) || 'Doctor',
+            fullName: catchFallbackName || 'Doctor',
             email: user.primaryEmailAddress?.emailAddress || '',
             phone: (user.unsafeMetadata?.phone as string) || '',
             address: (user.unsafeMetadata?.address as string) || '',
@@ -278,6 +294,20 @@ export default function DoctorDashboard() {
             totalConsultations: 0,
             completedAt: new Date().toISOString()
           });
+        }
+
+        // CRITICAL: Load appointments from localStorage even on total network failure
+        const allLocalApts = JSON.parse(localStorage.getItem('appointments') || '[]');
+        const nameToMatchCatch = catchFallbackName.toLowerCase().trim();
+        const localMatched = allLocalApts.filter((apt: any) => {
+          const aptName = (apt.doctorName || apt.doctor_name || '').toLowerCase().trim();
+          return apt.doctorId === user.id ||
+            apt.doctor_id === user.id ||
+            (nameToMatchCatch && (aptName.includes(nameToMatchCatch) || nameToMatchCatch.includes(aptName)));
+        });
+        if (localMatched.length > 0) {
+          setTodayAppointments(localMatched);
+          setRecentAppointments(localMatched.slice(0, 5));
         }
       }
     };
