@@ -133,26 +133,29 @@ export default function DoctorDashboard() {
           
           if (aptRes.ok) {
             doctorAppointments = await aptRes.json();
-            // Map keys
-            doctorAppointments = doctorAppointments.map((apt: any) => ({
-              ...apt,
-              id: apt.id.toString(),
-              patientId: apt.patient_id || apt.patientId,
-              doctorId: apt.doctor_id || apt.doctorId,
-              doctorName: apt.doctor_name || apt.doctorName,
-              doctorSpecialization: apt.doctor_specialization || apt.doctorSpecialization,
-              patientName: apt.patient?.name || apt.patient_name || apt.patientName || 'Patient',
-              status: apt.status?.toLowerCase() || 'pending',
-              date: apt.date,
-              time: apt.time
-            }));
-          } else {
-            const allAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-            // For Hackathon Demo: All appointments are immediate and visible
-            doctorAppointments = allAppointments.filter((apt: any) => 
-               apt.doctor_id === user.id || apt.doctorId === user.id
-            ).map((apt: any) => ({ ...apt, status: 'confirmed' }));
           }
+
+          // Hackathon Smart-Match: Also check by name and merge with local
+          const allLocalApts = JSON.parse(localStorage.getItem('appointments') || '[]');
+          const nameMatchedApts = allLocalApts.filter((apt: any) => 
+            apt.doctorName === mappedProfile.fullName || 
+            apt.doctor_name === mappedProfile.fullName ||
+            apt.doctorId === user.id ||
+            apt.doctor_id === user.id
+          );
+
+          // Merge and normalize
+          doctorAppointments = [...doctorAppointments, ...nameMatchedApts].map((apt: any) => ({
+            ...apt,
+            id: apt.id?.toString() || Date.now().toString(),
+            patientId: apt.patient_id || apt.patientId,
+            doctorId: apt.doctor_id || apt.doctorId,
+            doctorName: apt.doctor_name || apt.doctorName,
+            patientName: apt.patient?.name || apt.patient_name || apt.patientName || 'Patient',
+            status: apt.status?.toLowerCase() || 'confirmed',
+            date: apt.date,
+            time: apt.time
+          }));
 
           // Always merge hackathon appointments for the demo
           doctorAppointments = [...doctorAppointments, ...hackathonApts];
