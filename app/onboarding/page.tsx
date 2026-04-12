@@ -30,6 +30,7 @@ export default function OnboardingPage() {
     const { user, isLoaded } = useUser();
     const router = useRouter();
     const [role, setRole] = useState<"patient" | "doctor" | null>(null);
+    const [formData, setFormData] = useState({
         fullName: "",
         phone: "",
         age: "",

@@ -213,6 +213,13 @@ export default function DoctorDashboard() {
           if (storedProfile) {
             setProfileData(JSON.parse(storedProfile));
           } else {
+            setProfileData({
+              fullName: user.fullName || (user.unsafeMetadata?.fullName as string) || 'Doctor',
+              email: user.primaryEmailAddress?.emailAddress || '',
+              phone: (user.unsafeMetadata?.phone as string) || '',
+              address: (user.unsafeMetadata?.address as string) || '',
+              specialization: (user.unsafeMetadata?.specialization as string) || 'General',
+              experience: (user.unsafeMetadata?.experience as string) || '0',
               qualifications: '',
               consultationFee: '11',
               about: '',
