@@ -218,24 +218,41 @@ export default function BookAppointmentPage() {
       paymentStatus: 'pending' as const
     };
 
-    // ALWAYS save locally first — this guarantees the demo never fails
+    // ALWAYS save locally first as instant backup
     const existingAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
     existingAppointments.push(appointment);
     localStorage.setItem('appointments', JSON.stringify(existingAppointments));
 
-    // Try to sync to cloud in background (non-blocking)
-    try {
-      const apiUrl = getApiUrl();
-      fetch(`${apiUrl}/appointments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(appointment),
-      }).catch(err => console.warn("Background cloud sync failed (non-critical):", err));
-    } catch (error) {
-      console.warn("Cloud sync skipped:", error);
+    // Try to save to cloud with retries (so doctor dashboard can see it)
+    const apiUrl = getApiUrl();
+    let cloudSaved = false;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        console.log(`Cloud sync attempt ${attempt}/3...`);
+        const response = await fetch(`${apiUrl}/appointments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(appointment),
+        });
+        if (response.ok) {
+          cloudSaved = true;
+          console.log('Appointment saved to cloud successfully!');
+          break;
+        }
+      } catch (err) {
+        console.warn(`Cloud sync attempt ${attempt} failed:`, err);
+        if (attempt < 3) {
+          // Wait 2 seconds before retry (gives Render time to wake up)
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
     }
 
-    // Always proceed to payment regardless of cloud status
+    if (!cloudSaved) {
+      console.warn('Cloud sync failed after 3 attempts. Doctor dashboard may not show this appointment immediately.');
+    }
+
+    // Always redirect to payment
     router.push(`/patient/payment/${appointmentId}`);
   };
 
