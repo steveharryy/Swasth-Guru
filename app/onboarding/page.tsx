@@ -34,6 +34,8 @@ export default function OnboardingPage() {
         phone: "",
         age: "",
         gender: "",
+        dob: "",
+        emergencyContact: "",
         specialization: "",
         experience: "",
         medicalCouncil: "",
