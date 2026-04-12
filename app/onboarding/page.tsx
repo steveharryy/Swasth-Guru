@@ -133,7 +133,7 @@ export default function OnboardingPage() {
                 unsafeMetadata: {
                     onboardingComplete: true,
                     role,
-                    ...formData,
+                    ...(role === 'doctor' ? { ...formData, consultationFee: '11' } : formData),
                 },
             });
 
@@ -146,7 +146,7 @@ export default function OnboardingPage() {
                     role,
                     email: user.primaryEmailAddress?.emailAddress,
                     name: user.fullName,
-                    ...formData,
+                    ...(role === 'doctor' ? { ...formData, consultationFee: '11' } : formData),
                     about: formData.bio,
                     languages: ['English', 'Hindi']
                 }),
