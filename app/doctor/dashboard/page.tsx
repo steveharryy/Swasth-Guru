@@ -191,20 +191,25 @@ export default function DoctorDashboard() {
             return d;
           };
 
-          const activeAppointments = doctorAppointments.filter((apt: any) => apt.status !== 'cancelled');
-          const todayApts = activeAppointments.filter((apt: any) => {
-            if (apt.date === 'hackathon') return true;
-            const isToday = normalizeDate(apt.date) === normalizeDate(today);
-            return isToday && apt.status !== 'completed';
+          // Hackathon Demo: Universal Search
+          // Show EVERY appointment that matches either the ID OR the Doctor's name
+          const allMatchingApts = uniqueAppointments.filter((apt: any) => {
+            const aptName = (apt.doctorName || apt.doctor_name || '').toLowerCase().trim();
+            const doctorNameMatch = aptName === nameToMatch;
+            const doctorIdMatch = apt.doctorId === user.id || apt.doctor_id === user.id;
+            const isConfirmed = apt.status !== 'cancelled';
+            return (doctorNameMatch || doctorIdMatch) && isConfirmed;
           });
 
-          const completedApts = doctorAppointments.filter((apt: any) => {
-            const isOver = getAppointmentTimeStatus(apt.date, apt.time) === 'over';
-            const isPast = normalizeDate(apt.date) < normalizeDate(today);
-            return apt.status === 'completed' || isOver || (isPast && (apt.status === 'upcoming' || apt.status === 'confirmed'));
-          }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          // Sort by creation (latest first)
+          const sortedApts = allMatchingApts.sort((a: any, b: any) => 
+            new Date(b.createdAt || b.created_at || 0).getTime() - new Date(a.createdAt || a.created_at || 0).getTime()
+          );
 
-          setTodayAppointments(todayApts);
+          setRecentAppointments(sortedApts.slice(0, 5));
+          setTodayAppointments(sortedApts); // Show all relevant ones in the main list for the demo
+          
+          const completedApts = sortedApts.filter(apt => apt.status === 'completed');
           setPastAppointments(completedApts.slice(0, 3));
 
 
