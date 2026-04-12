@@ -1,11 +1,13 @@
 import { PharmacyAvailability } from './ai-api';
 
 // Mock pharmacy data - In production, this would connect to real pharmacy APIs
-const mockPharmacies: PharmacyAvailability[] = [
+const mockPharmacies: (PharmacyAvailability & { lat: number; lng: number })[] = [
   {
     pharmacyId: '1',
     pharmacyName: 'MedPlus Pharmacy',
     address: 'Main Market, Sector 15, Chandigarh',
+    lat: 30.7583,
+    lng: 76.7841,
     distance: 0.8,
     price: 45,
     stock: 25,
@@ -18,6 +20,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '2',
     pharmacyName: 'Apollo Pharmacy',
     address: 'SCO 123, Phase 3B2, Mohali',
+    lat: 30.7046,
+    lng: 76.7179,
     distance: 1.2,
     price: 42,
     stock: 15,
@@ -30,6 +34,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '3',
     pharmacyName: 'Local Medical Store',
     address: 'Village Rampur, Near Gurudwara',
+    lat: 30.6864,
+    lng: 76.8123,
     distance: 2.1,
     price: 38,
     stock: 8,
@@ -42,6 +48,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '4',
     pharmacyName: 'HealthKart Pharmacy',
     address: 'Mall Road, Patiala',
+    lat: 30.3400,
+    lng: 76.3800,
     distance: 3.5,
     price: 50,
     stock: 0,
@@ -54,6 +62,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '5',
     pharmacyName: 'Bansal Medical Store',
     address: 'Cinema Road, Nabha, Punjab',
+    lat: 30.3752,
+    lng: 76.1466,
     distance: 0.6,
     price: 40,
     stock: 18,
@@ -66,6 +76,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '6',
     pharmacyName: 'Singla Pharmacy',
     address: 'Patiala Gate, Nabha',
+    lat: 30.3725,
+    lng: 76.1488,
     distance: 1.1,
     price: 47,
     stock: 12,
@@ -78,6 +90,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '7',
     pharmacyName: 'Jain Medical Hall',
     address: 'Station Road, Nabha',
+    lat: 30.3780,
+    lng: 76.1520,
     distance: 1.9,
     price: 39,
     stock: 20,
@@ -90,6 +104,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '8',
     pharmacyName: 'Sharma Chemist',
     address: 'Circular Road, Near Bus Stand, Nabha',
+    lat: 30.3700,
+    lng: 76.1400,
     distance: 2.4,
     price: 44,
     stock: 10,
@@ -102,6 +118,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '9',
     pharmacyName: 'Verma Medicos',
     address: 'Nehru Market, Nabha',
+    lat: 30.3740,
+    lng: 76.1550,
     distance: 2.9,
     price: 41,
     stock: 22,
@@ -114,6 +132,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '10',
     pharmacyName: 'Gupta Pharmacy',
     address: 'Hospital Road, Nabha',
+    lat: 30.3795,
+    lng: 76.1422,
     distance: 3.2,
     price: 43,
     stock: 14,
@@ -126,6 +146,8 @@ const mockPharmacies: PharmacyAvailability[] = [
     pharmacyId: '11',
     pharmacyName: 'City Life Pharmacy',
     address: 'Railway Road, Nabha',
+    lat: 30.3820,
+    lng: 76.1500,
     distance: 3.7,
     price: 46,
     stock: 9,
@@ -136,21 +158,48 @@ const mockPharmacies: PharmacyAvailability[] = [
   }
 ];
 
+// Helper to calculate distance between two coordinates in km
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export async function searchMedicineAvailability(
   medicineName: string,
   userLocation?: { lat: number; lng: number }
 ): Promise<PharmacyAvailability[]> {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 800));
 
-  // Filter pharmacies that have the medicine in stock
-  const availablePharmacies = mockPharmacies.filter(pharmacy => {
-    // Simulate random availability for demo
-    const hasStock = Math.random() > 0.3;
-    return hasStock && pharmacy.stock > 0;
+  // 1. Calculate real distances if location is provided
+  const updatedPharmacies = mockPharmacies.map(pharmacy => {
+    if (userLocation) {
+      const realDistance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        pharmacy.lat,
+        pharmacy.lng
+      );
+      return { ...pharmacy, distance: parseFloat(realDistance.toFixed(1)) };
+    }
+    return pharmacy;
   });
 
-  // Sort by distance and availability
+  // 2. Filter pharmacies that have the medicine in stock (simulated)
+  const availablePharmacies = updatedPharmacies.filter(pharmacy => {
+    // Simulate random availability for demo, but ensure at least some are available
+    const hasStock = pharmacy.stock > 0;
+    return hasStock;
+  });
+
+  // 3. Sort by distance (asc) and status (open first)
   return availablePharmacies.sort((a, b) => {
     if (a.isOpen && !b.isOpen) return -1;
     if (!a.isOpen && b.isOpen) return 1;

@@ -41,8 +41,29 @@ export function MedicineTracker() {
   const [selectedTab, setSelectedTab] = useState('search');
   const [isRefreshing, setIsRefreshing] = useState<string | null>(null);
   const [aiAvailable] = useState(isAiAvailable());
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { showNotification } = useNotification();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setUserLocation(location);
+          console.log("User location detected:", location);
+        },
+        (error) => {
+          console.warn("Geolocation denied or failed:", error.message);
+          // Default to Nabha coordinates as fallback
+          setUserLocation({ lat: 30.3752, lng: 76.1466 });
+        }
+      );
+    }
+  }, []);
 
 
   const handleSearch = async () => {
@@ -65,7 +86,7 @@ export function MedicineTracker() {
       setMedicineInfo(info);
 
       // 3. Search for availability in nearby pharmacies
-      const availability = await searchMedicineAvailability(searchQuery);
+      const availability = await searchMedicineAvailability(searchQuery, userLocation || undefined);
       setPharmacies(availability);
 
       // 4. Find alternatives
@@ -164,7 +185,7 @@ export function MedicineTracker() {
                 try {
                    // Clean name for better search matching
                    const searchKey = cleanedName.split(' ')[0];
-                   const availability = await searchMedicineAvailability(searchKey);
+                   const availability = await searchMedicineAvailability(searchKey, userLocation || undefined);
                    setPharmacies(availability);
                    
                    const alts = await findMedicineAlternatives(searchKey, ['general']);

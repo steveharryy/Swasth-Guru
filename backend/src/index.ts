@@ -24,7 +24,12 @@ const io = new Server(httpServer, {
     }
 });
 
-app.use(cors());
+app.use(cors({
+    origin: true, // Echoes back the request origin - perfect for dev + prod
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
 app.use(express.json({ limit: '10mb' }));
 
 app.use((req, res, next) => {

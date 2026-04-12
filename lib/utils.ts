@@ -58,11 +58,11 @@ export function getAppointmentTimeStatus(dateStr: string, timeStr: string): 'ear
 }
 
 export function getApiUrl() {
-  // FORCE Cloud for Demo: This ensures localhost and Vercel use the same DB
-  return 'https://swasth-guru-backend.onrender.com/api';
+  // Prefer local environment variable if available, fallback to production Render URL
+  return process.env.NEXT_PUBLIC_API_URL || 'https://swasth-guru-backend.onrender.com/api';
 }
 
 export function getSocketUrl() {
-  // FORCE Cloud for Demo: This ensures video calls connect globally
-  return 'https://swasth-guru-backend.onrender.com';
+  // Prefer local environment variable if available, fallback to production Render URL
+  return process.env.NEXT_PUBLIC_BACKEND_URL || 'https://swasth-guru-backend.onrender.com';
 }
