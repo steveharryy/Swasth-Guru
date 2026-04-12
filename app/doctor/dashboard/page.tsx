@@ -213,8 +213,8 @@ export default function DoctorDashboard() {
           setPastAppointments(completedApts.slice(0, 3));
 
 
-          const totalPatients = new Set(activeAppointments.map((apt: any) => apt.patientId)).size;
-          const totalConsultations = activeAppointments.length;
+          const totalPatients = new Set(allMatchingApts.map((apt: any) => apt.patientId)).size;
+          const totalConsultations = allMatchingApts.length;
 
           setProfileData(prev => prev ? {
             ...prev,
