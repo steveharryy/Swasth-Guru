@@ -117,6 +117,12 @@ export default function PatientConsultationPage() {
       setAppointment(currentApt);
       const status = getAppointmentTimeStatus(currentApt.date, currentApt.time);
       setTimeStatus(status);
+
+      // Hackathon Demo: Always initialize camera and READY for incoming calls
+      if (!localStreamRef.current) {
+        console.log('Auto-initializing patient camera for demo...');
+        initializeCamera();
+      }
     };
 
     loadAppointment();
@@ -228,7 +234,7 @@ export default function PatientConsultationPage() {
     return () => clearInterval(interval);
   }, [isCallActive]);
 
-  const startCall = async () => {
+  const initializeCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
@@ -236,18 +242,21 @@ export default function PatientConsultationPage() {
       });
 
       setLocalStream(stream);
-
+      
+      // Auto-prep peer connection on patient side (Ready to receive offer)
       createPeerConnection(stream, setRemoteStream, (candidate) => {
         socket.emit('ice-candidate', { roomId: appointmentId, candidate });
       });
-
-      socket.emit('start-video-session', appointmentId);
       setIsCallActive(true);
-      showNotification('Waiting for doctor to join...', 'info');
     } catch (err) {
-      console.error('Error starting call:', err);
+      console.error('Error auto-starting camera:', err);
       showNotification('Could not access camera/mic', 'error');
     }
+  };
+
+  const startCall = async () => {
+    if (localStream) return;
+    await initializeCamera();
   };
 
   const handleToggleVideo = () => {

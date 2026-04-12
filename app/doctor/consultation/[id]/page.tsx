@@ -129,8 +129,9 @@ export default function DoctorConsultationPage() {
       const status = getAppointmentTimeStatus(currentApt.date, currentApt.time);
       setTimeStatus(status);
 
-      // Hackathon Demo: Always initialize camera
+      // Hackathon Demo: Always initialize camera and READY for calls
       if (!mediaStreamRef.current) {
+        console.log('Auto-initializing camera for demo...');
         initializeCamera();
       }
     };
@@ -148,6 +149,12 @@ export default function DoctorConsultationPage() {
 
         const stream = await startCamera(localVideoRef.current);
         setMediaStream(stream);
+        
+        // Auto-prep peer connection on doctor side
+        createPeerConnection(stream, setRemoteStream, (candidate) => {
+          socket.emit('ice-candidate', { roomId: appointmentId, candidate });
+        });
+        setIsCallActive(true);
       } catch (error) {
         setCameraError('Unable to access camera.');
         console.error('Camera initialization error:', error);
