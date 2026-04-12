@@ -58,13 +58,11 @@ export function getAppointmentTimeStatus(dateStr: string, timeStr: string): 'ear
 }
 
 export function getApiUrl() {
-  // For Hackathon Demo: Always prioritize the cloud backend to ensure data consistency
-  const cloudUrl = 'https://swasth-guru-backend.onrender.com/api';
-  return process.env.NEXT_PUBLIC_API_URL || cloudUrl;
+  // FORCE Cloud for Demo: This ensures localhost and Vercel use the same DB
+  return 'https://swasth-guru-backend.onrender.com/api';
 }
 
 export function getSocketUrl() {
-  // For Hackathon Demo: Always prioritize the cloud socket server
-  const cloudUrl = 'https://swasth-guru-backend.onrender.com';
-  return process.env.NEXT_PUBLIC_SOCKET_URL || cloudUrl;
+  // FORCE Cloud for Demo: This ensures video calls connect globally
+  return 'https://swasth-guru-backend.onrender.com';
 }
