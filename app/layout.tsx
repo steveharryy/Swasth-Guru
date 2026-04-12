@@ -41,7 +41,6 @@ export default function RootLayout({
         <body className={cn(inter.className, 'antialiased min-h-screen')}>
           <Providers>
             {children}
-            <ChatWidget />
           </Providers>
         </body>
       </html>

@@ -7,6 +7,7 @@ import { useUser, UserButton } from '@clerk/nextjs';
 import { useLanguage } from '@/contexts/language-context';
 import { MedicineTracker } from '@/components/medicine-tracker';
 import { DhanvantariDrishti } from '@/components/dhanvantari-drishti';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 import { Button } from '@/components/ui/button';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -768,8 +769,7 @@ export default function PatientDashboard() {
           </div>
         </div>
       </nav>
-
-
-    </div >
+      <ChatWidget />
+    </div>
   );
 }
