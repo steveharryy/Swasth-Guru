@@ -365,151 +365,108 @@ const SYMPTOM_SPECIALIZATION_MAP: Record<string, string[]> = {
 export const getAvailableDoctors = async (language: string, symptoms?: string[]) => {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
-    let apiDoctors: Doctor[] = [];
+    const dhanvantriUrl = process.env.NEXT_PUBLIC_DHANVANTRI_API_URL || 'http://localhost:8000';
+    
+    // Trigger API fetch and LLM analysis in PARALLEL to save time
+    const [apiResponse, llmResponse] = await Promise.allSettled([
+      // Fetch DB Doctors
+      (async () => {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 3000); // 3s timeout for DB
+        try {
+          const res = await fetch(`${apiUrl}/doctors`, { signal: controller.signal });
+          clearTimeout(tid);
+          return res.ok ? await res.json() : [];
+        } catch (e) {
+          return [];
+        }
+      })(),
+      // Fetch LLM Matching
+      (async () => {
+        if (!symptoms || symptoms.length === 0) return null;
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 2000); // 2s strict timeout for AI
+        try {
+          const res = await fetch(`${dhanvantriUrl}/doctor-match`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ symptoms }),
+             signal: controller.signal
+          });
+          clearTimeout(tid);
+          return res.ok ? await res.json() : null;
+        } catch (e) {
+          return null;
+        }
+      })()
+    ]);
 
-    try {
-      console.log("Fetching doctors from API...");
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+    const rawApiDoctors = apiResponse.status === 'fulfilled' ? apiResponse.value : [];
+    const llmMatch = llmResponse.status === 'fulfilled' ? llmResponse.value : null;
 
-      const res = await fetch(`${apiUrl}/doctors`, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const rawDoctors = await res.json();
-        console.log(`Successfully fetched ${rawDoctors.length} doctors from API`, rawDoctors);
-        apiDoctors = rawDoctors.map((d: any) => ({
-          ...d,
-          clerkId: d.clerk_id || d.clerkId || d.id?.toString(),
-          consultationFee: d.consultation_fee || d.consultationFee || 500,
-          availableSlots: Array.isArray(d.available_slots) ? d.available_slots : (d.availableSlots || ["09:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"]),
-          specialties: Array.isArray(d.specialties) ? d.specialties : (d.specialties ? [d.specialties] : []),
-          availability: d.availability ?? true,
-          rating: d.rating || 5.0, // High rating to show at top for testing
-          experience: d.experience || "Medical Specialist",
-          qualifications: d.qualifications || "Verified Doctor",
-          isLive: true // Flag to show 'Live' badge
-        }));
-      } else {
-        console.warn(`API returned status ${res.status}`);
-      }
-    } catch (e: any) {
-      if (e.name === 'AbortError') {
-        console.error("API fetch timed out after 5s");
-      } else {
-        console.error("Failed to fetch API doctors:", e);
-      }
-    }
+    const apiDoctors = rawApiDoctors.map((d: any) => ({
+      ...d,
+      clerkId: d.clerk_id || d.clerkId || d.id?.toString(),
+      consultationFee: d.consultation_fee || d.consultationFee || 11,
+      availableSlots: Array.isArray(d.available_slots) ? d.available_slots : (d.availableSlots || ["09:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"]),
+      specialties: Array.isArray(d.specialties) ? d.specialties : (d.specialties ? [d.specialties] : []),
+      availability: d.availability ?? true,
+      rating: d.rating || 5.0,
+      experience: d.experience || "Medical Specialist",
+      qualifications: d.qualifications || "Verified Doctor",
+      isLive: true
+    }));
 
     // Merge static and API doctors
     const allDoctorsMap = new Map();
-
-    // Load static first
     doctorsData.forEach(d => {
       const key = d.clerkId || d.id.toString();
       allDoctorsMap.set(key, { ...d, isLive: false });
     });
-
-    // Overwrite/Add API data
-    apiDoctors.forEach(d => {
+    apiDoctors.forEach((d: Doctor) => {
       const key = d.clerkId || d.id.toString();
       allDoctorsMap.set(key, d);
     });
 
-    // Merge Demo Mode localStorage Doctors (if any)
-    if (typeof window !== 'undefined') {
-      try {
-        const localDoctors = JSON.parse(localStorage.getItem('registeredDoctors') || '[]');
-        localDoctors.forEach((d: any) => {
-          const key = d.clerkId || d.id.toString();
-          // Merge with static data if exists, otherwise save as new
-          if (allDoctorsMap.has(key)) {
-             allDoctorsMap.set(key, { ...allDoctorsMap.get(key), ...d });
-          } else {
-             allDoctorsMap.set(key, d);
-          }
-        });
-      } catch(e) {
-        // Ignore
-      }
-    }
-
-    const allDoctors = Array.from(allDoctorsMap.values());
-
-    // Filter by availability
+    const allDoctors = Array.from(allDoctorsMap.values()) as Doctor[];
     let filtered = allDoctors.filter(doctor => doctor.availability !== false);
 
-    if (symptoms && symptoms.length > 0) {
-      // 1. Try LLM matching via Python Backend (Dhanvantri Core)
-      try {
-        const dhanvantriUrl = process.env.NEXT_PUBLIC_DHANVANTRI_API_URL || 'http://localhost:8000';
-        console.log("Attempting LLM matching at:", dhanvantriUrl);
-        
-        const llmRes = await fetch(`${dhanvantriUrl}/doctor-match`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ symptoms })
-        });
-        
-        if (llmRes.ok) {
-           const { specialist_needed } = await llmRes.json();
-           console.log("LLM Analysis Result:", specialist_needed);
-           
-           // If LLM identifies a specific specialization, filter by it
-           if (specialist_needed && specialist_needed !== "General Physician") {
-             const llmFiltered = filtered.filter(doctor =>
-               doctor.specialization.toLowerCase().includes(specialist_needed.toLowerCase()) ||
-               specialist_needed.toLowerCase().includes(doctor.specialization.toLowerCase())
-             );
-             
-             // If we found doctors with the LLM recommended specialization, return them
-             if (llmFiltered.length > 0) {
-               return llmFiltered.sort((a, b) => b.rating - a.rating);
-             }
-           }
-        }
-      } catch (e) {
-        console.warn("LLM Matching unavailable, using static mapping fallback:", e);
-      }
+    if (llmMatch?.specialist_needed && llmMatch.specialist_needed !== "General Physician") {
+      const specialistNeeded = llmMatch.specialist_needed.toLowerCase();
+      const llmFiltered = filtered.filter(doctor =>
+        doctor.specialization.toLowerCase().includes(specialistNeeded) ||
+        specialistNeeded.includes(doctor.specialization.toLowerCase())
+      );
+      if (llmFiltered.length > 0) return llmFiltered.sort((a, b) => b.rating - a.rating);
+    }
 
-      // 2. Fallback to static mapping logic
+    // Fallback to static mapping logic if AI fails or no AI match
+    if (symptoms && symptoms.length > 0) {
       filtered = filtered.filter(doctor =>
         symptoms.some(symptom => {
           const lowerSymptom = symptom.toLowerCase();
-
-          // 1. Check strict specialties array match
           const hasSpecialty = doctor.specialties && doctor.specialties.some((specialty: string) =>
-            specialty.toLowerCase().includes(lowerSymptom) ||
-            lowerSymptom.includes(specialty.toLowerCase())
+            specialty.toLowerCase().includes(lowerSymptom) || lowerSymptom.includes(specialty.toLowerCase())
           );
-
           if (hasSpecialty) return true;
 
-          // 2. Check strict specialization string match
           const hasSpecialization = doctor.specialization && (
             doctor.specialization.toLowerCase().includes(lowerSymptom) ||
             lowerSymptom.includes(doctor.specialization.toLowerCase())
           );
-
           if (hasSpecialization) return true;
 
-          // 3. Smart Match: Check mapped specializations
           const mappedTargetSpecs = Object.entries(SYMPTOM_SPECIALIZATION_MAP).find(([key, val]) =>
             lowerSymptom.includes(key) || key.includes(lowerSymptom)
           )?.[1];
 
-          if (mappedTargetSpecs) {
-            return mappedTargetSpecs.some(targetSpec =>
-              doctor.specialization.toLowerCase().includes(targetSpec.toLowerCase()) ||
-              targetSpec.toLowerCase().includes(doctor.specialization.toLowerCase())
-            );
-          }
-
-          return false;
+          return mappedTargetSpecs?.some(targetSpec =>
+            doctor.specialization.toLowerCase().includes(targetSpec.toLowerCase()) ||
+            targetSpec.toLowerCase().includes(doctor.specialization.toLowerCase())
+          );
         })
       );
     }
-
 
     return filtered.sort((a, b) => b.rating - a.rating);
   } catch (error) {

@@ -82,7 +82,7 @@ export default function DoctorDashboard() {
     
     if (localApts) {
        const storedAppointments = JSON.parse(localApts).filter((apt: any) =>
-          apt.doctorId === user.id
+          apt.doctorId === user.id && apt.status !== 'pending_payment'
         );
         const today = new Date().toISOString().split('T')[0];
         const activeAppointments = storedAppointments.filter((apt: any) => apt.status !== 'cancelled');
@@ -147,9 +147,10 @@ export default function DoctorDashboard() {
               time: apt.time
             }));
           } else {
-            doctorAppointments = storedAppointments.filter((apt: any) =>
-              apt.doctorId === user.id || 
-              (remoteProfile?.id && apt.doctorId?.toString() === remoteProfile?.id.toString())
+            const allAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+            doctorAppointments = allAppointments.filter((apt: any) => 
+              (apt.doctor_id === user.id || apt.doctorId === user.id) &&
+              apt.status !== 'pending_payment'
             );
           }
 

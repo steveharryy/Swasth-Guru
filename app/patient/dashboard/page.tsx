@@ -113,7 +113,7 @@ export default function PatientDashboard() {
     
     if (localApts) {
       const storedAppointments = JSON.parse(localApts).filter((apt: any) =>
-        apt.patientId === user.id || (apt.patient_id === user.id)
+        (apt.patientId === user.id || (apt.patient_id === user.id)) && apt.status !== 'pending_payment'
       );
       const today = new Date().toISOString().split('T')[0];
       const upcoming = storedAppointments.filter((apt: any) => {
@@ -242,8 +242,9 @@ export default function PatientDashboard() {
         } else {
           // Fallback to localStorage
           const storedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-          const userAppointments = storedAppointments.filter((apt: any) =>
-            apt.patientId === user.id || (apt.patient_id === user.id)
+          const userAppointments = storedAppointments.filter((apt: any) => 
+            (apt.patient_id === user.id || apt.patientId === user.id) &&
+            apt.status !== 'pending_payment'
           );
           const today = new Date().toISOString().split('T')[0];
           const upcoming = userAppointments.filter((apt: any) => {

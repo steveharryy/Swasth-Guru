@@ -209,7 +209,7 @@ export default function BookAppointmentPage() {
       date: selectedDate,
       time: selectedTime,
       type: consultationType,
-      status: 'confirmed' as const,
+      status: 'pending_payment' as const,
       symptoms: selectedSymptoms,
       consultationFee: selectedDoctor.consultationFee,
       additionalNotes,
