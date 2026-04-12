@@ -276,7 +276,7 @@ export default function PatientConsultationPage() {
 
   const handleEndCall = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

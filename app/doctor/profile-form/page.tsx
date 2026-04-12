@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Stethoscope, Award, IndianRupee, Upload, Loader2, CheckCircle, FileText } from 'lucide-react';
 import { MEDICAL_SPECIALIZATIONS } from '@/lib/specializations';
-import { cn } from '@/lib/utils';
+import { cn , getApiUrl } from '@/lib/utils';
 
 export default function DoctorProfileForm() {
   const router = useRouter();
@@ -100,7 +100,7 @@ export default function DoctorProfileForm() {
     };
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/users`, {
         method: 'POST',
         headers: {
@@ -145,7 +145,7 @@ export default function DoctorProfileForm() {
       });
 
       const fileBase64 = await base64Promise;
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
 
       const res = await fetch(`${apiUrl}/doctors/upload-proof`, {
         method: 'POST',

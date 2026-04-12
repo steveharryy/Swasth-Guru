@@ -21,7 +21,7 @@ import {
   Search
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { getAppointmentTimeStatus, cn } from '@/lib/utils';
+import { getAppointmentTimeStatus, cn , getApiUrl } from '@/lib/utils';
 
 interface Appointment {
   id: string;
@@ -56,7 +56,7 @@ export default function DoctorAppointmentsPage() {
 
   const fetchDoctorAppointments = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
 
       // First get numeric doctor ID
       let numericId: number | null = null;
@@ -196,7 +196,7 @@ export default function DoctorAppointmentsPage() {
 
   const handleUpdateStatus = async (appointmentId: string, status: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

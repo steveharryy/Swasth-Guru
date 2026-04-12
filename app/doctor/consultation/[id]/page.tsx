@@ -42,7 +42,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getAppointmentTimeStatus, cn } from '@/lib/utils';
+import { getAppointmentTimeStatus, cn, getApiUrl } from '@/lib/utils';
 
 export default function DoctorConsultationPage() {
   const router = useRouter();
@@ -100,7 +100,7 @@ export default function DoctorConsultationPage() {
 
       if (!currentApt) {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+          const apiUrl = getApiUrl();
           const res = await fetch(`${apiUrl}/appointments/${appointmentId}`);
           if (res.ok) {
             const data = await res.json();
@@ -304,7 +304,7 @@ export default function DoctorConsultationPage() {
 
   const handleEndCall = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

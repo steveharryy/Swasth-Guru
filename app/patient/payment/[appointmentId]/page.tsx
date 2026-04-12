@@ -1,5 +1,7 @@
 'use client';
 
+import { getApiUrl } from '@/lib/utils';
+
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
@@ -124,7 +126,7 @@ export default function PaymentPage() {
 
     try {
       // Sync with backend (Supabase)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/appointments/${appointment.id}`, {
         method: 'PATCH',
         headers: {

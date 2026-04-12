@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/utils';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -43,7 +44,7 @@ export default function PatientProfileForm() {
       // Fetch from API
       const fetchProfile = async () => {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+          const apiUrl = getApiUrl();
           const response = await fetch(`${apiUrl}/users/patient/${user?.id}`);
 
           if (response.ok) {
@@ -107,7 +108,7 @@ export default function PatientProfileForm() {
     setIsSubmitting(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/users`, {
         method: 'POST',
         headers: {

@@ -33,7 +33,7 @@ import {
   AlertCircle,
   Pill
 } from 'lucide-react';
-import { getAppointmentTimeStatus, cn } from '@/lib/utils';
+import { getAppointmentTimeStatus, cn , getApiUrl } from '@/lib/utils';
 interface Appointment {
   id: string;
   patientId: string;  // 🔹 Add this
@@ -132,7 +132,7 @@ export default function PatientDashboard() {
     // Fetch profile from Backend (Supabase)
     const fetchProfile = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+        const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/users/patient/${user.id}`);
         if (res.ok) {
           const remoteProfile = await res.json();
@@ -183,7 +183,7 @@ export default function PatientDashboard() {
     // Load appointments from Backend (Supabase)
     const fetchAppointments = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+        const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/appointments/patient/${user.id}`);
         if (res.ok) {
           const remoteAppointments = await res.json();
@@ -268,7 +268,7 @@ export default function PatientDashboard() {
     // Load medical records from Backend (Supabase)
     const fetchRecords = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+        const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/records/${user.id}`);
         if (res.ok) {
           const records = await res.json();
@@ -289,7 +289,7 @@ export default function PatientDashboard() {
     // Fetch doctors
     const fetchDoctors = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+        const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/doctors`);
         if (res.ok) {
           const data = await res.json();

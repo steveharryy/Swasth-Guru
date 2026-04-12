@@ -1,3 +1,4 @@
+import { getApiUrl } from '@/lib/utils';
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -83,7 +84,7 @@ export default function PatientRecordsPage() {
     if (!user) return;
     setIsLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/records/${user.id}`);
       if (res.ok) {
         const data = await res.json();
@@ -126,7 +127,7 @@ export default function PatientRecordsPage() {
       });
 
       const fileBase64 = await base64Promise;
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
 
       const res = await fetch(`${apiUrl}/records`, {
         method: 'POST',
@@ -170,7 +171,7 @@ export default function PatientRecordsPage() {
     if (!confirm('Are you sure you want to delete this record?')) return;
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/records/${id}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Record deleted');

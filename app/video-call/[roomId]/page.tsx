@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAppointmentTimeStatus } from '@/lib/utils';
+import { getAppointmentTimeStatus, getApiUrl } from '@/lib/utils';
 
 export default function VideoCallPage() {
     const params = useParams();
@@ -51,7 +51,7 @@ export default function VideoCallPage() {
 
             if (!currentApt) {
                 try {
-                    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                    const apiUrl = getApiUrl();
                     const res = await fetch(`${apiUrl}/appointments/${roomId}`);
                     if (res.ok) {
                         currentApt = await res.json();
