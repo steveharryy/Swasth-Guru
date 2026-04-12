@@ -499,9 +499,7 @@ export default function DoctorDashboard() {
                     </div>
                   </div>
                 </div>
-                  )}>
-                    {appointment.status.toUpperCase()}
-                  </Badge>
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                   {(appointment.status === 'upcoming' || appointment.status === 'confirmed') && (
                     <>
                       <Button
