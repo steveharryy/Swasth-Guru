@@ -79,7 +79,7 @@ router.post('/', async (req, res) => {
                     available_slots: slots,
                     experience: otherData.experience,
                     qualifications: otherData.qualifications,
-                    consultation_fee: isNaN(fee as number) ? 500 : fee,
+                    consultation_fee: isNaN(fee as number) ? 11 : fee,
                     about: otherData.about || otherData.bio,
                     license_number: otherData.licenseNumber,
                     languages: otherData.languages || ['English', 'Hindi'],

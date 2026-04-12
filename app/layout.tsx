@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { Providers } from '@/components/providers';
-import { PWAInstaller } from '@/components/pwa-installer';
 import { ClerkProvider } from '@clerk/nextjs';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -41,7 +40,6 @@ export default function RootLayout({
         <body className={cn(inter.className, 'antialiased min-h-screen')}>
           <Providers>
             {children}
-            <PWAInstaller />
           </Providers>
         </body>
       </html>

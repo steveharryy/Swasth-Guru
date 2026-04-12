@@ -199,9 +199,12 @@ export default function DoctorConsultationPage() {
     });
 
     socket.on('chat-message', (data: any) => {
-      console.log('Received chat message:', data);
+      console.log('Received chat message from patient:', data);
       setChatMessages(prev => [...prev, data.message]);
     });
+
+    // Auto-join room for chat availability on mount
+    socket.emit('join-room', appointmentId, user?.id);
 
     socket.on('call-ended', () => {
       console.log('Call ended by remote user');
@@ -267,7 +270,7 @@ export default function DoctorConsultationPage() {
         socket.emit('ice-candidate', { roomId: appointmentId, candidate });
       });
 
-      socket.emit('join-room', appointmentId, user?.id);
+      socket.emit('start-video-session', appointmentId);
       setIsCallActive(true);
       showNotification('Waiting for patient to join...', 'info');
     } catch (err) {

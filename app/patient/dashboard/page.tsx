@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useUser, UserButton } from '@clerk/nextjs';
 import { useLanguage } from '@/contexts/language-context';
 import { MedicineTracker } from '@/components/medicine-tracker';
@@ -102,9 +103,29 @@ export default function PatientDashboard() {
       return;
     }
 
-    if (!user.unsafeMetadata?.onboardingComplete) {
-      router.push('/onboarding');
-      return;
+    // Cache-First: Load from localStorage immediately for instant UI
+    const localProfile = localStorage.getItem(`patient_profile_${user.id}`);
+    const localApts = localStorage.getItem('appointments');
+    
+    if (localProfile) {
+      setProfileData(JSON.parse(localProfile));
+    }
+    
+    if (localApts) {
+      const storedAppointments = JSON.parse(localApts).filter((apt: any) =>
+        apt.patientId === user.id || (apt.patient_id === user.id)
+      );
+      const today = new Date().toISOString().split('T')[0];
+      const upcoming = storedAppointments.filter((apt: any) => {
+        const isHackathon = apt.date === 'hackathon' || apt.doctorName?.toLowerCase().includes("gajraj pandey");
+        return isHackathon || (['upcoming', 'confirmed', 'pending'].includes(apt.status?.toLowerCase()) && apt.date >= today);
+      });
+      setUpcomingAppointments(upcoming.slice(0, 3));
+      setStatsData(prev => ({
+        ...prev,
+        upcomingCount: upcoming.length.toString(),
+        totalConsultations: storedAppointments.length.toString()
+      }));
     }
 
     // Fetch profile from Backend (Supabase)
@@ -329,8 +350,9 @@ export default function PatientDashboard() {
             <p className="text-lg font-bold text-slate-400">{formattedDate}</p>
             <div className="inline-flex items-center px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest mt-4 border border-emerald-100">
               <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
-              All systems online
+              Secure & Encrypted
             </div>
+
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
@@ -706,37 +728,42 @@ export default function PatientDashboard() {
       <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-slate-100 h-20 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <div className="container mx-auto px-10 h-full max-w-5xl">
           <div className="flex justify-around items-center h-full">
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-primary gap-1 px-4 group active:bg-primary/5 rounded-none"
-            >
-              <Home className="w-6 h-6 transition-none group-active:scale-90" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
-              onClick={() => router.push('/patient/appointments')}
-            >
-              <CalendarDays className="w-6 h-6 transition-none group-active:scale-90" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Dates</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
-              onClick={() => router.push('/patient/records')}
-            >
-              <FileText className="w-6 h-6 transition-none group-active:scale-90" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Files</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
-              onClick={() => router.push('/patient/profile')}
-            >
-              <User className="w-6 h-6 transition-none group-active:scale-90" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Me</span>
-            </Button>
+            <Link href="/patient/dashboard" className="flex-1">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center justify-center h-full w-full text-primary gap-1 px-4 group active:bg-primary/5 rounded-none"
+              >
+                <Home className="w-6 h-6 transition-none group-active:scale-90" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
+              </Button>
+            </Link>
+            <Link href="/patient/appointments" className="flex-1">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+              >
+                <CalendarDays className="w-6 h-6 transition-none group-active:scale-90" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Dates</span>
+              </Button>
+            </Link>
+            <Link href="/patient/records" className="flex-1">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+              >
+                <FileText className="w-6 h-6 transition-none group-active:scale-90" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Files</span>
+              </Button>
+            </Link>
+            <Link href="/patient/profile" className="flex-1">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+              >
+                <User className="w-6 h-6 transition-none group-active:scale-90" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Me</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>

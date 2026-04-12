@@ -190,7 +190,7 @@ export function WelcomeScreen() {
                 size="lg"
                 className="glowing-button w-full h-20 text-2xl font-black rounded-[2rem] group"
               >
-                Access Protocol
+                Get Started
                 <ChevronRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </Button>
             </SignUpButton>
@@ -201,17 +201,17 @@ export function WelcomeScreen() {
               className="glowing-button w-full h-20 text-2xl font-black rounded-[2rem]"
               onClick={() => router.push('/onboarding')}
             >
-              Resume Session →
+              Continue to Dashboard →
             </Button>
           </SignedIn>
           <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em] animate-pulse">
-            Neural Care Node Active
+            24/7 AI Healthcare Active
           </p>
 
         </div>
 
         <div className="text-center text-[10px] text-slate-200 font-black pt-12 uppercase tracking-[0.4em]">
-          SWG &bull; CLUSTER &bull; 2026
+          SwasthGuru Health &bull; 2026
         </div>
 
       </motion.div>

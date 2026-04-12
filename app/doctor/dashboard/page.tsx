@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useUser, UserButton } from '@clerk/nextjs';
 import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
@@ -69,6 +70,29 @@ export default function DoctorDashboard() {
     if (!user.unsafeMetadata?.onboardingComplete) {
       router.push('/onboarding');
       return;
+    }
+
+    // Cache-First: Load from localStorage immediately for instant UI
+    const localProfile = localStorage.getItem(`doctor_profile_${user.id}`);
+    const localApts = localStorage.getItem('appointments');
+    
+    if (localProfile) {
+      setProfileData(JSON.parse(localProfile));
+    }
+    
+    if (localApts) {
+       const storedAppointments = JSON.parse(localApts).filter((apt: any) =>
+          apt.doctorId === user.id
+        );
+        const today = new Date().toISOString().split('T')[0];
+        const activeAppointments = storedAppointments.filter((apt: any) => apt.status !== 'cancelled');
+        const todayApts = activeAppointments.filter((apt: any) => {
+          if (apt.date === 'hackathon') return true;
+          return apt.date === today && apt.status !== 'completed';
+        });
+
+        setRecentAppointments(storedAppointments.slice(0, 5));
+        setTodayAppointments(todayApts);
     }
 
     // Fallback to local storage for demo purposes if metadata isn't fully robust yet
@@ -494,7 +518,7 @@ export default function DoctorDashboard() {
                           className="h-14 px-6 text-xs font-black rounded-2xl border-2 border-slate-100 text-slate-400 hover:border-emerald-500/30 hover:text-emerald-500 hover:bg-emerald-50/50"
                           onClick={() => handleUpdateStatus(appointment.id, 'completed')}
                         >
-                          Complete Path
+                          Complete Consultation
                         </Button>
                       </>
                     )}
@@ -573,37 +597,42 @@ export default function DoctorDashboard() {
       <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-slate-100 h-20 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <div className="container mx-auto px-10 h-full max-w-5xl">
           <div className="flex justify-around items-center h-full">
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-primary gap-1 px-4 group active:bg-primary/5 rounded-none"
-            >
-              <Home className="w-6 h-6 transition-none group-active:scale-90" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
-              onClick={() => router.push('/doctor/appointments')}
-            >
-              <CalendarDays className="w-6 h-6 transition-none group-active:scale-90" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Visits</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
-              onClick={() => router.push('/doctor/patients')}
-            >
-              <Users className="w-6 h-6 transition-none group-active:scale-90" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Patients</span>
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center justify-center h-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
-              onClick={() => router.push('/doctor/profile')}
-            >
-              <User className="w-6 h-6 transition-none group-active:scale-90" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Me</span>
-            </Button>
+            <Link href="/doctor/dashboard" className="flex-1">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center justify-center h-full w-full text-primary gap-1 px-4 group active:bg-primary/5 rounded-none"
+              >
+                <Home className="w-6 h-6 transition-none group-active:scale-90" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
+              </Button>
+            </Link>
+            <Link href="/doctor/appointments" className="flex-1">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+              >
+                <CalendarDays className="w-6 h-6 transition-none group-active:scale-90" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Visits</span>
+              </Button>
+            </Link>
+            <Link href="/doctor/patients" className="flex-1">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+              >
+                <Users className="w-6 h-6 transition-none group-active:scale-90" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Patients</span>
+              </Button>
+            </Link>
+            <Link href="/doctor/profile" className="flex-1">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+              >
+                <User className="w-6 h-6 transition-none group-active:scale-90" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Me</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>

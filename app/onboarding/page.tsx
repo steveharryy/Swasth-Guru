@@ -39,7 +39,7 @@ export default function OnboardingPage() {
         medicalCouncil: "",
         licenseNumber: "",
         qualifications: "",
-        consultationFee: "",
+        consultationFee: "11",
         bio: "",
         address: "",
         bloodGroup: "",
@@ -100,12 +100,15 @@ export default function OnboardingPage() {
         setIsVerifying(true);
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const validFormats = ["DMC-25578", "MMC-80546", "NMC-10928", "NMC-10925"];
         const enteredLicense = formData.licenseNumber.trim().toUpperCase();
+        const demoIds = ["DMC-25578", "MMC-80546", "NMC-10928", "NMC-10925"];
+        
+        // Match standard medical license formats (Prefix-Numbers)
+        const isValidFormat = /^[A-Z]{2,3}-\d{4,8}$/.test(enteredLicense);
 
-        if (!validFormats.includes(enteredLicense)) {
+        if (!demoIds.includes(enteredLicense) && !isValidFormat) {
             setIsVerifying(false);
-            toast.error("❌ License not found in National Medical Registry.");
+            toast.error("❌ Invalid format. Use (Council-ID) e.g., NMC-12345");
             return;
         }
 
@@ -192,7 +195,7 @@ export default function OnboardingPage() {
                         Profile Setup
                     </h1>
                     <p className="text-lg font-bold text-slate-400">
-                        Initializing your healthcare node
+                        Complete your medical profile to get started
                     </p>
                 </div>
 
@@ -200,8 +203,8 @@ export default function OnboardingPage() {
                 <div className="bg-white/80 backdrop-blur-3xl border border-slate-100 shadow-[0_30px_60px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-12 relative overflow-hidden w-full max-w-4xl">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-8 mb-16 border-b border-slate-50 pb-10">
                         <div className="space-y-2 text-center sm:text-left">
-                            <h3 className="text-4xl font-black text-slate-900 tracking-tight">Identity Specification</h3>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Establish Your Role</p>
+                            <h3 className="text-4xl font-black text-slate-900 tracking-tight">Select your role</h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Establish Your Identity</p>
                         </div>
                         <Button
                             variant="ghost"
@@ -209,7 +212,7 @@ export default function OnboardingPage() {
                             className="h-12 px-8 text-[10px] font-black text-rose-500 hover:bg-rose-50 rounded-2xl transition-all uppercase tracking-widest border border-rose-100"
                             onClick={() => window.location.reload()}
                         >
-                            <X className="w-4 h-4 mr-2" /> Reset Session
+                            <X className="w-4 h-4 mr-2" /> Reset selection
                         </Button>
                     </div>
 
@@ -295,7 +298,7 @@ export default function OnboardingPage() {
                                         />
                                     </div>
                                     <div className="space-y-4">
-                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Age Entity</Label>
+                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Age</Label>
                                         <Input
                                             name="age"
                                             type="number"
@@ -309,7 +312,7 @@ export default function OnboardingPage() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Gender Classification</Label>
+                                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Gender</Label>
                                     <Select onValueChange={(val) => handleSelectChange("gender", val)} required>
                                         <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all">
                                             <SelectValue placeholder="Select Gender" />
@@ -322,18 +325,88 @@ export default function OnboardingPage() {
                                     </Select>
                                 </div>
 
+                                {role === "patient" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Blood Group</Label>
+                                            <Select onValueChange={(val) => handleSelectChange("bloodGroup", val)} required>
+                                                <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900">
+                                                    <SelectValue placeholder="Group" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white border-slate-100">
+                                                    {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
+                                                        <SelectItem key={bg} value={bg} className="font-black py-3">{bg}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Weight (kg)</Label>
+                                            <Input
+                                                name="weight"
+                                                type="number"
+                                                placeholder="e.g. 70"
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                value={formData.weight}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Height (cm)</Label>
+                                            <Input
+                                                name="height"
+                                                type="number"
+                                                placeholder="e.g. 170"
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                value={formData.height}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Emergency Contact</Label>
+                                            <Input
+                                                name="emergencyContact"
+                                                placeholder="+91 XXXXX XXXXX"
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                value={formData.emergencyContact}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                        <div className="space-y-4 md:col-span-2">
+                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Allergies</Label>
+                                            <Input
+                                                name="allergies"
+                                                placeholder="Any allergies? (e.g. Penicillin, Peanuts)"
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                value={formData.allergies}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                        <div className="space-y-4 md:col-span-2">
+                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Current Medications</Label>
+                                            <Input
+                                                name="currentMedications"
+                                                placeholder="Any existing medications?"
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                value={formData.currentMedications}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
 
                                 {role === "doctor" && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
                                         <div className="space-y-3">
-                                            <Label className="text-xs font-black text-white/40 uppercase tracking-wider ml-2">Specialization Field</Label>
+                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Medical Specialization</Label>
                                             <Select onValueChange={(val) => handleSelectChange("specialization", val)} required>
-                                                <SelectTrigger className="h-14 px-6 text-md font-bold rounded-2xl bg-white/5 border-white/10 focus:border-primary text-white transition-all">
+                                                <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all">
                                                     <SelectValue placeholder="Select Specialization" />
                                                 </SelectTrigger>
-                                                <SelectContent className="rounded-2xl border-white/10 bg-[#030712]/95 backdrop-blur-xl shadow-2xl max-h-[300px]">
+                                                <SelectContent className="rounded-2xl border-slate-100 bg-white shadow-2xl max-h-[300px]">
                                                     {MEDICAL_SPECIALIZATIONS.map((spec) => (
-                                                        <SelectItem key={spec.id} value={spec.name} className="font-bold py-4">
+                                                        <SelectItem key={spec.id} value={spec.name} className="font-black py-4">
                                                             {spec.name}
                                                         </SelectItem>
                                                     ))}
@@ -341,24 +414,24 @@ export default function OnboardingPage() {
                                             </Select>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-primary/5 p-8 rounded-[2rem] border border-primary/20 relative overflow-hidden group">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-blue-50/50 p-10 rounded-[2.5rem] border border-blue-100 relative overflow-hidden group shadow-inner">
                                             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                               <ShieldCheck className="w-20 h-20 text-primary" />
+                                               <ShieldCheck className="w-20 h-20 text-blue-600" />
                                             </div>
                                             <div className="col-span-full mb-4">
-                                                <h4 className="text-sm font-black text-primary flex items-center gap-3">
+                                                <h4 className="text-sm font-black text-blue-600 flex items-center gap-3">
                                                     <ShieldCheck className="w-5 h-5" />
-                                                    Credential Matrix Verification
+                                                    Professional Verification
                                                 </h4>
                                             </div>
                                             
                                             <div className="space-y-3">
-                                                <Label className="text-xs font-black text-white/40 uppercase tracking-wider">Medical Council</Label>
+                                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Medical Council</Label>
                                                 <Select onValueChange={(val) => handleSelectChange("medicalCouncil", val)} required disabled={isVerified}>
-                                                    <SelectTrigger className="h-14 px-4 font-bold rounded-xl bg-slate-950/50 border-white/10">
+                                                    <SelectTrigger className="h-14 px-6 font-black rounded-xl bg-white border-slate-100 text-slate-900">
                                                         <SelectValue placeholder="Select Council" />
                                                     </SelectTrigger>
-                                                    <SelectContent>
+                                                    <SelectContent className="bg-white border-slate-100 font-bold">
                                                         <SelectItem value="Delhi Medical Council">Delhi Medical Council</SelectItem>
                                                         <SelectItem value="Maharashtra Medical Council">Maharashtra Medical Council</SelectItem>
                                                         <SelectItem value="Other State Council">Other State Council</SelectItem>
@@ -367,7 +440,7 @@ export default function OnboardingPage() {
                                             </div>
 
                                             <div className="space-y-3">
-                                                <Label className="text-xs font-black text-white/40 uppercase tracking-wider">License ID</Label>
+                                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">License ID</Label>
                                                 <div className="flex gap-3">
                                                     <Input
                                                         id="licenseNumber"
@@ -375,7 +448,7 @@ export default function OnboardingPage() {
                                                         placeholder="NMC-XXXX"
                                                         required
                                                         disabled={isVerified}
-                                                        className="h-14 bg-slate-950/50 border-white/10 rounded-xl"
+                                                        className="h-14 bg-white border-slate-100 rounded-xl text-slate-900 font-black px-6"
                                                         value={formData.licenseNumber}
                                                         onChange={handleInputChange}
                                                     />
@@ -405,7 +478,7 @@ export default function OnboardingPage() {
                                     {isSubmitting ? (
                                         <div className="flex items-center gap-6">
                                             <Loader2 className="h-10 w-10 animate-spin" />
-                                            <span>Syncing...</span>
+                                            <span>Saving Profile...</span>
                                         </div>
                                     ) : (
                                         <>
@@ -422,9 +495,10 @@ export default function OnboardingPage() {
             </motion.div>
             
             <div className="text-center text-[10px] text-slate-200 font-black py-10 uppercase tracking-[0.5em] relative z-10">
-                SwasthGuru Core Ecosystem &bull; 2026
+                SwasthGuru &bull; 2026
             </div>
 
         </div>
     );
 }
+

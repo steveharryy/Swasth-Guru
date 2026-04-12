@@ -73,7 +73,7 @@ const SYMPTOM_CATEGORIES = [
 ];
 
 function Brain(props: any) {
-    return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z" /></svg>
 }
 
 const categorizedSymptoms: Symptom[] = [
@@ -249,9 +249,9 @@ export default function BookAppointmentPage() {
     const dates = [];
     const today = new Date();
     for (let i = 1; i <= 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        dates.push(date.toISOString().split('T')[0]);
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push(date.toISOString().split('T')[0]);
     }
     return dates;
   };
@@ -278,13 +278,13 @@ export default function BookAppointmentPage() {
               <h1 className="text-3xl font-black logo-text tracking-tighter">Booking Portal</h1>
             </div>
             <div className="flex items-center gap-4">
-               <div className="hidden md:flex flex-col items-end">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Node Address</p>
-                  <p className="text-xs font-bold font-mono text-primary">SWG-PATH-242</p>
-               </div>
-               <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-primary animate-pulse" />
-               </div>
+              <div className="hidden md:flex flex-col items-end">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Node Address</p>
+                <p className="text-xs font-bold font-mono text-primary">SWG-PATH-242</p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center">
+                <Activity className="w-6 h-6 text-primary animate-pulse" />
+              </div>
 
             </div>
           </div>
@@ -298,12 +298,12 @@ export default function BookAppointmentPage() {
             <div className="absolute top-1/2 left-0 right-0 h-px bg-slate-200 -translate-y-1/2 z-0"></div>
             {bookingSteps.map((step) => (
               <div key={step.step} className="relative z-10 flex flex-col items-center">
-                <motion.div 
-                   animate={{ 
-                     scale: currentStep === step.step ? 1.2 : 1,
-                     backgroundColor: currentStep >= step.step ? 'hsl(var(--primary))' : 'rgba(0,0,0,0.05)'
-                   }}
-                   className={`w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all border ${currentStep >= step.step ? 'border-primary shadow-2xl shadow-primary/20' : 'border-slate-200 text-slate-300'}`}>
+                <motion.div
+                  animate={{
+                    scale: currentStep === step.step ? 1.2 : 1,
+                    backgroundColor: currentStep >= step.step ? 'hsl(var(--primary))' : 'rgba(0,0,0,0.05)'
+                  }}
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all border ${currentStep >= step.step ? 'border-primary shadow-2xl shadow-primary/20' : 'border-slate-200 text-slate-300'}`}>
                   {currentStep > step.step ? <CheckCircle className="w-6 h-6 text-white" /> : <span className={currentStep >= step.step ? 'text-white' : ''}>{step.step}</span>}
                 </motion.div>
                 <span className={`mt-4 text-[10px] font-black uppercase tracking-[0.4em] ${currentStep >= step.step ? 'text-primary' : 'text-slate-300'}`}>
@@ -318,163 +318,163 @@ export default function BookAppointmentPage() {
         {currentStep === 1 && (
           <div className="space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-4">
-                <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Symptom Selection</h2>
-                <p className="text-lg font-medium text-slate-500">Select the neurological or physical flags reported by your core.</p>
+              <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Symptom Selection</h2>
+              <p className="text-lg font-medium text-slate-500">Select the neurological or physical flags reported by your core.</p>
             </div>
 
 
             {/* Category Switcher */}
             <div className="flex flex-wrap items-center justify-center gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {SYMPTOM_CATEGORIES.map((cat) => (
-                        <button
-                        key={cat.id}
-                        onClick={() => setActiveCategory(cat.id)}
-                        className={cn(
-                            "px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-500 flex items-center gap-3 border",
-                            activeCategory === cat.id 
-                                ? "bg-primary text-white border-primary shadow-2xl shadow-primary/20 scale-105" 
-                                : "bg-white text-slate-600 border-slate-200 hover:border-primary/40"
-                        )}
-                    >
+              {SYMPTOM_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={cn(
+                    "px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-500 flex items-center gap-3 border",
+                    activeCategory === cat.id
+                      ? "bg-primary text-white border-primary shadow-2xl shadow-primary/20 scale-105"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-primary/40"
+                  )}
+                >
 
-                        <cat.icon className="w-4 h-4" />
-                        {cat.name}
-                    </button>
-                ))}
+                  <cat.icon className="w-4 h-4" />
+                  {cat.name}
+                </button>
+              ))}
             </div>
 
             {/* Symptom Grid */}
             <div className="vibrant-card p-10 backdrop-blur-3xl">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <AnimatePresence mode="popLayout">
-                        {categorizedSymptoms.filter(s => s.category === activeCategory).map((symptom, idx) => (
-                            <motion.div
-                                key={symptom.name}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                transition={{ delay: idx * 0.05 }}
-                                onClick={() => handleSymptomToggle(symptom.name)}
-                                className={cn(
-                                    "group cursor-pointer rounded-[2rem] overflow-hidden border-2 transition-all duration-700 relative aspect-[4/5]",
-                                    selectedSymptoms.includes(symptom.name)
-                                        ? "border-primary bg-primary/10 shadow-[0_0_40px_rgba(139,92,246,0.3)]"
-                                        : "border-white/5 bg-white/5 hover:border-white/20"
-                                )}
-                            >
-                                <div className="absolute inset-0 z-0">
-                                    <Image 
-                                        src={symptom.image} 
-                                        alt={symptom.name} 
-                                        fill 
-                                        className={cn(
-                                            "object-cover transition-transform duration-1000 group-hover:scale-110",
-                                            selectedSymptoms.includes(symptom.name) ? "opacity-100" : "opacity-80 group-hover:opacity-100"
-                                        )}
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                </div>
-                                <div className="absolute inset-0 p-8 flex flex-col justify-end z-10">
-                                    <div className={cn(
-                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500",
-                                        selectedSymptoms.includes(symptom.name) ? "bg-primary text-white scale-110" : "bg-white/20 text-white"
-                                    )}>
-                                        <Plus className={cn("w-6 h-6 transition-transform duration-500", selectedSymptoms.includes(symptom.name) && "rotate-45")} />
-                                    </div>
-                                    <h4 className="mt-4 text-xl font-black text-white tracking-tight">{symptom.name}</h4>
-                                    <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mt-1">Detected ID: REF-{idx}</p>
-                                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <AnimatePresence mode="popLayout">
+                  {categorizedSymptoms.filter(s => s.category === activeCategory).map((symptom, idx) => (
+                    <motion.div
+                      key={symptom.name}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ delay: idx * 0.05 }}
+                      onClick={() => handleSymptomToggle(symptom.name)}
+                      className={cn(
+                        "group cursor-pointer rounded-[2rem] overflow-hidden border-2 transition-all duration-700 relative aspect-[4/5]",
+                        selectedSymptoms.includes(symptom.name)
+                          ? "border-primary bg-primary/10 shadow-[0_0_40px_rgba(139,92,246,0.3)]"
+                          : "border-white/5 bg-white/5 hover:border-white/20"
+                      )}
+                    >
+                      <div className="absolute inset-0 z-0">
+                        <Image
+                          src={symptom.image}
+                          alt={symptom.name}
+                          fill
+                          className={cn(
+                            "object-cover transition-transform duration-1000 group-hover:scale-110",
+                            selectedSymptoms.includes(symptom.name) ? "opacity-100" : "opacity-80 group-hover:opacity-100"
+                          )}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      </div>
+                      <div className="absolute inset-0 p-8 flex flex-col justify-end z-10">
+                        <div className={cn(
+                          "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500",
+                          selectedSymptoms.includes(symptom.name) ? "bg-primary text-white scale-110" : "bg-white/20 text-white"
+                        )}>
+                          <Plus className={cn("w-6 h-6 transition-transform duration-500", selectedSymptoms.includes(symptom.name) && "rotate-45")} />
+                        </div>
+                        <h4 className="mt-4 text-xl font-black text-white tracking-tight">{symptom.name}</h4>
+                        <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mt-1">Detected ID: REF-{idx}</p>
+                      </div>
 
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
 
-                {/* Selected Summary */}
-                <div className="mt-16 pt-16 border-t border-white/5 space-y-10">
+              {/* Selected Summary */}
+              <div className="mt-16 pt-16 border-t border-white/5 space-y-10">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="space-y-3 text-center md:text-left">
-                            <h3 className="text-2xl font-black text-slate-800">Active Flags</h3>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedSymptoms.length} Anomalies detected</p>
-                        </div>
-                        <div className="flex flex-wrap justify-center md:justify-end gap-3 max-w-xl">
-                            {selectedSymptoms.map(s => (
-                                <Badge key={s} className="px-5 py-3 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-rose-500 hover:text-white transition-all cursor-pointer" onClick={() => handleSymptomToggle(s)}>
-                                    {s} ×
-                                </Badge>
-                            ))}
-                            {selectedSymptoms.length === 0 && <span className="text-slate-300 font-bold italic">No symptoms selected...</span>}
-                        </div>
-                    </div>
-
-                    <div className="pt-10 border-t border-slate-100">
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="space-y-1">
-                                <h4 className="text-xl font-black text-slate-800 uppercase tracking-wider">Voice Diagnostics</h4>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Hands-free symptom reporting</p>
-                            </div>
-                            <Button 
-                                onClick={() => setShowVoiceInput(!showVoiceInput)}
-                                className={cn(
-                                    "px-6 py-2 rounded-xl font-black text-[10px] tracking-widest transition-all",
-                                    showVoiceInput ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                                )}
-                            >
-                                {showVoiceInput ? 'DISABLE VOICE' : 'ENABLE VOICE MODE'}
-                            </Button>
-                        </div>
-
-
-                        <AnimatePresence>
-                            {showVoiceInput && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden mb-12"
-                                >
-                                    <VoiceSymptomLogger 
-                                        onSymptomDetected={(s) => {
-                                            if (!selectedSymptoms.includes(s)) {
-                                                handleSymptomToggle(s);
-                                                showNotification(`Detected: ${s}`, 'success');
-                                            }
-                                        }}
-                                        availableSymptoms={categorizedSymptoms.map(s => s.name)}
-                                        currentLanguage={voiceLang}
-                                        onLanguageChange={setVoiceLang}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Custom Anomalies</label>
-                                <div className="flex gap-4">
-                                    <Input
-                                        className="h-16 px-8 text-lg font-bold rounded-2xl bg-slate-50 border-slate-200 text-slate-900 focus:border-primary transition-all"
-                                        placeholder="Describe other issues..."
-                                        value={customSymptom}
-                                        onChange={(e) => setCustomSymptom(e.target.value)}
-                                    />
-                                    <Button onClick={handleAddCustomSymptom} disabled={!customSymptom.trim()} className="h-16 px-10 rounded-2xl bg-slate-100 text-slate-600 font-black hover:bg-primary hover:text-white transition-all">
-                                        ADD
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <Button 
-                                onClick={() => setCurrentStep(2)} 
-                                disabled={selectedSymptoms.length === 0}
-                                className="glowing-button h-24 text-3xl font-black rounded-[2.5rem] flex items-center justify-center group"
-                            >
-                                Proceed to Node Selection
-                                <ChevronRight className="ml-4 w-8 h-8 group-hover:translate-x-2 transition-transform" />
-                            </Button>
-                        </div>
-                    </div>
+                  <div className="space-y-3 text-center md:text-left">
+                    <h3 className="text-2xl font-black text-slate-800">Active Flags</h3>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedSymptoms.length} Anomalies detected</p>
+                  </div>
+                  <div className="flex flex-wrap justify-center md:justify-end gap-3 max-w-xl">
+                    {selectedSymptoms.map(s => (
+                      <Badge key={s} className="px-5 py-3 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-rose-500 hover:text-white transition-all cursor-pointer" onClick={() => handleSymptomToggle(s)}>
+                        {s} ×
+                      </Badge>
+                    ))}
+                    {selectedSymptoms.length === 0 && <span className="text-slate-300 font-bold italic">No symptoms selected...</span>}
+                  </div>
                 </div>
+
+                <div className="pt-10 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="space-y-1">
+                      <h4 className="text-xl font-black text-slate-800 uppercase tracking-wider">Voice Diagnostics</h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Hands-free symptom reporting</p>
+                    </div>
+                    <Button
+                      onClick={() => setShowVoiceInput(!showVoiceInput)}
+                      className={cn(
+                        "px-6 py-2 rounded-xl font-black text-[10px] tracking-widest transition-all",
+                        showVoiceInput ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                      )}
+                    >
+                      {showVoiceInput ? 'DISABLE VOICE' : 'ENABLE VOICE MODE'}
+                    </Button>
+                  </div>
+
+
+                  <AnimatePresence>
+                    {showVoiceInput && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden mb-12"
+                      >
+                        <VoiceSymptomLogger
+                          onSymptomDetected={(s) => {
+                            if (!selectedSymptoms.includes(s)) {
+                              handleSymptomToggle(s);
+                              showNotification(`Detected: ${s}`, 'success');
+                            }
+                          }}
+                          availableSymptoms={categorizedSymptoms.map(s => s.name)}
+                          currentLanguage={voiceLang}
+                          onLanguageChange={setVoiceLang}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Custom Anomalies</label>
+                      <div className="flex gap-4">
+                        <Input
+                          className="h-16 px-8 text-lg font-bold rounded-2xl bg-slate-50 border-slate-200 text-slate-900 focus:border-primary transition-all"
+                          placeholder="Describe other issues..."
+                          value={customSymptom}
+                          onChange={(e) => setCustomSymptom(e.target.value)}
+                        />
+                        <Button onClick={handleAddCustomSymptom} disabled={!customSymptom.trim()} className="h-16 px-10 rounded-2xl bg-slate-100 text-slate-600 font-black hover:bg-primary hover:text-white transition-all">
+                          ADD
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() => setCurrentStep(2)}
+                      disabled={selectedSymptoms.length === 0}
+                      className="glowing-button h-24 text-3xl font-black rounded-[2.5rem] flex items-center justify-center group"
+                    >
+                      Proceed to Doctor Selection
+                      <ChevronRight className="ml-4 w-8 h-8 group-hover:translate-x-2 transition-transform" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -482,98 +482,98 @@ export default function BookAppointmentPage() {
         {currentStep === 2 && (
           <div className="space-y-12">
             <div className="vibrant-card p-10 bg-white">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
-                    <div className="space-y-2 text-center md:text-left">
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Doctor Selection</h2>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Choose your preferred healthcare professional</p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                        <div className="relative flex-1">
-                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                             <Input 
-                                placeholder="Search Registry..." 
-                                value={searchQuery} 
-                                onChange={(e) => setSearchQuery(e.target.value)} 
-                                className="h-14 pl-12 pr-6 rounded-2xl bg-slate-50 border-slate-200 text-slate-900 font-bold min-w-[300px]" 
-                             />
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
+                <div className="space-y-2 text-center md:text-left">
+                  <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Doctor Selection</h2>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Choose your preferred healthcare professional</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                    <Input
+                      placeholder="Search Registry..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-14 pl-12 pr-6 rounded-2xl bg-slate-50 border-slate-200 text-slate-900 font-bold min-w-[300px]"
+                    />
+                  </div>
+                  <select
+                    value={selectedSpecialization}
+                    onChange={(e) => setSelectedSpecialization(e.target.value)}
+                    className="h-14 px-6 rounded-2xl bg-slate-50 border-slate-200 text-slate-900 font-black uppercase text-[10px] tracking-widest outline-none transition-all hover:bg-slate-100"
+                  >
+                    <option value="">All Fields</option>
+                    {MEDICAL_SPECIALIZATIONS.map((spec) => (
+                      <option key={spec.id} value={spec.name} className="bg-white">{spec.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+
+              <div className="space-y-8">
+                {isLoading ? (
+                  <div className="py-40 text-center space-y-8">
+                    <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto" />
+                    <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.6em] animate-pulse">Initializing Direct Path Search...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {filteredDoctors.map((doctor) => (
+                      <motion.div
+                        key={doctor.id}
+                        whileHover={{ y: -10 }}
+                        className="p-8 rounded-[2.5rem] bg-white border border-slate-100 hover:border-primary/40 transition-all duration-500 relative overflow-hidden group/doc"
+                      >
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/doc:opacity-10 transition-opacity">
+                          <Stethoscope className="w-24 h-24 text-primary" />
                         </div>
-                        <select
-                          value={selectedSpecialization}
-                          onChange={(e) => setSelectedSpecialization(e.target.value)}
-                          className="h-14 px-6 rounded-2xl bg-slate-50 border-slate-200 text-slate-900 font-black uppercase text-[10px] tracking-widest outline-none transition-all hover:bg-slate-100"
-                        >
-                          <option value="">All Fields</option>
-                          {MEDICAL_SPECIALIZATIONS.map((spec) => (
-                            <option key={spec.id} value={spec.name} className="bg-white">{spec.name}</option>
-                          ))}
-                        </select>
-                    </div>
-                </div>
-
-
-                <div className="space-y-8">
-                  {isLoading ? (
-                    <div className="py-40 text-center space-y-8">
-                      <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto" />
-                      <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.6em] animate-pulse">Initializing Direct Path Search...</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {filteredDoctors.map((doctor) => (
-                        <motion.div
-                          key={doctor.id}
-                          whileHover={{ y: -10 }}
-                          className="p-8 rounded-[2.5rem] bg-white border border-slate-100 hover:border-primary/40 transition-all duration-500 relative overflow-hidden group/doc"
-                        >
-                           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/doc:opacity-10 transition-opacity">
-                               <Stethoscope className="w-24 h-24 text-primary" />
-                           </div>
-                           <div className="flex items-center gap-8 relative z-10">
-                              <div className="relative">
-                                  <Avatar className="w-24 h-24 rounded-3xl border-2 border-primary/20 p-1">
-                                    <AvatarImage src={getDoctorAvatar(doctor)} className="rounded-2xl object-cover" />
-                                    <AvatarFallback className="bg-slate-100 rounded-2xl text-2xl font-black">{doctor.name[0]}</AvatarFallback>
-                                  </Avatar>
-                                  <div className="absolute -bottom-2 -right-2 bg-primary text-white px-2 py-1 rounded-lg text-[10px] font-black">
-                                      {doctor.rating} ★
-                                  </div>
+                        <div className="flex items-center gap-8 relative z-10">
+                          <div className="relative">
+                            <Avatar className="w-24 h-24 rounded-3xl border-2 border-primary/20 p-1">
+                              <AvatarImage src={getDoctorAvatar(doctor)} className="rounded-2xl object-cover" />
+                              <AvatarFallback className="bg-slate-100 rounded-2xl text-2xl font-black">{doctor.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div className="absolute -bottom-2 -right-2 bg-primary text-white px-2 py-1 rounded-lg text-[10px] font-black">
+                              {doctor.rating} ★
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">{doctor.name}</h3>
+                            <Badge className="bg-primary/10 text-primary border-none font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
+                              {doctor.specialization}
+                            </Badge>
+                            <div className="flex items-center gap-4 pt-2">
+                              <div className="flex items-center gap-2 text-slate-400">
+                                <Clock className="w-4 h-4" />
+                                <span className="text-xs font-bold">Available Now</span>
                               </div>
-                              <div className="space-y-2">
-                                 <h3 className="text-2xl font-black text-slate-900 tracking-tight">{doctor.name}</h3>
-                                 <Badge className="bg-primary/10 text-primary border-none font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
-                                    {doctor.specialization}
-                                 </Badge>
-                                 <div className="flex items-center gap-4 pt-2">
-                                     <div className="flex items-center gap-2 text-slate-400">
-                                         <Clock className="w-4 h-4" />
-                                         <span className="text-xs font-bold">Available Now</span>
-                                     </div>
-                                     <div className="flex items-center gap-2 text-slate-400">
-                                         <IndianRupee className="w-4 h-4" />
-                                         <span className="text-xs font-bold font-mono">₹{doctor.consultationFee}</span>
-                                     </div>
-                                 </div>
+                              <div className="flex items-center gap-2 text-slate-400">
+                                <IndianRupee className="w-4 h-4" />
+                                <span className="text-xs font-bold font-mono">₹{doctor.consultationFee}</span>
                               </div>
-                           </div>
-                           <p className="mt-8 text-sm font-medium text-slate-500 italic leading-relaxed line-clamp-2">“{doctor.about}”</p>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="mt-8 text-sm font-medium text-slate-500 italic leading-relaxed line-clamp-2">“{doctor.about}”</p>
 
-                           <Button 
-                              onClick={() => handleDoctorSelect(doctor)} 
-                              className="glowing-button w-full h-16 mt-10 rounded-2xl text-[10px] font-black uppercase tracking-widest"
-                           >
-                              Connect to Specialist
-                           </Button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                  {filteredDoctors.length === 0 && !isLoading && (
-                    <div className="py-20 text-center space-y-6">
-                      <Activity className="w-20 h-20 text-white/5 mx-auto" />
-                      <p className="text-xl font-black text-white/30">No Medical Nodes Identified</p>
-                    </div>
-                  )}
-                </div>
+                        <Button
+                          onClick={() => handleDoctorSelect(doctor)}
+                          className="glowing-button w-full h-16 mt-10 rounded-2xl text-[10px] font-black uppercase tracking-widest"
+                        >
+                          Connect to Specialist
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+                {filteredDoctors.length === 0 && !isLoading && (
+                  <div className="py-20 text-center space-y-6">
+                    <Activity className="w-20 h-20 text-white/5 mx-auto" />
+                    <p className="text-xl font-black text-white/30">No Medical Nodes Identified</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -582,111 +582,111 @@ export default function BookAppointmentPage() {
           <div className="max-w-4xl mx-auto space-y-12">
             <h2 className="text-4xl font-black text-center text-slate-900 tracking-tighter">Scheduling Matrix</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div className="lg:col-span-1 space-y-8">
-                    <div className="vibrant-card p-8 bg-white">
-                        <Avatar className="w-full aspect-square rounded-[2rem] border-2 border-primary/20 mb-6">
-                            <AvatarImage src={getDoctorAvatar(selectedDoctor)} className="object-cover" />
-                        </Avatar>
-                        <h3 className="text-2xl font-black text-center text-slate-800">{selectedDoctor.name}</h3>
-                        <p className="text-[10px] font-black text-primary uppercase text-center tracking-widest mt-2">{selectedDoctor.specialization}</p>
-                    </div>
-                    <div className="vibrant-card p-6 bg-white space-y-4">
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Consultation Fee</h4>
-                        <div className="flex items-center justify-between">
-                            <span className="text-3xl font-black font-mono text-slate-900">₹{selectedDoctor.consultationFee}</span>
-                            <Badge className="bg-emerald-500/10 text-emerald-600 border-none px-4 rounded-lg uppercase tracking-widest font-black text-[9px]">Verified Node</Badge>
-                        </div>
-                    </div>
+              <div className="lg:col-span-1 space-y-8">
+                <div className="vibrant-card p-8 bg-white">
+                  <Avatar className="w-full aspect-square rounded-[2rem] border-2 border-primary/20 mb-6">
+                    <AvatarImage src={getDoctorAvatar(selectedDoctor)} className="object-cover" />
+                  </Avatar>
+                  <h3 className="text-2xl font-black text-center text-slate-800">{selectedDoctor.name}</h3>
+                  <p className="text-[10px] font-black text-primary uppercase text-center tracking-widest mt-2">{selectedDoctor.specialization}</p>
                 </div>
+                <div className="vibrant-card p-6 bg-white space-y-4">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Consultation Fee</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl font-black font-mono text-slate-900">₹{selectedDoctor.consultationFee}</span>
+                    <Badge className="bg-emerald-500/10 text-emerald-600 border-none px-4 rounded-lg uppercase tracking-widest font-black text-[9px]">Verified Node</Badge>
+                  </div>
+                </div>
+              </div>
 
 
-                <div className="lg:col-span-2 space-y-10">
-                    <Card className="vibrant-card border border-slate-100 bg-white shadow-xl shadow-slate-200/50 overflow-hidden">
-                        <CardContent className="p-10 space-y-12">
-                            <div className="space-y-6">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Communication Protocol</label>
-                                <div className="grid grid-cols-2 gap-6">
-                                    {[
-                                        { id: 'video', label: 'Neural Link', sub: 'Video Session', icon: Video },
-                                        { id: 'phone', label: 'Audio Relay', sub: 'Phone Session', icon: Phone }
-                                    ].map((type) => (
-                                        <button
-                                            key={type.id}
-                                            onClick={() => setConsultationType(type.id as any)}
-                                            className={cn(
-                                                "p-8 rounded-[2rem] border-2 transition-all duration-700 flex flex-col items-center gap-4 text-center group",
-                                                consultationType === type.id 
-                                                    ? "bg-primary text-white border-primary shadow-2xl shadow-primary/20" 
-                                                    : "bg-slate-50 text-slate-400 border-slate-100 hover:border-primary/40"
-                                            )}
-                                        >
-                                            <type.icon className={cn("w-10 h-10 transition-transform duration-500 group-hover:scale-110", consultationType === type.id ? "text-white" : "text-primary")} />
-                                            <div>
-                                                <p className="text-lg font-black tracking-tight">{type.label}</p>
-                                                <p className="text-[9px] font-bold uppercase tracking-widest opacity-60 mt-1">{type.sub}</p>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
+              <div className="lg:col-span-2 space-y-10">
+                <Card className="vibrant-card border border-slate-100 bg-white shadow-xl shadow-slate-200/50 overflow-hidden">
+                  <CardContent className="p-10 space-y-12">
+                    <div className="space-y-6">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Communication Protocol</label>
+                      <div className="grid grid-cols-2 gap-6">
+                        {[
+                          { id: 'video', label: 'Video Call', sub: 'Video Session', icon: Video },
+                          { id: 'phone', label: 'Audio Call', sub: 'Audio Session', icon: Phone }
+                        ].map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setConsultationType(type.id as any)}
+                            className={cn(
+                              "p-8 rounded-[2rem] border-2 transition-all duration-700 flex flex-col items-center gap-4 text-center group",
+                              consultationType === type.id
+                                ? "bg-primary text-white border-primary shadow-2xl shadow-primary/20"
+                                : "bg-slate-50 text-slate-400 border-slate-100 hover:border-primary/40"
+                            )}
+                          >
+                            <type.icon className={cn("w-10 h-10 transition-transform duration-500 group-hover:scale-110", consultationType === type.id ? "text-white" : "text-primary")} />
+                            <div>
+                              <p className="text-lg font-black tracking-tight">{type.label}</p>
+                              <p className="text-[9px] font-bold uppercase tracking-widest opacity-60 mt-1">{type.sub}</p>
                             </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
 
-                            <div className="space-y-6">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Time-Window Allocation</label>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    {getNextAvailableDates().map((date) => (
-                                        <button
-                                            key={date}
-                                            onClick={() => setSelectedDate(date)}
-                                            className={cn(
-                                                "p-4 rounded-2xl border transition-all duration-500 flex flex-col items-center gap-1",
-                                                selectedDate === date 
-                                                    ? "bg-primary text-white border-primary shadow-xl" 
-                                                    : "bg-slate-50 text-slate-400 border-slate-100 hover:border-primary/40"
-                                            )}
-                                        >
-                                            <span className="text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">{new Date(date).toLocaleDateString(undefined, { weekday: 'short' })}</span>
-                                            <span className="text-lg font-black">{new Date(date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                    <div className="space-y-6">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Time-Window Allocation</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {getNextAvailableDates().map((date) => (
+                          <button
+                            key={date}
+                            onClick={() => setSelectedDate(date)}
+                            className={cn(
+                              "p-4 rounded-2xl border transition-all duration-500 flex flex-col items-center gap-1",
+                              selectedDate === date
+                                ? "bg-primary text-white border-primary shadow-xl"
+                                : "bg-slate-50 text-slate-400 border-slate-100 hover:border-primary/40"
+                            )}
+                          >
+                            <span className="text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">{new Date(date).toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                            <span className="text-lg font-black">{new Date(date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
+                          </button>
+                        ))}
+                      </div>
 
 
-                                {selectedDate && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-6"
-                                    >
-                                        {["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"].map((time) => (
-                                            <button
-                                                key={time}
-                                                onClick={() => setSelectedTime(time)}
-                                                className={cn(
-                                                    "h-12 text-xs font-black rounded-xl border transition-all duration-500",
-                                                    selectedTime === time 
-                                                        ? "bg-primary text-black border-primary" 
-                                                        : "bg-white/5 text-white/30 border-white/5 hover:border-white/20"
-                                                )}
-                                            >
-                                                {time}
-                                            </button>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </div>
-
-                            <Button 
-                                onClick={() => handleDateTimeSelect(selectedDate, selectedTime)} 
-                                disabled={!selectedDate || !selectedTime}
-                                className="glowing-button w-full h-24 text-2xl font-black rounded-[2.5rem] shadow-2xl flex items-center justify-center gap-4 group mt-10"
+                      {selectedDate && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-6"
+                        >
+                          {["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"].map((time) => (
+                            <button
+                              key={time}
+                              onClick={() => setSelectedTime(time)}
+                              className={cn(
+                                "h-12 text-xs font-black rounded-xl border transition-all duration-500",
+                                selectedTime === time
+                                  ? "bg-primary text-white border-primary shadow-lg"
+                                  : "bg-slate-50 text-slate-600 border-slate-100 hover:border-primary/40"
+                              )}
                             >
-                                Review Session Allocation
-                                <ArrowLeft className="w-8 h-8 rotate-180 group-hover:translate-x-2 transition-transform" />
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
+                              {time}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </div>
+
+                    <Button
+                      onClick={() => handleDateTimeSelect(selectedDate, selectedTime)}
+                      disabled={!selectedDate || !selectedTime}
+                      className="glowing-button w-full h-24 text-2xl font-black rounded-[2.5rem] shadow-2xl flex items-center justify-center gap-4 group mt-10"
+                    >
+                      Review Session Allocation
+                      <ArrowLeft className="w-8 h-8 rotate-180 group-hover:translate-x-2 transition-transform" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         )}
@@ -694,92 +694,92 @@ export default function BookAppointmentPage() {
         {currentStep === 4 && selectedDoctor && (
           <div className="max-w-3xl mx-auto space-y-16">
             <div className="text-center space-y-4">
-                <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Confirmation Logic</h2>
-                <p className="text-lg font-medium text-slate-500">Finalizing your direct path with {selectedDoctor.name}.</p>
+              <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Confirmation Logic</h2>
+              <p className="text-lg font-medium text-slate-500">Finalizing your direct path with {selectedDoctor.name}.</p>
             </div>
 
             <div className="vibrant-card p-12 bg-white space-y-12 relative overflow-hidden border border-slate-100">
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-emerald-500" />
-                
-                <div className="flex flex-col md:flex-row items-center gap-10 p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative">
-                    <Avatar className="w-32 h-32 rounded-[2rem] border-2 border-primary/20">
-                        <AvatarImage src={getDoctorAvatar(selectedDoctor)} className="object-cover" />
-                    </Avatar>
-                    <div className="space-y-4 text-center md:text-left">
-                        <div className="space-y-1">
-                            <h3 className="text-3xl font-black text-slate-900 tracking-tight">{selectedDoctor.name}</h3>
-                            <p className="text-sm font-black text-primary uppercase tracking-[0.4em]">{selectedDoctor.specialization}</p>
-                        </div>
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                            <div className="px-4 py-2 bg-white rounded-xl border border-slate-100 flex items-center gap-3">
-                                <Video className="w-4 h-4 text-primary" />
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{consultationType} Node</span>
-                            </div>
-                            <div className="px-4 py-2 bg-white rounded-xl border border-slate-100 flex items-center gap-3">
-                                <Clock className="w-4 h-4 text-primary" />
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{selectedTime}</span>
-                            </div>
-                        </div>
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-emerald-500" />
+
+              <div className="flex flex-col md:flex-row items-center gap-10 p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative">
+                <Avatar className="w-32 h-32 rounded-[2rem] border-2 border-primary/20">
+                  <AvatarImage src={getDoctorAvatar(selectedDoctor)} className="object-cover" />
+                </Avatar>
+                <div className="space-y-4 text-center md:text-left">
+                  <div className="space-y-1">
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">{selectedDoctor.name}</h3>
+                    <p className="text-sm font-black text-primary uppercase tracking-[0.4em]">{selectedDoctor.specialization}</p>
+                  </div>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                    <div className="px-4 py-2 bg-white rounded-xl border border-slate-100 flex items-center gap-3">
+                      <Video className="w-4 h-4 text-primary" />
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{consultationType} Node</span>
                     </div>
+                    <div className="px-4 py-2 bg-white rounded-xl border border-slate-100 flex items-center gap-3">
+                      <Clock className="w-4 h-4 text-primary" />
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{selectedTime}</span>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                           <Calendar className="w-8 h-8 text-primary" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-1">Session Date</p>
-                            <p className="text-xl font-black text-slate-900">{selectedDate}</p>
-                        </div>
-                    </div>
-                    <div className="p-8 rounded-[2rem] bg-emerald-50 border border-emerald-100 flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center border border-emerald-200 text-emerald-600">
-                           <IndianRupee className="w-8 h-8" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-1">Execution Fee</p>
-                            <p className="text-xl font-black text-slate-900 font-mono">₹{selectedDoctor.consultationFee}</p>
-                        </div>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Calendar className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-1">Session Date</p>
+                    <p className="text-xl font-black text-slate-900">{selectedDate}</p>
+                  </div>
                 </div>
+                <div className="p-8 rounded-[2rem] bg-emerald-50 border border-emerald-100 flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center border border-emerald-200 text-emerald-600">
+                    <IndianRupee className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-1">Execution Fee</p>
+                    <p className="text-xl font-black text-slate-900 font-mono">₹{selectedDoctor.consultationFee}</p>
+                  </div>
+                </div>
+              </div>
 
 
-                <Button
-                  onClick={handleBookAppointment}
-                  className="glowing-button w-full h-24 text-3xl font-black rounded-[2.5rem] shadow-3xl mt-4 flex items-center justify-center group"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-6">
-                      <Loader2 className="w-10 h-10 animate-spin" />
-                      <span className="uppercase tracking-widest">Compiling Transaction...</span>
-                    </div>
-                  ) : (
-                    <>
-                       Authorize Session Entry
-                       <Activity className="ml-4 w-10 h-10 group-hover:scale-125 transition-transform" />
-                    </>
-                  )}
-                </Button>
+              <Button
+                onClick={handleBookAppointment}
+                className="glowing-button w-full h-24 text-3xl font-black rounded-[2.5rem] shadow-3xl mt-4 flex items-center justify-center group"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center gap-6">
+                    <Loader2 className="w-10 h-10 animate-spin" />
+                    <span className="uppercase tracking-widest">Compiling Transaction...</span>
+                  </div>
+                ) : (
+                  <>
+                    Book Appointment
+                    <Activity className="ml-4 w-10 h-10 group-hover:scale-125 transition-transform" />
+                  </>
+                )}
+              </Button>
 
-                <p className="text-center text-[10px] font-black text-white/20 uppercase tracking-[0.5em] mt-8 animate-pulse">
-                    Node Handshake Initialized &bull; Secure Protocol Active
-                </p>
+              <p className="text-center text-[10px] font-black text-white/20 uppercase tracking-[0.5em] mt-8 animate-pulse">
+                Node Handshake Initialized &bull; Secure Protocol Active
+              </p>
             </div>
           </div>
         )}
       </main>
 
-       <footer className="fixed bottom-0 left-0 right-0 z-50 py-10 bg-gradient-to-t from-background to-transparent pointer-events-none">
-          <div className="container mx-auto px-6 max-w-6xl flex justify-center">
-              <div className="px-6 py-2 rounded-full bg-white border border-slate-100 shadow-xl pointer-events-auto">
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">
-                      SwasthGuru Ecosystem &bull; Core Ver 4.0.2
-                   </p>
-              </div>
+      <footer className="fixed bottom-0 left-0 right-0 z-50 py-10 bg-gradient-to-t from-background to-transparent pointer-events-none">
+        <div className="container mx-auto px-6 max-w-6xl flex justify-center">
+          <div className="px-6 py-2 rounded-full bg-white border border-slate-100 shadow-xl pointer-events-auto">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">
+              SwasthGuru Ecosystem &bull; Core Ver 4.0.2
+            </p>
           </div>
+        </div>
       </footer>
 
     </div>
