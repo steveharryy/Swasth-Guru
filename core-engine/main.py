@@ -23,11 +23,13 @@ analyzer = MedicineAnalyzer()
 
 
 @app.get("/")
+@app.head("/")
 async def root():
     return {
         "message": "SwasthGuru LLM Engine is Active",
         "endpoints": ["/health", "/doctor-match", "/docs"]
     }
+
 
 
 class DoctorMatchInput(BaseModel):
