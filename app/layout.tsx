@@ -1,3 +1,4 @@
+import { ChatWidget } from '@/components/chat/ChatWidget';
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -40,6 +41,7 @@ export default function RootLayout({
         <body className={cn(inter.className, 'antialiased min-h-screen')}>
           <Providers>
             {children}
+            <ChatWidget />
           </Providers>
         </body>
       </html>
