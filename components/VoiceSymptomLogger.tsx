@@ -34,16 +34,18 @@ interface VoiceSymptomLoggerProps {
 
 // Synonyms mapping for better matching (especially for Hindi)
 const SYMPTOM_SYNONYMS: Record<string, string[]> = {
-  'Headache': ['headache', 'head pain', 'sar dard', 'sirdard', 'sir mein dard'],
-  'Adult Fever': ['fever', 'bukhaar', 'body hot', 'tapmaan'],
-  'Stomach pain': ['stomach pain', 'pet dard', 'abdominal pain', 'pet kharab'],
-  'Chest Problems': ['chest pain', 'seene mein dard', 'dil mein dard', 'heart pain', 'breathless'],
-  'Skin rash': ['rash', 'khujli', 'skin problem', 'itching', 'daane'],
-  'Nausea': ['nausea', 'vomit', 'ultee', 'जी मिचलाना'],
-  'Body ache': ['body ache', 'badan dard', 'muscle pain'],
-  'Cough': ['cough', 'khansi', 'caugh'],
-  'Back pain': ['back pain', 'peeth dard', 'kamar dard'],
-  'Dental pain': ['toothache', 'daant dard', 'dental pain'],
+  'Headache': ['headache', 'head pain', 'sar dard', 'sirdard', 'sir mein dard', 'sir dard', 'headacheing', 'aching head'],
+  'Adult Fever': ['fever', 'bukhaar', 'body hot', 'tapmaan', 'bukhar', 'thandi lag rahi', 'feverish', 'high temperature'],
+  'Stomach pain': ['stomach pain', 'pet dard', 'abdominal pain', 'pet kharab', 'acidity', 'gas', 'stomach ache', 'digestion'],
+  'Chest Problems': ['chest pain', 'seene mein dard', 'dil mein dard', 'heart pain', 'breathless', 'seene mey dard', 'chest pressure'],
+  'Skin rash': ['rash', 'khujli', 'skin problem', 'itching', 'daane', 'khujli ho rahi', 'redness', 'eczema'],
+  'Nausea': ['nausea', 'vomit', 'ultee', 'जी मिचलाना', 'vomiting', 'puking', 'feeling sick'],
+  'Body ache': ['body ache', 'badan dard', 'muscle pain', 'pain in body', 'body pain', 'thakan'],
+  'Cough': ['cough', 'khansi', 'khasi', 'coughing', 'sore throat'],
+  'Back pain': ['back pain', 'peeth dard', 'kamar dard', 'spine pain', 'lower back'],
+  'Dental pain': ['toothache', 'daant dard', 'dental pain', 'teeth pain', 'molar pain'],
+  'Joint pain': ['joint pain', 'ghutno mein dard', 'ghutna dard', 'knee pain', 'arthritis', 'joint ache'],
+  'Eye problems': ['eye pain', 'aankh mein dard', 'vision', 'red eye', 'itchy eyes'],
 };
 
 export function VoiceSymptomLogger({ 
@@ -70,12 +72,14 @@ export function VoiceSymptomLogger({
       recognitionRef.current.onresult = (event: any) => {
         let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const resultText = event.results[i][0].transcript.toLowerCase();
           if (event.results[i].isFinal) {
-            const final = event.results[i][0].transcript.toLowerCase();
-            setTranscript(prev => prev + ' ' + final);
-            analyzeSpeech(final);
+            setTranscript(prev => prev + ' ' + resultText);
+            analyzeSpeech(resultText);
           } else {
-            interimTranscript += event.results[i][0].transcript;
+            interimTranscript += resultText;
+            // Also analyze interim results for faster sensing
+            if (interimTranscript.length > 3) analyzeSpeech(interimTranscript);
           }
         }
       };

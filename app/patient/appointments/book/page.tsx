@@ -435,8 +435,8 @@ export default function BookAppointmentPage() {
                       >
                         <VoiceSymptomLogger
                           onSymptomDetected={(s) => {
+                            setSelectedSymptoms(prev => prev.includes(s) ? prev : [...prev, s]);
                             if (!selectedSymptoms.includes(s)) {
-                              handleSymptomToggle(s);
                               showNotification(`Detected: ${s}`, 'success');
                             }
                           }}
