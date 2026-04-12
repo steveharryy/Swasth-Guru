@@ -215,12 +215,11 @@ export default function PatientDashboard() {
 
           const today = new Date().toISOString().split('T')[0];
           const todayStr = normalizeDate(today);
-          const upcoming = userAppointments.filter((apt: Appointment) => {
-            const status = apt.status?.toLowerCase();
-            const normalizedAptDate = normalizeDate(apt.date);
-            const isHackathon = apt.date === 'hackathon' || apt.doctorName?.toLowerCase().includes("gajraj pandey");
-            return isHackathon || ((status === 'upcoming' || status === 'confirmed' || status === 'pending') && normalizedAptDate >= todayStr);
-          });
+          // For Hackathon Demo: ALL appointments are 'ready' to join immediately
+          const upcoming = userAppointments.map((apt: any) => ({
+            ...apt,
+            status: 'confirmed' // Force confirmed for demo
+          }));
 
           const past = userAppointments.filter((apt: Appointment) => {
             const status = apt.status?.toLowerCase();
@@ -502,33 +501,20 @@ export default function PatientDashboard() {
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                   <Badge
-                    className={cn("h-10 px-6 text-[10px] font-black rounded-xl uppercase tracking-widest", (appointment.status === 'confirmed' || appointment.status === 'upcoming') ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400")}
+                    className={cn("h-10 px-6 text-[10px] font-black rounded-xl uppercase tracking-widest bg-emerald-50 text-emerald-600")}
                     variant="outline"
                   >
-                    {getAppointmentTimeStatus(appointment.date, appointment.time) === 'over' ? 'Finished' : (appointment.status.toUpperCase())}
+                    READY FOR DEMO
                   </Badge>
-                  {getAppointmentTimeStatus(appointment.date, appointment.time) === 'ready' && (
-                    <Button
-                      variant="premium"
-                      size="sm"
-                      className="h-14 px-8 text-xs font-black rounded-2xl shadow-xl shadow-primary/20"
-                      onClick={() => router.push(`/patient/consultation/${appointment.id}`)}
-                    >
-                      <Video className="w-5 h-5 mr-3" />
-                      Join Now
-                    </Button>
-                  )}
-                  {appointment.date === 'hackathon' && (
-                    <Button
-                      variant="premium"
-                      size="sm"
-                      className="h-14 px-8 text-xs font-black rounded-2xl shadow-xl shadow-emerald-200/50 bg-emerald-500 hover:bg-emerald-600 border-none text-white transition-all transform hover:scale-105"
-                      onClick={() => router.push(`/patient/consultation/${appointment.id}`)}
-                    >
-                      <Video className="w-5 h-5 mr-3" />
-                      Direct Join
-                    </Button>
-                  )}
+                  <Button
+                    variant="premium"
+                    size="sm"
+                    className="h-14 px-8 text-xs font-black rounded-2xl shadow-xl shadow-primary/20 brightness-110"
+                    onClick={() => router.push(`/patient/consultation/${appointment.id}`)}
+                  >
+                    <Video className="w-5 h-5 mr-3" />
+                    Enter Consultation
+                  </Button>
                 </div>
               </div>
             ))}

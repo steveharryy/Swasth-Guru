@@ -14,6 +14,7 @@ import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 export function WelcomeScreen() {
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const punjabiAudioRef = useRef<HTMLAudioElement | null>(null);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
 
@@ -188,10 +189,20 @@ export function WelcomeScreen() {
             <SignUpButton mode="modal">
               <Button
                 size="lg"
+                onClick={() => setIsAuthenticating(true)}
                 className="glowing-button w-full h-20 text-2xl font-black rounded-[2rem] group"
               >
-                Get Started
-                <ChevronRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                {isAuthenticating ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                    Connecting...
+                  </div>
+                ) : (
+                  <>
+                    Login/Register
+                    <ChevronRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </Button>
             </SignUpButton>
           </SignedOut>
@@ -201,9 +212,18 @@ export function WelcomeScreen() {
               className="glowing-button w-full h-20 text-2xl font-black rounded-[2rem]"
               onClick={() => router.push('/onboarding')}
             >
-              Continue to Dashboard →
+              Resume Session →
             </Button>
           </SignedIn>
+          {isAuthenticating && (
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-[10px] font-black text-primary uppercase tracking-[0.5em] animate-pulse"
+            >
+              Directing to Secure Gate...
+            </motion.p>
+          )}
           <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em] animate-pulse">
             24/7 AI Healthcare Active
           </p>

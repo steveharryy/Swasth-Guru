@@ -148,10 +148,11 @@ export default function DoctorDashboard() {
             }));
           } else {
             const allAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+            // For Hackathon Demo: All doctor appointments are immediate
             doctorAppointments = allAppointments.filter((apt: any) => 
               (apt.doctor_id === user.id || apt.doctorId === user.id) &&
               apt.status !== 'pending_payment'
-            );
+            ).map((apt: any) => ({ ...apt, status: 'confirmed' }));
           }
 
           // Always merge hackathon appointments for the demo
@@ -186,8 +187,7 @@ export default function DoctorDashboard() {
           const todayApts = activeAppointments.filter((apt: any) => {
             if (apt.date === 'hackathon') return true;
             const isToday = normalizeDate(apt.date) === normalizeDate(today);
-            const isOver = getAppointmentTimeStatus(apt.date, apt.time) === 'over';
-            return isToday && apt.status !== 'completed' && !isOver;
+            return isToday && apt.status !== 'completed';
           });
 
           const completedApts = doctorAppointments.filter((apt: any) => {
@@ -347,9 +347,8 @@ export default function DoctorDashboard() {
             <Button
               variant="premium"
               className="h-12 px-8 text-base rounded-2xl font-bold shadow-lg border-2 border-primary/20"
-              disabled={!todayAppointments.some(apt => getAppointmentTimeStatus(apt.date, apt.time) === 'ready')}
               onClick={() => {
-                const readyApt = todayAppointments.find(apt => getAppointmentTimeStatus(apt.date, apt.time) === 'ready');
+                const readyApt = todayAppointments[0];
                 if (readyApt) {
                   router.push(`/doctor/consultation/${readyApt.id}`);
                 }
@@ -471,7 +470,15 @@ export default function DoctorDashboard() {
           <CardContent className="p-10 space-y-8">
             {todayAppointments.map((appointment) => (
               <div key={appointment.id} className="flex flex-col sm:flex-row items-center justify-between p-6 border border-slate-100 rounded-[2rem] bg-white gap-6 hover:border-primary/20 hover:shadow-xl transition-all group">
-                <div className="flex items-center space-x-6 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                  <Badge className={cn(
+                    "h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest border transition-all",
+                    appointment.status === 'completed' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                      appointment.status === 'cancelled' ? "bg-rose-50 text-rose-600 border-rose-100" :
+                        "bg-primary/5 text-primary border-primary/10"
+                  )}>
+                    {appointment.status}
+                  </Badge>
                   <div className="relative shrink-0">
                     <Avatar className="w-20 h-20 border-2 border-slate-100 p-1">
                       <AvatarImage src={appointment.avatar} className="rounded-2xl" />
@@ -492,37 +499,28 @@ export default function DoctorDashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                  <Badge className={cn(
-                    "h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest border transition-all",
-                    (appointment.status === 'completed' || getAppointmentTimeStatus(appointment.date, appointment.time) === 'over') ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                      appointment.status === 'cancelled' ? "bg-rose-50 text-rose-600 border-rose-100" :
-                        "bg-primary/5 text-primary border-primary/10"
                   )}>
-                    {(appointment.status === 'completed' || getAppointmentTimeStatus(appointment.date, appointment.time) === 'over') ? 'Completed' : appointment.status.toUpperCase()}
+                    {appointment.status.toUpperCase()}
                   </Badge>
-                  {(appointment.status === 'upcoming' || appointment.status === 'confirmed') &&
-                    getAppointmentTimeStatus(appointment.date, appointment.time) !== 'over' && (
-                      <>
-                        {getAppointmentTimeStatus(appointment.date, appointment.time) === 'ready' && (
-                          <Button
-                            variant="premium"
-                            className="h-14 px-8 text-xs font-black rounded-2xl shadow-xl shadow-emerald-200/50 bg-emerald-500 hover:bg-emerald-600 border-none text-white transition-all transform hover:scale-105"
-                            onClick={() => router.push(`/doctor/consultation/${appointment.id}`)}
-                          >
-                            <Video className="w-5 h-5 mr-3" />
-                            Direct Join
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          className="h-14 px-6 text-xs font-black rounded-2xl border-2 border-slate-100 text-slate-400 hover:border-emerald-500/30 hover:text-emerald-500 hover:bg-emerald-50/50"
-                          onClick={() => handleUpdateStatus(appointment.id, 'completed')}
-                        >
-                          Complete Consultation
-                        </Button>
-                      </>
-                    )}
+                  {(appointment.status === 'upcoming' || appointment.status === 'confirmed') && (
+                    <>
+                      <Button
+                        variant="premium"
+                        className="h-14 px-8 text-xs font-black rounded-2xl shadow-xl shadow-emerald-200/50 bg-emerald-500 hover:bg-emerald-600 border-none text-white transition-all transform hover:scale-105"
+                        onClick={() => router.push(`/doctor/consultation/${appointment.id}`)}
+                      >
+                        <Video className="w-5 h-5 mr-3" />
+                        Start Demo Room
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="h-14 px-6 text-xs font-black rounded-2xl border-2 border-slate-100 text-slate-400 hover:border-emerald-500/30 hover:text-emerald-500 hover:bg-emerald-50/50"
+                        onClick={() => handleUpdateStatus(appointment.id, 'completed')}
+                      >
+                        Finish
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
