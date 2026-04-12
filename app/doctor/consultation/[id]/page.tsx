@@ -214,6 +214,20 @@ export default function DoctorConsultationPage() {
     // Auto-join room for chat availability on mount
     socket.emit('join-room', appointmentId, user?.id);
 
+    // Delayed auto-offer: If patient is already in the room, there's no
+    // 'user-connected' event. Send an offer after 3s to catch this case.
+    const autoOfferTimer = setTimeout(async () => {
+      if (isCallActiveRef.current) {
+        try {
+          console.log('Sending delayed auto-offer to catch already-present patient...');
+          const offer = await createOffer();
+          socket.emit('offer', { roomId: appointmentId, offer });
+        } catch (err) {
+          console.log('Delayed offer skipped (peer may already be connected):', err);
+        }
+      }
+    }, 3000);
+
     socket.on('call-ended', () => {
       console.log('Call ended by remote user');
       showNotification('Consultation ended by patient', 'info');
@@ -233,6 +247,7 @@ export default function DoctorConsultationPage() {
 
 
     return () => {
+      clearTimeout(autoOfferTimer);
       socket.off('user-connected');
       socket.off('offer');
       socket.off('answer');

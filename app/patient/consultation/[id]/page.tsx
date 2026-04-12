@@ -28,7 +28,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { getSocket } from '@/lib/socket';
-import { getAppointmentTimeStatus, cn } from '@/lib/utils';
+import { getAppointmentTimeStatus, cn, getApiUrl } from '@/lib/utils';
 
 import {
   createPeerConnection,
@@ -81,6 +81,24 @@ export default function PatientConsultationPage() {
       return;
     }
 
+    const initCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        setLocalStream(stream);
+        // Auto-prep peer connection (Ready to receive offer from doctor)
+        createPeerConnection(stream, setRemoteStream, (candidate) => {
+          socket.emit('ice-candidate', { roomId: appointmentId, candidate });
+        });
+        setIsCallActive(true);
+      } catch (err) {
+        console.error('Error auto-starting camera:', err);
+        showNotification('Could not access camera/mic', 'error');
+      }
+    };
+
     // Load real appointment data
     const loadAppointment = async () => {
       let currentApt = null;
@@ -89,11 +107,10 @@ export default function PatientConsultationPage() {
 
       if (!currentApt) {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+          const apiUrl = getApiUrl();
           const res = await fetch(`${apiUrl}/appointments/${appointmentId}`);
           if (res.ok) {
             const data = await res.json();
-            // Map snake_case from Supabase to camelCase
             currentApt = {
               ...data,
               patientId: data.patient_id,
@@ -118,10 +135,10 @@ export default function PatientConsultationPage() {
       const status = getAppointmentTimeStatus(currentApt.date, currentApt.time);
       setTimeStatus(status);
 
-      // Hackathon Demo: Always initialize camera and READY for incoming calls
+      // Hackathon Demo: Auto-start camera
       if (!localStreamRef.current) {
         console.log('Auto-initializing patient camera for demo...');
-        initializeCamera();
+        initCamera();
       }
     };
 
@@ -133,16 +150,10 @@ export default function PatientConsultationPage() {
     if (!socket || !appointmentId) return;
 
     // Socket listeners
-    socket.on('user-connected', async (userId: string) => {
+    // NOTE: Patient does NOT create offers — only the Doctor does.
+    // Patient just listens for incoming offers and responds with answers.
+    socket.on('user-connected', (userId: string) => {
       console.log('User connected to room:', userId);
-      if (isCallActiveRef.current) {
-        try {
-          const offer = await createOffer();
-          socket.emit('offer', { roomId: appointmentId, offer });
-        } catch (err) {
-          console.error('Error creating offer:', err);
-        }
-      }
     });
 
     socket.on('offer', async (data: any) => {
@@ -234,29 +245,19 @@ export default function PatientConsultationPage() {
     return () => clearInterval(interval);
   }, [isCallActive]);
 
-  const initializeCamera = async () => {
+  const startCall = async () => {
+    if (localStream) return;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setLocalStream(stream);
-      
-      // Auto-prep peer connection on patient side (Ready to receive offer)
       createPeerConnection(stream, setRemoteStream, (candidate) => {
         socket.emit('ice-candidate', { roomId: appointmentId, candidate });
       });
       setIsCallActive(true);
     } catch (err) {
-      console.error('Error auto-starting camera:', err);
+      console.error('Error starting call:', err);
       showNotification('Could not access camera/mic', 'error');
     }
-  };
-
-  const startCall = async () => {
-    if (localStream) return;
-    await initializeCamera();
   };
 
   const handleToggleVideo = () => {
