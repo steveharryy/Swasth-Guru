@@ -30,7 +30,7 @@ export default function OnboardingPage() {
     const { user, isLoaded } = useUser();
     const router = useRouter();
     const [role, setRole] = useState<"patient" | "doctor" | null>(null);
-    const [formData, setFormData] = useState({
+        fullName: "",
         phone: "",
         age: "",
         gender: "",
@@ -145,7 +145,7 @@ export default function OnboardingPage() {
                     clerkId: user.id,
                     role,
                     email: user.primaryEmailAddress?.emailAddress,
-                    name: user.fullName,
+                    name: formData.fullName || user.fullName,
                     ...(role === 'doctor' ? { ...formData, consultationFee: '11' } : formData),
                     about: formData.bio,
                     languages: ['English', 'Hindi']
@@ -288,6 +288,17 @@ export default function OnboardingPage() {
                                 className="space-y-10 pt-10 border-t border-white/5"
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4 md:col-span-2">
+                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Full Name</Label>
+                                        <Input
+                                            name="fullName"
+                                            placeholder="Enter your full name"
+                                            required
+                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all shadow-inner"
+                                            value={formData.fullName}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
                                     <div className="space-y-4">
                                         <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Phone Number</Label>
                                         <Input

@@ -213,16 +213,8 @@ export default function DoctorDashboard() {
           if (storedProfile) {
             setProfileData(JSON.parse(storedProfile));
           } else {
-            // Last resort: Create fallback from Clerk
-            setProfileData({
-              fullName: user.fullName || '',
-              email: user.primaryEmailAddress?.emailAddress || '',
-              phone: '',
-              address: '',
-              specialization: 'General',
-              experience: '0',
               qualifications: '',
-              consultationFee: '500',
+              consultationFee: '11',
               about: '',
               userId: user.id,
               rating: 5.0,
@@ -240,15 +232,15 @@ export default function DoctorDashboard() {
           setProfileData(JSON.parse(storedProfile));
         } else {
           setProfileData({
-            fullName: user.fullName || '',
+            fullName: user.fullName || (user.unsafeMetadata?.fullName as string) || 'Doctor',
             email: user.primaryEmailAddress?.emailAddress || '',
-            phone: '',
-            address: '',
-            specialization: 'General',
-            experience: '0',
-            qualifications: '',
-            consultationFee: '500',
-            about: '',
+            phone: (user.unsafeMetadata?.phone as string) || '',
+            address: (user.unsafeMetadata?.address as string) || '',
+            specialization: (user.unsafeMetadata?.specialization as string) || 'General',
+            experience: (user.unsafeMetadata?.experience as string) || '0',
+            qualifications: (user.unsafeMetadata?.qualifications as string) || '',
+            consultationFee: '11',
+            about: (user.unsafeMetadata?.bio as string) || '',
             userId: user.id,
             rating: 5.0,
             totalPatients: 0,
@@ -326,7 +318,7 @@ export default function DoctorDashboard() {
         <div className="mb-12 p-10 rounded-[2.5rem] bg-white border border-slate-100 shadow-[0_20px_40px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
           <div className="space-y-3 relative z-10">
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">नमस्ते, Dr. {user.firstName}</h2>
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight">नमस्ते, Dr. {profileData.fullName.split(' ')[0]}</h2>
             <p className="text-lg font-bold text-slate-400">{formattedDate}</p>
             <div className="inline-flex items-center px-4 py-1.5 bg-primary/5 text-primary rounded-full text-[10px] font-black uppercase tracking-widest mt-4 border border-primary/10">
               <span className="w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
