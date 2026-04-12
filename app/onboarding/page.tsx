@@ -300,11 +300,22 @@ export default function OnboardingPage() {
                                         />
                                     </div>
                                     <div className="space-y-4">
+                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Date of Birth</Label>
+                                        <Input
+                                            name="dob"
+                                            type="date"
+                                            required
+                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all"
+                                            value={formData.dob}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                    <div className="space-y-4">
                                         <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Age</Label>
                                         <Input
                                             name="age"
                                             type="number"
-                                            placeholder="Enter Age"
+                                            placeholder="Age"
                                             required
                                             className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all"
                                             value={formData.age}
