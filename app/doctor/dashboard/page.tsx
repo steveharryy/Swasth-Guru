@@ -129,23 +129,29 @@ export default function DoctorDashboard() {
           const hackathonApts = storedAppointments.filter((apt: any) => apt.date === 'hackathon');
 
           let doctorAppointments = [];
-          const aptRes = await fetch(`${apiUrl}/appointments/doctor/${user.id}`);
-          
-          if (aptRes.ok) {
-            doctorAppointments = await aptRes.json();
-          }
+          const [idRes, globalRes] = await Promise.allSettled([
+            fetch(`${apiUrl}/appointments/doctor/${user.id}`),
+            fetch(`${apiUrl}/appointments`)
+          ]);
 
-          // Hackathon Smart-Match: Also check by name and merge with local
+          let fromId = idRes.status === 'fulfilled' && idRes.value.ok ? await idRes.value.json() : [];
+          let allGlobal = globalRes.status === 'fulfilled' && globalRes.value.ok ? await globalRes.value.json() : [];
+
+          // Merge: Match by ID OR matching the doctor's current full name
+          const nameToMatch = mappedProfile.fullName.toLowerCase().trim();
+          const nameMatchedGlobal = allGlobal.filter((apt: any) => {
+            const aptName = (apt.doctorName || apt.doctor_name || '').toLowerCase().trim();
+            return aptName === nameToMatch || apt.doctorId === user.id || apt.doctor_id === user.id;
+          });
+
           const allLocalApts = JSON.parse(localStorage.getItem('appointments') || '[]');
-          const nameMatchedApts = allLocalApts.filter((apt: any) => 
-            apt.doctorName === mappedProfile.fullName || 
-            apt.doctor_name === mappedProfile.fullName ||
-            apt.doctorId === user.id ||
-            apt.doctor_id === user.id
-          );
+          const nameMatchedLocal = allLocalApts.filter((apt: any) => {
+            const aptName = (apt.doctorName || apt.doctor_name || '').toLowerCase().trim();
+            return aptName === nameToMatch || apt.doctorId === user.id || apt.doctor_id === user.id;
+          });
 
-          // Merge and normalize
-          doctorAppointments = [...doctorAppointments, ...nameMatchedApts].map((apt: any) => ({
+          // Normalize and deduplicate
+          doctorAppointments = [...fromId, ...nameMatchedGlobal, ...nameMatchedLocal].map((apt: any) => ({
             ...apt,
             id: apt.id?.toString() || Date.now().toString(),
             patientId: apt.patient_id || apt.patientId,
