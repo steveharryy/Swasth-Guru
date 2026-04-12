@@ -148,10 +148,9 @@ export default function DoctorDashboard() {
             }));
           } else {
             const allAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-            // For Hackathon Demo: All doctor appointments are immediate
+            // For Hackathon Demo: All appointments are immediate and visible
             doctorAppointments = allAppointments.filter((apt: any) => 
-              (apt.doctor_id === user.id || apt.doctorId === user.id) &&
-              apt.status !== 'pending_payment'
+               apt.doctor_id === user.id || apt.doctorId === user.id
             ).map((apt: any) => ({ ...apt, status: 'confirmed' }));
           }
 
@@ -500,7 +499,6 @@ export default function DoctorDashboard() {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                  {(appointment.status === 'upcoming' || appointment.status === 'confirmed') && (
                     <>
                       <Button
                         variant="premium"
@@ -518,7 +516,6 @@ export default function DoctorDashboard() {
                         Finish
                       </Button>
                     </>
-                  )}
                 </div>
               </div>
             ))}

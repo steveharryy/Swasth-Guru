@@ -309,51 +309,8 @@ export default function PatientConsultationPage() {
     return <div className="p-8">Loading consultation details...</div>;
   }
 
-  if (timeStatus === 'early') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <Clock className="w-12 h-12 text-primary mx-auto mb-4" />
-            <CardTitle>Too Early to Join</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-6">
-              Your consultation with <strong>{appointment.doctorName}</strong> is scheduled for <strong>{appointment.time}</strong> on <strong>{appointment.date}</strong>.
-              <br /><br />
-              You can join up to 10 minutes before the scheduled time.
-            </p>
-            <Button onClick={() => router.push('/patient/dashboard')} className="w-full">
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (timeStatus === 'over') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-            <CardTitle>Appointment Window Over</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-6">
-              The join window for your consultation with <strong>{appointment.doctorName}</strong> has expired.
-              <br /><br />
-              Consultations can be joined up to 15 minutes after the scheduled start time.
-            </p>
-            <Button onClick={() => router.push('/patient/dashboard')} variant="outline" className="w-full">
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Hackathon Demo Mode: Bypass timeStatus early/over checks
+  const isDemo = true; 
 
   return (
     <div className="min-h-screen bg-background">

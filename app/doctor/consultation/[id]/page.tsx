@@ -129,7 +129,8 @@ export default function DoctorConsultationPage() {
       const status = getAppointmentTimeStatus(currentApt.date, currentApt.time);
       setTimeStatus(status);
 
-      if (status === 'ready' && !mediaStreamRef.current) {
+      // Hackathon Demo: Always initialize camera
+      if (!mediaStreamRef.current) {
         initializeCamera();
       }
     };
@@ -355,51 +356,8 @@ export default function DoctorConsultationPage() {
   if (isLoading || !appointment) return <div className="p-8">Loading appointment details...</div>;
   if (!isAuthenticated || !isDoctor) return null;
 
-  if (timeStatus === 'early') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <Clock className="w-12 h-12 text-primary mx-auto mb-4" />
-            <CardTitle>Too Early to Join</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-6">
-              This consultation with <strong>{appointment.patientName}</strong> is scheduled for <strong>{appointment.time}</strong> on <strong>{appointment.date}</strong>.
-              <br /><br />
-              You can join 10 minutes before the scheduled time.
-            </p>
-            <Button onClick={() => router.push('/doctor/dashboard')} className="w-full">
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (timeStatus === 'over') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-            <CardTitle>Appointment Window Over</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-6">
-              The window for this consultation with <strong>{appointment.patientName}</strong> has passed.
-              <br /><br />
-              Appointments are marked as over 15 minutes after their scheduled start time.
-            </p>
-            <Button onClick={() => router.push('/doctor/dashboard')} variant="outline" className="w-full">
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Hackathon Demo Mode: Bypass timeStatus early/over checks
+  const isDemoMode = true;
 
   return (
     <div className="min-h-screen bg-background">
