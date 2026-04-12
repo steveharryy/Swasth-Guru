@@ -56,3 +56,13 @@ export function getAppointmentTimeStatus(dateStr: string, timeStr: string): 'ear
     return 'early';
   }
 }
+
+export function getApiUrl() {
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  return process.env.NEXT_PUBLIC_API_URL || (isLocal ? 'http://localhost:8888/api' : 'https://swasth-guru-backend.onrender.com/api');
+}
+
+export function getSocketUrl() {
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  return process.env.NEXT_PUBLIC_SOCKET_URL || (isLocal ? 'http://localhost:8888' : 'https://swasth-guru-backend.onrender.com');
+}

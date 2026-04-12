@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { MEDICAL_SPECIALIZATIONS } from "@/lib/specializations";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { getApiUrl } from "@/lib/utils";
 
 
 interface UserMetadata {
@@ -138,7 +139,7 @@ export default function OnboardingPage() {
                 },
             });
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+            const apiUrl = getApiUrl();
             await fetch(`${apiUrl}/users`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

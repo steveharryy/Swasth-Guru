@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getAppointmentTimeStatus, cn } from '@/lib/utils';
+import { getAppointmentTimeStatus, cn, getApiUrl } from '@/lib/utils';
 import {
   Calendar,
   Users,
@@ -98,7 +98,7 @@ export default function DoctorDashboard() {
     // Fallback to local storage for demo purposes if metadata isn't fully robust yet
     const loadDoctorData = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+        const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/users/doctor/${user.id}`);
         if (res.ok) {
           const remoteProfile = await res.json();
@@ -263,7 +263,7 @@ export default function DoctorDashboard() {
 
   const handleUpdateStatus = async (appointmentId: string, status: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api';
+      const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/appointments/${appointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
