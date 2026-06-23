@@ -1,5 +1,8 @@
+// Onboarding Sync Route - Credentials Configured
 import express from 'express';
 import { supabase } from '../config/supabase';
+import { sendPatientWelcomeEmail, sendDoctorWelcomeEmail } from '../services/emailService';
+// SMTP NodeMailer version
 
 const router = express.Router();
 
@@ -25,6 +28,15 @@ router.post('/', async (req, res) => {
 
         if (role === 'patient') {
             console.log('Syncing patient:', { clerkId, email, name });
+
+            // Check if patient already exists to determine if this is a first-time signup
+            const { data: existingPatient } = await supabase
+                .from('patients')
+                .select('clerk_id')
+                .eq('clerk_id', clerkId)
+                .maybeSingle();
+            const isNewPatient = !existingPatient;
+
             const { data, error } = await supabase
                 .from('patients')
                 .upsert({
@@ -54,12 +66,20 @@ router.post('/', async (req, res) => {
             }
             console.log('Patient sync successful:', data.clerk_id);
             resultData = data;
+
+            if (isNewPatient && email) {
+                sendPatientWelcomeEmail(email, name || 'Valued Patient').catch(err => {
+                    console.error('Failed to send patient welcome email:', err);
+                });
+            }
         } else if (role === 'doctor') {
             const { data: existingDoctor } = await supabase
                 .from('doctors')
                 .select('*')
                 .eq('clerk_id', clerkId)
                 .maybeSingle();
+
+            const isNewDoctor = !existingDoctor;
 
             const slots = (existingDoctor?.available_slots && existingDoctor.available_slots.length > 0)
                 ? existingDoctor.available_slots
@@ -97,6 +117,12 @@ router.post('/', async (req, res) => {
             }
             console.log('Doctor sync successful:', data.clerk_id);
             resultData = data;
+
+            if (isNewDoctor && email) {
+                sendDoctorWelcomeEmail(email, name || 'Doctor').catch(err => {
+                    console.error('Failed to send doctor welcome email:', err);
+                });
+            }
         } else {
             return res.status(400).json({ message: 'Invalid role' });
         }

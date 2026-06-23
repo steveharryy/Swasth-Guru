@@ -9,34 +9,34 @@ import { MedicineTracker } from '@/components/medicine-tracker';
 import { DhanvantariDrishti } from '@/components/dhanvantari-drishti';
 import { ChatWidget } from '@/components/chat/ChatWidget';
 import { Button } from '@/components/ui/button';
+import { BackendStatusPanel } from '@/components/backend-status-panel';
+import { getSocket } from '@/lib/socket';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Calendar,
-  Users,
-  Clock,
   Video,
   FileText,
   User,
   Home,
   CalendarDays,
   Stethoscope,
-  Settings,
   Bell,
-  TrendingUp,
-  Activity,
-  Phone,
-  Plus,
   Heart,
   AlertCircle,
-  Pill
+  Plus,
+  Clock,
+  Phone,
+  Pill,
+  Loader2
 } from 'lucide-react';
-import { getAppointmentTimeStatus, cn , getApiUrl } from '@/lib/utils';
+import { cn, getApiUrl } from '@/lib/utils';
+
 interface Appointment {
   id: string;
-  patientId: string;  // 🔹 Add this
+  patientId: string;
   doctorName: string;
   doctorSpecialization: string;
   date: string;
@@ -47,7 +47,6 @@ interface Appointment {
   avatar?: string;
   consultationFee?: number;
 }
-
 
 interface PatientProfile {
   fullName: string;
@@ -83,7 +82,7 @@ interface Doctor {
 export default function PatientDashboard() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [pastAppointments, setPastAppointments] = useState<Appointment[]>([]);
 
@@ -96,6 +95,14 @@ export default function PatientDashboard() {
     healthScore: '100%'
   });
 
+  // Loading states for navigation buttons
+  const [isBookingLoading, setIsBookingLoading] = useState(false);
+  const [isAppointmentsLoading, setIsAppointmentsLoading] = useState(false);
+  const [activeConsultationLoading, setActiveConsultationLoading] = useState<string | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isRecordsLoading, setIsRecordsLoading] = useState(false);
+  const [isMedicationLoading, setIsMedicationLoading] = useState(false);
+
   useEffect(() => {
     if (!isLoaded || !user) return;
 
@@ -103,6 +110,20 @@ export default function PatientDashboard() {
       router.push('/');
       return;
     }
+
+    // Pre-connect Socket.IO to eliminate latency when joining video rooms
+    try {
+      getSocket();
+    } catch (err) {
+      console.warn('Socket preconnection skipped:', err);
+    }
+
+    // Prefetch common routes for instant navigation transitions
+    router.prefetch('/patient/appointments/book');
+    router.prefetch('/patient/appointments');
+    router.prefetch('/patient/records');
+    router.prefetch('/patient/profile');
+    router.prefetch('/patient/medicine-tracker');
 
     // Cache-First: Load from localStorage immediately for instant UI
     const localProfile = localStorage.getItem(`patient_profile_${user.id}`);
@@ -129,14 +150,13 @@ export default function PatientDashboard() {
       }));
     }
 
-    // Fetch profile from Backend (Supabase)
+    // Fetch profile from Backend
     const fetchProfile = async () => {
       try {
         const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/users/patient/${user.id}`);
         if (res.ok) {
           const remoteProfile = await res.json();
-          // Map snake_case from Supabase to camelCase for the frontend
           const mappedProfile = {
             fullName: remoteProfile.name,
             email: remoteProfile.email,
@@ -153,10 +173,8 @@ export default function PatientDashboard() {
             userId: remoteProfile.clerk_id
           };
           setProfileData(mappedProfile as PatientProfile);
-          // Also sync to localStorage for offline/backup
           localStorage.setItem(`patient_profile_${user.id}`, JSON.stringify(mappedProfile));
         } else {
-          // Fallback to localStorage if API fails
           const storedProfile = localStorage.getItem(`patient_profile_${user.id}`);
           if (storedProfile) {
             setProfileData(JSON.parse(storedProfile));
@@ -164,12 +182,10 @@ export default function PatientDashboard() {
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
-        // Fallback on network error (backend down)
         const storedProfile = localStorage.getItem(`patient_profile_${user.id}`);
         if (storedProfile) {
           setProfileData(JSON.parse(storedProfile));
         } else {
-          // Minimal fallback
           setProfileData({
             fullName: user.fullName || '',
             email: user.primaryEmailAddress?.emailAddress || '',
@@ -180,14 +196,13 @@ export default function PatientDashboard() {
     };
     fetchProfile();
 
-    // Load appointments from Backend (Supabase)
+    // Load appointments from Backend
     const fetchAppointments = async () => {
       try {
         const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/appointments/patient/${user.id}`);
         if (res.ok) {
           const remoteAppointments = await res.json();
-          // Map snake_case from Supabase if needed, but the API seems to return what we want
           const userAppointments = remoteAppointments.filter((apt: any) =>
             apt.patientId === user.id || (apt.patient_id === user.id)
           ).map((apt: any) => ({
@@ -203,22 +218,14 @@ export default function PatientDashboard() {
           const normalizeDate = (d: string) => {
             if (!d) return '';
             if (d.includes('T')) return d.split('T')[0];
-            if (d.includes('/')) {
-              const parts = d.split('/');
-              if (parts.length === 3) {
-                if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
-              }
-            }
             return d;
           };
 
           const today = new Date().toISOString().split('T')[0];
           const todayStr = normalizeDate(today);
-          // For Hackathon Demo: ALL appointments are 'ready' to join immediately
           const upcoming = userAppointments.map((apt: any) => ({
             ...apt,
-            status: 'confirmed' // Force confirmed for demo
+            status: 'confirmed'
           }));
 
           const past = userAppointments.filter((apt: Appointment) => {
@@ -236,11 +243,8 @@ export default function PatientDashboard() {
             totalConsultations: userAppointments.length.toString()
           }));
 
-
-          // Sync to localStorage
           localStorage.setItem('appointments', JSON.stringify(userAppointments));
         } else {
-          // Fallback to localStorage
           const storedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
           const userAppointments = storedAppointments.filter((apt: any) => 
             (apt.patient_id === user.id || apt.patientId === user.id) &&
@@ -265,7 +269,7 @@ export default function PatientDashboard() {
     };
     fetchAppointments();
 
-    // Load medical records from Backend (Supabase)
+    // Load medical records from Backend
     const fetchRecords = async () => {
       try {
         const apiUrl = getApiUrl();
@@ -293,7 +297,7 @@ export default function PatientDashboard() {
         const res = await fetch(`${apiUrl}/doctors`);
         if (res.ok) {
           const data = await res.json();
-          setDoctors(data.slice(0, 4)); // Show top 4 doctors
+          setDoctors(data.slice(0, 4));
         }
       } catch (error) {
         console.error('Error fetching doctors:', error);
@@ -308,15 +312,14 @@ export default function PatientDashboard() {
   }
 
   const stats = [
-    { label: 'Upcoming Appointments', value: statsData.upcomingCount, icon: Calendar, color: 'bg-primary/10 text-primary' },
-    { label: 'Total Consultations', value: statsData.totalConsultations, icon: Video, color: 'bg-emerald-500/10 text-emerald-600' },
-    { label: 'Medical Records', value: statsData.medicalRecords, icon: FileText, color: 'bg-indigo-500/10 text-indigo-600' },
-    { label: 'Health Score', value: statsData.healthScore, icon: Heart, color: 'bg-rose-500/10 text-rose-600' },
+    { label: 'Upcoming Visits / आने वाले अपॉइंटमेंट', value: statsData.upcomingCount, icon: Calendar, color: 'bg-primary/10 text-primary' },
+    { label: 'Consultations / कुल परामर्श', value: statsData.totalConsultations, icon: Video, color: 'bg-emerald-500/10 text-emerald-600' },
+    { label: 'Medical Records / चिकित्सा रिकॉर्ड', value: statsData.medicalRecords, icon: FileText, color: 'bg-indigo-500/10 text-indigo-600' },
+    { label: 'Health Score / स्वास्थ्य स्कोर', value: statsData.healthScore, icon: Heart, color: 'bg-rose-500/10 text-rose-600' },
   ];
 
-
   const date = new Date();
-  const formattedDate = date.toLocaleDateString('en-US', {
+  const formattedDate = date.toLocaleDateString(language === 'hindi' ? 'hi-IN' : 'en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -329,49 +332,69 @@ export default function PatientDashboard() {
       <header className="bg-card border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-5xl">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold logo-text">SwasthGuru</h1>
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary transition-colors">
-                <Bell className="h-5 w-5" />
-              </Button>
-              <div className="h-6 w-[1px] bg-slate-100 hidden sm:block"></div>
-              <UserButton appearance={{ elements: { userButtonAvatarBox: 'h-8 w-8' } }} />
+            <div className="flex items-center space-x-2.5">
+              <img src="/logo.png" alt="Swasth Guru Logo" className="h-16 w-auto object-contain" />
+              <h1 className="text-2xl font-black logo-text hidden sm:block">SwasthGuru</h1>
             </div>
-
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
+                <Bell className="h-6 w-6" />
+              </Button>
+              <div className="h-6 w-[1px] bg-border"></div>
+              <UserButton appearance={{ elements: { userButtonAvatarBox: 'h-10 w-10' } }} />
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-10 pb-28 max-w-5xl">
         {/* Welcome Section */}
-        <div className="mb-12 p-10 rounded-[2.5rem] bg-white border border-slate-100 shadow-[0_20px_40px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden">
+        <div className="mb-12 p-10 rounded-[2.5rem] bg-card border border-border shadow-[0_20px_40px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
           <div className="space-y-3 relative z-10">
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">नमस्ते, {user.firstName}</h2>
-            <p className="text-lg font-bold text-slate-400">{formattedDate}</p>
-            <div className="inline-flex items-center px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest mt-4 border border-emerald-100">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
-              Secure & Encrypted
+            <h2 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
+              {language === 'hindi' ? 'नमस्ते' : 'Hello'}, {user.firstName}
+            </h2>
+            <p className="text-base md:text-lg font-extrabold text-muted-foreground">{formattedDate}</p>
+            <div className="inline-flex items-center px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-xs font-black uppercase tracking-wider mt-4 border border-emerald-100">
+              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+              Secure & Encrypted / सुरक्षित और गोपनीय
             </div>
-
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full sm:w-auto">
+            {/* Book Doctor Button */}
             <Button
-              onClick={() => router.push('/patient/appointments/book')}
+              onClick={() => {
+                setIsBookingLoading(true);
+                router.push('/patient/appointments/book');
+              }}
+              loading={isBookingLoading}
               variant="premium"
-              className="h-12 px-8 text-base rounded-2xl font-bold"
+              className="h-14 md:h-16 px-8 rounded-2xl font-black shadow-md border-2 border-primary/10 text-primary flex items-center justify-center"
             >
-              <Plus className="w-5 h-5 mr-2" />
-              Book Doctor
+              <Plus className="w-6 h-6 mr-2 shrink-0" />
+              <div className="flex flex-col items-start leading-tight text-left">
+                <span className="text-sm md:text-base font-extrabold text-[#001C3D]">Book Doctor</span>
+                <span className="text-xs font-semibold text-[#001C3D]/70">डॉक्टर से मिलें</span>
+              </div>
             </Button>
+
+            {/* My Appointments Button */}
             <Button
-              onClick={() => router.push('/patient/appointments')}
+              onClick={() => {
+                setIsAppointmentsLoading(true);
+                router.push('/patient/appointments');
+              }}
+              loading={isAppointmentsLoading}
               variant="outline"
-              className="h-12 px-8 text-base rounded-2xl border-2 border-primary/40 hover:bg-primary/10 transition-colors font-bold text-primary"
+              className="h-14 md:h-16 px-8 rounded-2xl border-2 border-primary/45 hover:bg-primary/5 transition-all text-primary font-black flex items-center justify-center"
             >
-              <Calendar className="w-5 h-5 mr-2" />
-              My Appointments
+              <Calendar className="w-6 h-6 mr-2 shrink-0" />
+              <div className="flex flex-col items-start leading-tight text-left">
+                <span className="text-sm md:text-base font-extrabold">Appointments</span>
+                <span className="text-xs font-semibold text-primary/70">मेरे अपॉइंटमेंट</span>
+              </div>
             </Button>
           </div>
         </div>
@@ -379,81 +402,88 @@ export default function PatientDashboard() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {stats.map((stat, index) => (
-            <Card key={index} className="border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)] bg-white rounded-3xl overflow-hidden hover:-translate-y-1 transition-all duration-300">
-
+            <Card key={index} className="border-border shadow-[0_10px_30px_rgba(0,0,0,0.02)] bg-card rounded-3xl overflow-hidden hover:-translate-y-1 transition-all duration-300">
               <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
                 <div className={cn("p-4 rounded-2xl", stat.color)}>
-                  <stat.icon className="w-6 h-6" />
+                  <stat.icon className="w-7 h-7" />
                 </div>
                 <div>
-                  <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</p>
+                  <p className="text-3xl font-black text-foreground tracking-tight">{stat.value}</p>
+                  <p className="text-xs md:text-sm font-extrabold text-muted-foreground tracking-wide mt-2">{stat.label}</p>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
+        {/* System Status Panel (Non-technical connectivity check) */}
+        <div className="mb-10">
+          <BackendStatusPanel />
+        </div>
 
         {/* Profile Information */}
         {profileData && (
-          <Card className="mb-8 border">
-            <CardHeader className="border-b py-4">
-              <CardTitle className="flex items-center text-lg font-bold">
-                <User className="w-5 h-5 mr-3 text-primary" />
-                मेरी जानकारी (My Profile)
+          <Card className="mb-8 border shadow-sm rounded-3xl">
+            <CardHeader className="border-b py-5 px-6">
+              <CardTitle className="flex items-center text-xl font-bold">
+                <User className="w-6 h-6 mr-3 text-primary" />
+                My Profile / मेरी जानकारी
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-primary uppercase tracking-widest border-l-2 border-primary pl-3">Personal Info</h4>
+                  <h4 className="text-sm font-black text-primary uppercase tracking-wider border-l-3 border-primary pl-3">
+                    Personal Info / व्यक्तिगत जानकारी
+                  </h4>
                   <div className="grid gap-4">
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">पूरा नाम (Full Name)</p>
-                      <p className="text-lg font-semibold text-foreground">{profileData.fullName}</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Full Name / पूरा नाम</p>
+                      <p className="text-lg font-bold text-foreground">{profileData.fullName}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">फोन (Phone)</p>
-                        <p className="text-base font-semibold text-foreground">{profileData.phone}</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase">Phone / फ़ोन</p>
+                        <p className="text-base font-bold text-foreground">{profileData.phone}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Gender</p>
-                        <p className="text-base font-semibold text-foreground capitalize">{profileData.gender}</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase">Gender / लिंग</p>
+                        <p className="text-base font-bold text-foreground capitalize">{profileData.gender}</p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">पता (Address)</p>
-                      <p className="text-base font-semibold text-foreground">{profileData.address || 'Not Added'}</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Address / पता</p>
+                      <p className="text-base font-semibold text-foreground">{profileData.address || '—'}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-secondary uppercase tracking-widest border-l-2 border-secondary pl-3">Medical Info</h4>
+                  <h4 className="text-sm font-black text-secondary uppercase tracking-wider border-l-3 border-secondary pl-3">
+                    Medical Info / स्वास्थ्य जानकारी
+                  </h4>
                   <div className="grid gap-4">
                     <div className="grid grid-cols-3 gap-3">
                       <div className="p-3 bg-muted rounded-xl text-center">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Blood</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Blood / रक्त</p>
                         <p className="text-lg font-bold text-red-500">{profileData.bloodGroup || '-'}</p>
                       </div>
                       <div className="p-3 bg-muted rounded-xl text-center">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Height</p>
-                        <p className="text-lg font-bold text-blue-500">{profileData.height || '-'} cm</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Height / लंबाई</p>
+                        <p className="text-base font-bold text-blue-500">{profileData.height || '-'} cm</p>
                       </div>
                       <div className="p-3 bg-muted rounded-xl text-center">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Weight</p>
-                        <p className="text-lg font-bold text-green-500">{profileData.weight || '-'} kg</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Weight / वजन</p>
+                        <p className="text-base font-bold text-green-500">{profileData.weight || '-'} kg</p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Allergies (एलर्जी)</p>
-                      <p className="text-base font-semibold text-red-400">{profileData.allergies || 'None'}</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Allergies / एलर्जी</p>
+                      <p className="text-base font-semibold text-red-400">{profileData.allergies || 'None / कोई नहीं'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Medications (दवाइयाँ)</p>
-                      <p className="text-base font-semibold text-foreground">{profileData.currentMedications || 'None'}</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Current Medications / अभी चल रही दवाइयाँ</p>
+                      <p className="text-base font-semibold text-foreground">{profileData.currentMedications || 'None / कोई नहीं'}</p>
                     </div>
                   </div>
                 </div>
@@ -463,26 +493,32 @@ export default function PatientDashboard() {
         )}
 
         {/* Upcoming Appointments */}
-        <Card className="mb-12 shadow-[0_30px_60px_rgba(0,0,0,0.04)] overflow-hidden border-slate-100 rounded-[2.5rem]">
-          <CardHeader className="flex flex-row items-center justify-between py-10 bg-slate-50/50 px-10 border-b border-slate-100">
-            <CardTitle className="text-3xl font-black text-slate-900 tracking-tight uppercase">आने वाली मुलाक़ात</CardTitle>
+        <Card className="mb-12 shadow-[0_30px_60px_rgba(0,0,0,0.04)] overflow-hidden border-border rounded-[2.5rem]">
+          <CardHeader className="flex flex-row items-center justify-between py-8 bg-primary/5 px-10 border-b border-border">
+            <CardTitle className="text-2xl font-black text-foreground tracking-tight uppercase">
+              {t('upcoming_visits')}
+            </CardTitle>
             <Button
               variant="outline"
-              size="sm"
-              className="px-8 h-12 text-[10px] font-black uppercase tracking-widest border-2 rounded-xl"
-              onClick={() => router.push('/patient/appointments')}
+              size="default"
+              className="px-6 h-12 text-sm font-black border-2 rounded-xl"
+              onClick={() => {
+                setIsAppointmentsLoading(true);
+                router.push('/patient/appointments');
+              }}
+              loading={isAppointmentsLoading}
             >
-              See All
+              See All / सभी देखें
             </Button>
           </CardHeader>
-          <CardContent className="p-10 space-y-8">
+          <CardContent className="p-8 space-y-6">
             {upcomingAppointments.map((appointment) => (
-              <div key={appointment.id} className="flex flex-col sm:flex-row items-center justify-between p-6 border border-slate-100 rounded-[2rem] bg-white gap-6 hover:border-primary/30 hover:shadow-xl transition-all group">
-                <div className="flex items-center space-x-6 w-full sm:w-auto">
+              <div key={appointment.id} className="flex flex-col md:flex-row items-center justify-between p-6 border border-border rounded-[2rem] bg-card gap-6 hover:border-primary/30 hover:shadow-xl transition-all group">
+                <div className="flex items-center space-x-6 w-full md:w-auto">
                   <div className="relative shrink-0">
-                    <Avatar className="w-20 h-20 border-2 border-slate-100 p-1">
+                    <Avatar className="w-20 h-20 border-2 border-border p-1">
                       <AvatarImage src={appointment.avatar} className="rounded-2xl" />
-                      <AvatarFallback className="bg-slate-50 text-primary text-xl font-black rounded-2xl">
+                      <AvatarFallback className="bg-muted text-primary text-xl font-black rounded-2xl">
                         {appointment.doctorName?.[0]}
                       </AvatarFallback>
                     </Avatar>
@@ -491,50 +527,59 @@ export default function PatientDashboard() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xl font-black text-slate-800 tracking-tight">{appointment.doctorName}</p>
-                    <p className="text-xs font-bold text-primary uppercase tracking-widest">{appointment.doctorSpecialization}</p>
-                    <div className="flex flex-wrap items-center text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2 gap-x-4">
-                      <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{new Date(appointment.date).toLocaleDateString()}</span>
-                      <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{appointment.time}</span>
+                    <p className="text-xl font-black text-foreground tracking-tight">{appointment.doctorName}</p>
+                    <p className="text-sm font-bold text-primary uppercase tracking-wider">{appointment.doctorSpecialization}</p>
+                    <div className="flex flex-wrap items-center text-xs text-muted-foreground font-bold uppercase tracking-wider mt-2 gap-x-4">
+                      <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{appointment.date === 'hackathon' ? 'Demo Room' : new Date(appointment.date).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{appointment.time}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto shrink-0">
                   <Badge
-                    className={cn("h-10 px-6 text-[10px] font-black rounded-xl uppercase tracking-widest bg-emerald-50 text-emerald-600")}
+                    className={cn("h-10 px-4 text-xs font-black rounded-xl uppercase tracking-wider bg-emerald-50 text-emerald-600 border-transparent")}
                     variant="outline"
                   >
-                    READY FOR DEMO
+                    Ready / तैयार
                   </Badge>
                   <Button
                     variant="premium"
-                    size="sm"
-                    className="h-14 px-8 text-xs font-black rounded-2xl shadow-xl shadow-primary/20 brightness-110"
-                    onClick={() => router.push(`/patient/consultation/${appointment.id}`)}
+                    className="h-14 px-8 text-sm font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all w-full sm:w-auto"
+                    onClick={() => {
+                      setActiveConsultationLoading(appointment.id);
+                      router.push(`/patient/consultation/${appointment.id}`);
+                    }}
+                    loading={activeConsultationLoading === appointment.id}
                   >
-                    <Video className="w-5 h-5 mr-3" />
-                    Enter Consultation
+                    <Video className="w-5 h-5 mr-2 shrink-0" />
+                    <div className="flex flex-col items-start leading-tight text-left">
+                      <span className="text-sm font-extrabold text-[#001C3D]">Join Call</span>
+                      <span className="text-xs font-semibold text-[#001C3D]/70">कॉल में शामिल हों</span>
+                    </div>
                   </Button>
                 </div>
               </div>
             ))}
 
             {upcomingAppointments.length === 0 && (
-              <div className="text-center py-20 space-y-8">
-                <div className="w-28 h-28 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
-                  <Calendar className="w-14 h-14 text-slate-300" />
+              <div className="text-center py-16 space-y-8">
+                <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto">
+                  <Calendar className="w-12 h-12 text-muted-foreground/60" />
                 </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-extrabold text-slate-800">कोई मुलाक़ात नहीं</p>
-                  <p className="text-xl font-bold text-slate-400 uppercase tracking-widest">No Appointments Found</p>
+                <div className="space-y-1">
+                  <p className="text-2xl font-extrabold text-foreground">No Appointments / कोई मुलाक़ात नहीं</p>
                 </div>
                 <Button
-                  onClick={() => router.push('/patient/appointments/book')}
+                  onClick={() => {
+                    setIsBookingLoading(true);
+                    router.push('/patient/appointments/book');
+                  }}
+                  loading={isBookingLoading}
                   size="lg"
-                  className="h-20 px-12 text-xl bg-primary text-black hover:bg-primary/90"
+                  className="h-16 px-10 text-lg bg-primary text-white hover:bg-primary/95 rounded-2xl shadow-lg shadow-primary/20"
                 >
-                  <Plus className="w-7 h-7 mr-4" />
-                  Book Now
+                  <Plus className="w-6 h-6 mr-3" />
+                  Book Doctor / अभी बुक करें
                 </Button>
               </div>
             )}
@@ -543,27 +588,29 @@ export default function PatientDashboard() {
 
         {/* Recent Past Appointments */}
         {pastAppointments.length > 0 && (
-          <Card className="mb-12 shadow-[0_30px_60px_rgba(0,0,0,0.04)] overflow-hidden border-slate-100 rounded-[2.5rem]">
-            <CardHeader className="flex flex-row items-center justify-between py-8 bg-slate-50/30 px-10 border-b border-slate-100">
-              <CardTitle className="text-2xl font-black text-slate-900 tracking-tight uppercase">पिछली मुलाक़ातें (Recent Visits)</CardTitle>
+          <Card className="mb-12 shadow-[0_30px_60px_rgba(0,0,0,0.04)] overflow-hidden border-border rounded-[2.5rem]">
+            <CardHeader className="flex flex-row items-center justify-between py-6 bg-primary/5 px-10 border-b border-border">
+              <CardTitle className="text-xl font-black text-foreground tracking-tight uppercase">
+                {t('recent_visits')}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="p-10 space-y-6">
+            <CardContent className="p-8 space-y-6">
               {pastAppointments.map((appointment) => (
-                <div key={appointment.id} className="flex items-center justify-between p-5 border border-slate-50 rounded-[1.5rem] bg-white gap-4 opacity-80 hover:opacity-100 transition-opacity">
+                <div key={appointment.id} className="flex items-center justify-between p-5 border border-border/50 rounded-[1.5rem] bg-card gap-4 opacity-80 hover:opacity-100 transition-opacity">
                   <div className="flex items-center space-x-4">
                     <Avatar className="w-12 h-12 border p-0.5">
                       <AvatarImage src={appointment.avatar} />
-                      <AvatarFallback className="bg-slate-50 text-primary text-sm font-bold">
+                      <AvatarFallback className="bg-muted text-primary text-sm font-bold">
                         {appointment.doctorName?.[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-bold text-slate-800">{appointment.doctorName}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(appointment.date).toLocaleDateString()} • {appointment.time}</p>
+                      <p className="font-bold text-foreground text-base">{appointment.doctorName}</p>
+                      <p className="text-xs font-bold text-muted-foreground mt-0.5">{new Date(appointment.date).toLocaleDateString()} • {appointment.time}</p>
                     </div>
                   </div>
-                  <Badge className="bg-green-50 text-green-600 border-green-100 uppercase text-[9px] font-black tracking-widest px-3 py-1 rounded-lg">
-                    Completed
+                  <Badge className="bg-green-50 text-green-600 border-green-100 uppercase text-xs font-black px-3 py-1 rounded-lg">
+                    Completed / पूरा हुआ
                   </Badge>
                 </div>
               ))}
@@ -571,127 +618,148 @@ export default function PatientDashboard() {
           </Card>
         )}
 
-
         {/* Available Doctors */}
-        <Card className="mb-12 border border-slate-100 shadow-[0_20px_40px_rgba(0,0,0,0.03)] bg-white rounded-[2.5rem] overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between py-8 px-10 border-b border-slate-50">
-            <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">हमारे डॉक्टर (Available Doctors)</CardTitle>
+        <Card className="mb-12 border border-border shadow-[0_20px_40px_rgba(0,0,0,0.03)] bg-card rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between py-6 px-10 border-b border-border/50">
+            <CardTitle className="text-xl font-black text-foreground uppercase tracking-tight">
+              {t('available_doctors')}
+            </CardTitle>
             <Button
               variant="outline"
-              size="sm"
-              className="px-6 h-10 text-[10px] font-black uppercase tracking-widest rounded-xl border-slate-200"
-              onClick={() => router.push('/patient/appointments/book')}
+              size="default"
+              className="px-6 h-12 text-sm font-black rounded-xl border-border"
+              onClick={() => {
+                setIsBookingLoading(true);
+                router.push('/patient/appointments/book');
+              }}
+              loading={isBookingLoading}
             >
-              See All
+              See All / सभी देखें
             </Button>
           </CardHeader>
-          <CardContent className="p-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {doctors.length > 0 ? (
                 doctors.map((doctor) => (
-                  <Card key={doctor._id || doctor.id} className="group cursor-pointer border border-slate-50 shadow-none overflow-hidden hover:border-primary/20 hover:shadow-xl transition-all rounded-[2rem] bg-slate-50/30" onClick={() => router.push(`/patient/appointments/book`)}>
-                    <CardContent className="p-8 flex flex-col items-center text-center space-y-4">
-                      <Avatar className="w-20 h-20 border-2 border-white transition-transform group-hover:scale-105 shadow-md">
+                  <Card 
+                    key={doctor._id || doctor.id} 
+                    className="group cursor-pointer border border-border shadow-none overflow-hidden hover:border-primary/20 hover:shadow-xl transition-all rounded-[2rem] bg-muted/30" 
+                    onClick={() => {
+                      setIsBookingLoading(true);
+                      router.push(`/patient/appointments/book`);
+                    }}
+                  >
+                    <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
+                      <Avatar className="w-20 h-20 border-2 border-card transition-transform group-hover:scale-105 shadow-md">
                         <AvatarImage src={doctor.avatar} />
-                        <AvatarFallback className="bg-white">
+                        <AvatarFallback className="bg-card">
                           <Stethoscope className="h-10 w-10 text-primary" />
                         </AvatarFallback>
                       </Avatar>
                       <div className="space-y-1">
-                        <h3 className="font-black text-lg text-slate-800 tracking-tight">{doctor.name}</h3>
-                        <p className="text-[10px] text-primary font-black uppercase tracking-widest">{doctor.specialization}</p>
+                        <h3 className="font-black text-base text-foreground tracking-tight">{doctor.name}</h3>
+                        <p className="text-xs text-primary font-black uppercase tracking-wider">{doctor.specialization}</p>
                       </div>
-                      <div className="flex items-center justify-center gap-3 w-full py-2 bg-white rounded-xl border border-slate-100 shadow-sm">
-                        <span className="text-sm font-black text-slate-900 font-mono">₹{doctor.consultationFee}</span>
-                        <span className="w-1.5 h-1.5 bg-slate-200 rounded-full"></span>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{doctor.experience}Y EXP</span>
+                      <div className="flex items-center justify-center gap-3 w-full py-2 bg-card rounded-xl border border-border shadow-sm">
+                        <span className="text-sm font-black text-foreground">₹{doctor.consultationFee}</span>
+                        <span className="w-1.5 h-1.5 bg-border rounded-full"></span>
+                        <span className="text-xs font-bold text-muted-foreground">{doctor.experience} Y EXP</span>
                       </div>
                     </CardContent>
                   </Card>
                 ))
               ) : (
-                <div className="col-span-full text-center py-20 text-slate-300 font-black text-xl uppercase tracking-widest">
-                  डॉक्टर अभी उपलब्ध नहीं हैं
+                <div className="col-span-full text-center py-12 text-muted-foreground font-bold text-lg">
+                  No Doctors Available / कोई डॉक्टर उपलब्ध नहीं हैं
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-
         {/* Health Tips & Emergency */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <Card className="shadow-2xl shadow-rose-100/50 border-rose-100 bg-rose-50 rounded-[2.5rem] relative overflow-hidden group">
+          <Card className="shadow-xl shadow-rose-100/50 border-rose-100 bg-rose-50 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-rose-200/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform" />
-            <CardHeader className="py-8 px-10">
+            <CardHeader className="py-6 px-10">
               <CardTitle className="flex items-center text-2xl font-black text-rose-600 tracking-tight uppercase">
                 <AlertCircle className="w-8 h-8 mr-4" />
-                आपातकालीन
+                Emergency Support / आपातकालीन सहायता
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-10 pb-10 space-y-6 relative z-10">
-              <p className="text-sm text-rose-900/60 font-medium">Any health emergency? Call our 24/7 medical support team immediately.</p>
+            <CardContent className="px-10 pb-8 space-y-6 relative z-10">
+              <p className="text-sm text-rose-900/60 font-semibold">{t('emergency_desc')}</p>
               <Button
                 variant="destructive"
-                className="w-full h-16 text-xl font-black rounded-2xl bg-rose-600 hover:bg-rose-700 transition-all shadow-xl shadow-rose-200"
+                className="w-full h-16 text-lg font-black rounded-2xl bg-rose-600 hover:bg-rose-700 transition-all shadow-xl shadow-rose-200 flex items-center justify-center"
+                onClick={() => window.open('tel:102')}
               >
-                <Phone className="w-6 h-6 mr-4 animate-pulse" />
-                CALL HELP: 102
+                <Phone className="w-6 h-6 mr-4 animate-pulse text-white" />
+                CALL / कॉल करें: 102
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="shadow-2xl shadow-emerald-100/50 border-emerald-100 bg-emerald-50 rounded-[2.5rem] relative overflow-hidden group">
+          <Card className="shadow-xl shadow-emerald-100/50 border-emerald-100 bg-emerald-50 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform" />
-            <CardHeader className="py-8 px-10">
+            <CardHeader className="py-6 px-10">
               <CardTitle className="flex items-center text-2xl font-black text-emerald-600 tracking-tight uppercase">
                 <Heart className="w-8 h-8 mr-4" />
-                स्वास्थ्य सलाह
+                Health Tips / स्वास्थ्य सलाह
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-10 pb-10 space-y-4 relative z-10">
-              <div className="p-4 bg-white/60 backdrop-blur-sm rounded-[1.5rem] flex items-center gap-4 border border-white">
+            <CardContent className="px-10 pb-8 space-y-4 relative z-10">
+              <div className="p-4 bg-card/70 backdrop-blur-sm rounded-[1.5rem] flex items-center gap-4 border border-card">
                 <span className="text-3xl shrink-0">💧</span>
                 <div>
-                  <p className="text-sm font-black text-slate-800">पानी पीते रहें</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stay Hydrated</p>
+                  <p className="text-sm font-black text-foreground">Stay Hydrated / पानी पीते रहें</p>
+                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">Drink plenty of water throughout the day. / दिनभर पर्याप्त मात्रा में पानी पिएं।</p>
                 </div>
               </div>
-              <div className="p-4 bg-white/60 backdrop-blur-sm rounded-[1.5rem] flex items-center gap-4 border border-white">
+              <div className="p-4 bg-card/70 backdrop-blur-sm rounded-[1.5rem] flex items-center gap-4 border border-card">
                 <span className="text-3xl shrink-0">😴</span>
                 <div>
-                  <p className="text-sm font-black text-slate-800">पूरी नींद लें</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Good Sleep</p>
+                  <p className="text-sm font-black text-foreground">Good Sleep / पूरी नींद लें</p>
+                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">Get 7-8 hours of restful sleep daily. / नियमित रूप से ७-८ घंटे की नींद लें।</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-
         {/* Quick Actions */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
-            { label: 'Files', sub: 'Reports', icon: FileText, color: 'bg-indigo-50 text-indigo-600', path: '/patient/records' },
-            { label: 'Doctors', sub: 'Book Now', icon: Stethoscope, color: 'bg-primary/10 text-primary', path: '/patient/appointments/book' },
-            { label: 'Profile', sub: 'Edit Info', icon: User, color: 'bg-amber-50 text-amber-600', path: '/patient/profile' },
-            { label: 'Medicines', sub: 'Track', icon: Pill, color: 'bg-emerald-50 text-emerald-600', path: '/patient/medicine-tracker' },
+            { label: 'Medical Records / चिकित्सा रिकॉर्ड', icon: FileText, color: 'bg-indigo-50 text-indigo-600', path: '/patient/records', loadingSetter: setIsRecordsLoading, loadingVal: isRecordsLoading },
+            { label: 'Book Doctor / डॉक्टर से मिलें', icon: Stethoscope, color: 'bg-primary/10 text-primary', path: '/patient/appointments/book', loadingSetter: setIsBookingLoading, loadingVal: isBookingLoading },
+            { label: 'My Profile / मेरी जानकारी', icon: User, color: 'bg-amber-50 text-amber-600', path: '/patient/profile', loadingSetter: setIsProfileLoading, loadingVal: isProfileLoading },
+            { label: 'Medicines / दवाई समय', icon: Pill, color: 'bg-emerald-50 text-emerald-600', path: '/patient/medicine-tracker', loadingSetter: setIsMedicationLoading, loadingVal: isMedicationLoading },
           ].map((action, i) => (
-            <Card key={i} className="group cursor-pointer border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:bg-slate-50 transition-all duration-200 rounded-[2rem] bg-white overflow-hidden" onClick={() => router.push(action.path)}>
-
-              <CardContent className="p-8 flex flex-col items-center text-center space-y-4">
-                <div className={cn("w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-all group-hover:scale-110 group-hover:rotate-6", action.color)}>
-                  <action.icon className="w-7 h-7" />
+            <Card 
+              key={i} 
+              className="group cursor-pointer border border-border shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all duration-150 rounded-[2rem] bg-card overflow-hidden" 
+              onClick={() => {
+                action.loadingSetter(true);
+                router.push(action.path);
+              }}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
+                <div className={cn("relative w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-all group-hover:scale-110", action.color)}>
+                  {action.loadingVal ? (
+                    <Loader2 className="w-7 h-7 animate-spin" />
+                  ) : (
+                    <action.icon className="w-7 h-7" />
+                  )}
                 </div>
-                <div>
-                  <h3 className="font-black text-xl text-slate-800 tracking-tight">{action.label}</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{action.sub}</p>
+                <div className="w-full flex flex-col items-center">
+                  <h3 className="font-black text-sm text-foreground tracking-tight leading-snug min-h-[40px] flex items-center justify-center text-center">
+                    {action.label}
+                  </h3>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-
 
         {/* Dhanvantari Drishti Section */}
         <div className="mb-8">
@@ -699,57 +767,57 @@ export default function PatientDashboard() {
         </div>
 
         {/* Medicine Tracker Section */}
-        <Card className="mb-8 border shadow-none">
-          <CardHeader className="py-4 px-6 border-b">
-            <CardTitle className="flex items-center text-lg font-bold">
+        <Card className="mb-8 border shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="py-4 px-6 border-b bg-primary/5">
+            <CardTitle className="flex items-center text-lg font-black">
               <Pill className="w-5 h-5 mr-3 text-primary" />
-              दवा की जानकारी (Medicine Tracker)
+              Medicine Tracker / दवाई ट्रैकर
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <MedicineTracker />
           </CardContent>
         </Card>
-      </main >
+      </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-slate-100 h-20 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-2xl border-t border-border h-20 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <div className="container mx-auto px-10 h-full max-w-5xl">
           <div className="flex justify-around items-center h-full">
-            <Link href="/patient/dashboard" className="flex-1">
+            <Link href="/patient/dashboard" className="flex-1 flex justify-center">
               <Button
                 variant="ghost"
-                className="flex flex-col items-center justify-center h-full w-full text-primary gap-1 px-4 group active:bg-primary/5 rounded-none"
+                className="flex flex-col items-center justify-center h-full w-full text-primary gap-1 px-4 rounded-none hover:bg-transparent active:bg-transparent focus:bg-transparent transition-colors duration-150"
               >
-                <Home className="w-6 h-6 transition-none group-active:scale-90" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
+                <Home className="w-6 h-6" />
+                <span className="text-xs font-extrabold uppercase tracking-wide">Home / मुख्य</span>
               </Button>
             </Link>
-            <Link href="/patient/appointments" className="flex-1">
+            <Link href="/patient/appointments" className="flex-1 flex justify-center">
               <Button
                 variant="ghost"
-                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+                className="flex flex-col items-center justify-center h-full w-full text-muted-foreground gap-1 px-4 rounded-none hover:text-primary hover:bg-transparent active:bg-transparent focus:bg-transparent transition-colors duration-150"
               >
-                <CalendarDays className="w-6 h-6 transition-none group-active:scale-90" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Dates</span>
+                <CalendarDays className="w-6 h-6" />
+                <span className="text-xs font-extrabold uppercase tracking-wide">Appointments / मुलाक़ात</span>
               </Button>
             </Link>
-            <Link href="/patient/records" className="flex-1">
+            <Link href="/patient/records" className="flex-1 flex justify-center">
               <Button
                 variant="ghost"
-                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+                className="flex flex-col items-center justify-center h-full w-full text-muted-foreground gap-1 px-4 rounded-none hover:text-primary hover:bg-transparent active:bg-transparent focus:bg-transparent transition-colors duration-150"
               >
-                <FileText className="w-6 h-6 transition-none group-active:scale-90" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Files</span>
+                <FileText className="w-6 h-6" />
+                <span className="text-xs font-extrabold uppercase tracking-wide">Records / रिकॉर्ड</span>
               </Button>
             </Link>
-            <Link href="/patient/profile" className="flex-1">
+            <Link href="/patient/profile" className="flex-1 flex justify-center">
               <Button
                 variant="ghost"
-                className="flex flex-col items-center justify-center h-full w-full text-slate-400 gap-1 px-4 group active:bg-primary/5 rounded-none hover:text-primary"
+                className="flex flex-col items-center justify-center h-full w-full text-muted-foreground gap-1 px-4 hover:text-primary hover:bg-transparent focus:bg-transparent active:bg-transparent transition-colors duration-150 rounded-none"
               >
-                <User className="w-6 h-6 transition-none group-active:scale-90" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Me</span>
+                <User className="w-6 h-6" />
+                <span className="text-xs font-extrabold uppercase tracking-wide">Profile / प्रोफ़ाइल</span>
               </Button>
             </Link>
           </div>

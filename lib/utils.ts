@@ -64,5 +64,5 @@ export function getApiUrl() {
 
 export function getSocketUrl() {
   // Prefer local environment variable if available, fallback to production Render URL
-  return process.env.NEXT_PUBLIC_BACKEND_URL || 'https://swasth-guru-backend.onrender.com';
+  return process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://swasth-guru-backend.onrender.com';
 }

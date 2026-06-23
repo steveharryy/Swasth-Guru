@@ -1,101 +1,126 @@
-# Swasth Guru 🩺
+# SwasthGuru — Cloud-Native Microservices Architecture
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC)](https://tailwindcss.com/)
-[![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF)](https://clerk.com/)
-[![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E)](https://supabase.com/)
+> A production-ready, GCP-deployable telemedicine platform with JWT-secured endpoints, real-time WebRTC video calling, and GenAI-powered medicine assistance.
 
-Swasth Guru is a comprehensive, AI-powered telemedicine and healthcare management platform built for modern medical consultation. It bridges the gap between patients and medical professionals by providing a seamless interface for booking appointments, conducting high-quality video consultations, and managing electronic health records (EHR).
+---
 
-## ✨ Key Features
+## Architecture Overview
 
-### For Patients 🧑‍⚕️
-*   **Smart Booking System**: Browse available doctors by specialization or symptoms and book immediate or scheduled consultations.
-*   **Virtual Consultations**: WebRTC-powered high-quality video calls directly from the dashboard.
-*   **AI Chatbot (SwasthSewak)**: Integrated Google Gemini AI-powered first-aid assistant to help diagnose mild symptoms or provide immediate guidance.
-*   **Secure Medical Records**: Upload, view, and manage lab reports, prescriptions, and visit histories in a centralized vault.
-*   **Health Tracking**: Monitor vital signs, current medications, and known allergies.
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    GCP Load Balancer / GKE Ingress            │
+└─────────────┬────────────┬─────────────┬──────────────────────┘
+              │            │             │
+    ┌─────────▼──┐  ┌──────▼──┐  ┌──────▼────────┐
+    │  Frontend  │  │  Auth   │  │     Data      │
+    │ (Next.js)  │  │ Service │  │   Service     │
+    │  :3000     │  │  :5002  │  │    :5003      │
+    └─────────────┘  └──────────┘  └──────────────┘
+              │            │             │
+    ┌─────────▼──────────────────────────▼──────────┐
+    │          Signal Service (Socket.IO + WebRTC)   │
+    │                      :5001                    │
+    │   Room Registry | ICE Config | Heartbeat      │
+    └───────────────────────┬───────────────────────┘
+                            │
+    ┌───────────────────────▼───────────────────────┐
+    │           Core Engine (FastAPI + Gemini)       │
+    │                     :8000                     │
+    │   /doctor-match | /analyze-medicine | /docs   │
+    └───────────────────────────────────────────────┘
+              │
+    ┌─────────▼──────────┐   ┌───────────────────┐
+    │    Supabase        │   │      Redis         │
+    │ (Auth + DB + Store)│   │  (Rate Limits +    │
+    └────────────────────┘   │   Session Store)   │
+                             └───────────────────┘
+```
 
-### For Doctors 👨‍⚕️
-*   **Centralized Dashboard**: Manage daily appointments, patient queues, and overall scheduling.
-*   **Patient Profiles**: Access comprehensive patient medical histories, previous visits, and vital signs before starting a consultation.
-*   **Remote Prescriptions**: Issue digital prescriptions directly during or after a video call.
-*   **Secure Architecture**: Compliant design ensuring patient data privacy and security.
+## Services
 
-## 🛠️ Technology Stack
+| Service | Port | Tech | Responsibility |
+|---------|------|------|----------------|
+| `frontend` | 3000 | Next.js 14 | Patient & Doctor UI |
+| `backend` | 5000 | Express (API Gateway) | Local dev convenience, route proxy |
+| `auth-service` | 5002 | Express + Svix | Clerk webhooks, user profile sync |
+| `data-service` | 5003 | Express + Supabase | Appointments, records, doctors, OCR |
+| `signal-service` | 5001 | Socket.IO | WebRTC signalling, 300+ sessions |
+| `core-engine` | 8000 | FastAPI + Gemini | Doctor matching, medicine AI |
+| `redis` | 6379 | Redis 7 | Rate limiting, session store |
+| `mongodb` | 27017 | MongoDB 7 | Legacy fallback storage |
 
-**Frontend:**
-*   Next.js 14 (App Router)
-*   React 18
-*   Tailwind CSS & Shadcn UI (Styling & Components)
-*   Zustand / Context API (State Management)
+## Security
 
-**Backend & Database:**
-*   Express.js & Node.js
-*   Supabase (PostgreSQL)
-*   Prisma ORM
-*   Socket.io (Video Calls & Real-time chat)
+- **JWT Authentication**: All protected endpoints verify Clerk-issued JWTs via JWKS
+- **RBAC**: Role-Based Access Control — patients vs doctors vs admins
+- **Rate Limiting**: IP-based token bucket (120 req/min general, 20 req/min AI)
+- **Webhook Verification**: Clerk webhooks validated with Svix signatures
+- **Structured Logging**: GCP Cloud Logging-compatible JSON output
 
-**Integrations:**
-*   **Clerk**: Secure, modern authentication.
-*   **Google Gemini AI**: Conversational AI chatbot for patient triage.
-*   **WebRTC**: Peer-to-peer video streaming.
-
-## 🚀 Getting Started
+## Running Locally
 
 ### Prerequisites
-Make sure you have Node.js (v18+) and npm installed on your machine.
+- Node.js 18+
+- Python 3.10+ (for core-engine)
+- Docker & Docker Compose (optional)
 
-### Environment Variables
-You will need to set up the following environment variables in your `.env` (Frontend) and `backend/.env` files:
-*   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` & `CLERK_SECRET_KEY`
-*   `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-*   `NEXT_PUBLIC_GEMINI_API_KEY`
-*   `NEXT_PUBLIC_API_URL` (Points to the backend API)
+### Start All Services (Docker)
+```bash
+cp backend/.env.example backend/.env    # Fill in your secrets
+docker compose up --build
+```
 
-### Installation
+### Start Backend Only
+```bash
+cd backend
+npm install
+npm run dev     # Starts on port 5000
+```
 
-1. **Clone the repository:**
+### Start Signal Service
+```bash
+cd services/signal-service
+npm install
+npm run dev     # Starts on port 5001
+```
+
+### Start Frontend
+```bash
+npm install
+npm run dev     # Starts on port 3000
+```
+
+## Deploying to GCP (GKE)
+
+1. **Create a GKE cluster** (e2-standard-4 nodes recommended)
+2. **Build and push images** to Google Container Registry:
    ```bash
-   git clone https://github.com/steveharryy/Swasth-Guru.git
-   cd Swasth-Guru
+   gcloud builds submit --tag gcr.io/PROJECT_ID/signal-service ./services/signal-service
+   gcloud builds submit --tag gcr.io/PROJECT_ID/auth-service ./services/auth-service
+   gcloud builds submit --tag gcr.io/PROJECT_ID/data-service ./services/data-service
+   gcloud builds submit --tag gcr.io/PROJECT_ID/core-engine ./core-engine
+   ```
+3. **Create namespace and secrets**:
+   ```bash
+   kubectl apply -f k8s/secrets.template.yaml   # fill in real values first!
+   ```
+4. **Deploy all services**:
+   ```bash
+   kubectl apply -f k8s/
    ```
 
-2. **Install Frontend Dependencies:**
-   ```bash
-   npm install
-   ```
+## Video Calling (WebRTC)
 
-3. **Install Backend Dependencies:**
-   ```bash
-   cd backend
-   npm install
-   ```
+- Uses Google's public STUN servers by default
+- Configure a TURN server (via `TURN_SERVER_URL` env var) for users behind strict NAT
+- Signal service supports up to **300+ concurrent sessions** via horizontal scaling (HPA up to 20 replicas)
+- Session affinity (`ClientIP`) ensures WebSocket connections stay on the same pod
+- Room heartbeats every 30s detect stale connections and clean up automatically
 
-### Running the Application
+## Environment Variables
 
-1. **Start the Backend Server:**
-   ```bash
-   cd backend
-   npm run dev
-   ```
-   *The backend will typically run on `http://localhost:5000`*
-
-2. **Start the Frontend Application:**
-   Open a new terminal window:
-   ```bash
-   npm run dev
-   ```
-   *The frontend will run on `http://localhost:3000`*
-
-## 💡 Hackathon Demo Mode
-This repository contains a specialized "Demo Mode" designed for live presentations:
-*   Any booked appointment is automatically flagged as a "Hackathon" session.
-*   Instantly bypasses time checks, generating a **"Direct Join (Demo)"** button on both the Doctor and Patient dashboards immediately post-payment.
-
-## 🤝 Contributing
-Contributions, issues, and feature requests are welcome!
-
-## 📝 License
-This project is licensed under the MIT License.
+See `backend/.env.example` for required variables. Key ones:
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_GEMINI_API_KEY`
+- `TURN_SERVER_URL` (optional, for TURN relay)

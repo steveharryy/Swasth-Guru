@@ -40,7 +40,7 @@ export default function DoctorProfilePage() {
   const { signOut } = useClerk();
   const isAuthenticated = !!user;
   const isDoctor = user?.unsafeMetadata?.role === 'doctor';
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { showNotification } = useNotification();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -184,10 +184,10 @@ export default function DoctorProfilePage() {
   }
 
   const stats = [
-    { label: 'Total Patients', value: '156', icon: User },
-    { label: 'Consultations', value: '1,234', icon: Stethoscope },
-    { label: 'Experience', value: '5 Years', icon: Clock },
-    { label: 'Rating', value: '4.8', icon: Star }
+    { label: t('total_patients'), value: '156', icon: User },
+    { label: t('stat_total'), value: '1,234', icon: Stethoscope },
+    { label: t('experience'), value: `5 ${t('years_exp').split(' ')[0] || 'Yrs'}`, icon: Clock },
+    { label: t('rating'), value: '4.8', icon: Star }
   ];
 
   return (
@@ -205,7 +205,7 @@ export default function DoctorProfilePage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <h1 className="text-xl font-bold logo-text">प्रोफ़ाइल (Profile)</h1>
+              <h1 className="text-xl font-bold logo-text">{t('my_profile_title')}</h1>
             </div>
             <div className="flex items-center gap-2">
               {!isEditing ? (
@@ -214,16 +214,16 @@ export default function DoctorProfilePage() {
                   className="h-9 px-4 rounded-xl font-bold border"
                 >
                   <Edit className="w-4 h-4 mr-2" />
-                  Edit
+                  {t('edit')}
                 </Button>
               ) : (
                 <div className="flex gap-2">
                   <Button variant="ghost" className="h-9 rounded-xl text-sm" onClick={() => setIsEditing(false)}>
-                    Cancel
+                    {t('cancel')}
                   </Button>
                   <Button onClick={handleSave} className="h-9 rounded-xl text-sm">
                     <Save className="w-4 h-4 mr-2" />
-                    Save
+                    {t('save')}
                   </Button>
                 </div>
               )}
@@ -289,7 +289,7 @@ export default function DoctorProfilePage() {
                 </div>
                 <div>
                   <div className="text-xl font-bold text-foreground">{stat.value}</div>
-                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">{stat.label.split(' ')[0]}</div>
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</div>
                 </div>
               </CardContent>
             </Card>
@@ -300,13 +300,13 @@ export default function DoctorProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card className="shadow-none border bg-card">
             <CardHeader className="py-4 px-6 border-b bg-muted/30">
-              <CardTitle className="text-lg font-bold text-foreground">निजी जानकारी (Personal)</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">{t('personal_info')}</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               {[
-                { label: 'Full Name', field: 'name', type: 'text' },
-                { label: 'Email Address', field: 'email', type: 'email' },
-                { label: 'Phone Number', field: 'phone', type: 'text' },
+                { label: t('full_name'), field: 'name', type: 'text' },
+                { label: t('email'), field: 'email', type: 'email' },
+                { label: t('phone'), field: 'phone', type: 'text' },
               ].map((item) => (
                 <div key={item.field} className="space-y-1">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{item.label}</label>
@@ -318,12 +318,12 @@ export default function DoctorProfilePage() {
                       className="h-10 text-sm font-medium border rounded-xl bg-muted/20"
                     />
                   ) : (
-                    <p className="text-sm font-bold text-foreground">{(formData as any)[item.field]}</p>
+                    <p className="text-sm font-bold text-foreground">{(formData as any)[item.field] || '—'}</p>
                   )}
                 </div>
               ))}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Clinic Address</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('clinic_address')}</label>
                 {isEditing ? (
                   <Textarea
                     value={formData.address}
@@ -332,7 +332,7 @@ export default function DoctorProfilePage() {
                   />
                 ) : (
                   <p className="text-sm font-medium text-muted-foreground italic leading-relaxed">
-                    {formData.address || 'No clinic address provided'}
+                    {formData.address || '—'}
                   </p>
                 )}
               </div>
@@ -341,11 +341,11 @@ export default function DoctorProfilePage() {
 
           <Card className="shadow-none border bg-card">
             <CardHeader className="py-4 px-6 border-b bg-muted/30">
-              <CardTitle className="text-lg font-bold text-foreground">व्यावसायिक जानकारी (Professional)</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">{t('professional_info')}</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Specialization</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('specialization')}</label>
                 {isEditing ? (
                   <select
                     value={formData.specialization}
@@ -358,32 +358,32 @@ export default function DoctorProfilePage() {
                     ))}
                   </select>
                 ) : (
-                  <p className="text-sm font-bold text-foreground">{formData.specialization}</p>
+                  <p className="text-sm font-bold text-foreground">{formData.specialization || '—'}</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Experience</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('experience')}</label>
                   {isEditing ? (
                     <Input value={formData.experience} onChange={(e) => handleInputChange('experience', e.target.value)} className="h-10 border rounded-xl font-bold bg-muted/20" />
-                  ) : <p className="text-lg font-bold text-foreground">{formData.experience} Yrs</p>}
+                  ) : <p className="text-lg font-bold text-foreground">{formData.experience} {t('years_exp').split(' ')[0]}</p>}
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Fee</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('fee')}</label>
                   {isEditing ? (
                     <Input value={formData.consultationFee} onChange={(e) => handleInputChange('consultationFee', e.target.value)} className="h-10 border rounded-xl font-bold bg-muted/20" />
                   ) : <p className="text-lg font-bold text-foreground">₹{formData.consultationFee}</p>}
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Qualifications</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('qualifications')}</label>
                 {isEditing ? (
                   <Input value={formData.qualifications} onChange={(e) => handleInputChange('qualifications', e.target.value)} className="h-10 border rounded-xl font-bold bg-muted/20" />
-                ) : <p className="text-sm font-bold text-foreground">{formData.qualifications}</p>}
+                ) : <p className="text-sm font-bold text-foreground">{formData.qualifications || '—'}</p>}
               </div>
               <div className="space-y-1 pt-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase border-b pb-1 flex items-center">
-                  <User className="w-3 h-3 mr-2" /> About Biography
+                  <User className="w-3 h-3 mr-2" /> {t('bio')}
                 </label>
                 {isEditing ? (
                   <Textarea
@@ -393,7 +393,7 @@ export default function DoctorProfilePage() {
                   />
                 ) : (
                   <p className="text-sm font-medium text-muted-foreground italic leading-relaxed">
-                    {formData.bio || 'Professional bio not provider.'}
+                    {formData.bio || '—'}
                   </p>
                 )}
               </div>
@@ -403,18 +403,53 @@ export default function DoctorProfilePage() {
 
         {/* Settings & Actions */}
         <div className="space-y-6">
+          {/* Language Selection Card */}
+          <Card className="shadow-none border bg-card overflow-hidden">
+            <CardHeader className="py-4 px-6 border-b bg-muted/30">
+              <CardTitle className="flex items-center text-lg font-bold text-foreground">
+                🗣️ {t('chooseLanguage')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => setLanguage('english')}
+                  variant={language === 'english' ? 'premium' : 'outline'}
+                  className={`flex-1 h-12 rounded-xl text-sm font-bold transition-all ${
+                    language === 'english'
+                      ? 'shadow-md shadow-primary/20 brightness-110'
+                      : 'border-border dark:border-border'
+                  }`}
+                >
+                  🇺🇸 English
+                </Button>
+                <Button
+                  onClick={() => setLanguage('hindi')}
+                  variant={language === 'hindi' ? 'premium' : 'outline'}
+                  className={`flex-1 h-12 rounded-xl text-sm font-bold transition-all ${
+                    language === 'hindi'
+                      ? 'shadow-md shadow-primary/20 brightness-110'
+                      : 'border-border dark:border-border'
+                  }`}
+                >
+                  🇮🇳 हिन्दी (Hindi)
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="shadow-none border bg-card overflow-hidden">
             <CardHeader className="py-4 px-6 border-b bg-muted/30">
               <CardTitle className="flex items-center text-lg font-bold text-foreground">
                 <Bell className="w-5 h-5 mr-3 text-primary" />
-                सूचना सेटिंग (Notifications)
+                {t('notification_settings')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 space-y-2">
               {[
-                { label: 'Visits', sub: 'New appointment alerts', field: 'appointments' },
-                { label: 'Messages', sub: 'Patient chat notifications', field: 'messages' },
-                { label: 'Reminders', sub: 'Upcoming schedule alerts', field: 'reminders' },
+                { label: t('stat_upcoming_short'), sub: t('notification_visits_desc'), field: 'appointments' },
+                { label: t('notification_messages'), sub: t('notification_messages_desc'), field: 'messages' },
+                { label: t('health_tips'), sub: t('notification_tips_desc'), field: 'reminders' },
               ].map((item) => (
                 <div key={item.field} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-xl transition-colors">
                   <div>
@@ -440,8 +475,8 @@ export default function DoctorProfilePage() {
                   <Settings className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Settings</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account & Prefs</p>
+                  <p className="text-sm font-bold text-foreground">{t('settings')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('account_prefs')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -452,8 +487,8 @@ export default function DoctorProfilePage() {
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Privacy</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Data & Security</p>
+                  <p className="text-sm font-bold text-foreground">{t('privacy')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('data_security')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -465,7 +500,7 @@ export default function DoctorProfilePage() {
             className="w-full h-12 text-sm font-bold rounded-xl shadow-none mt-4 transition-all"
           >
             <LogOut className="w-4 h-4 mr-2" />
-            लॉग आउट (Log Out)
+            {t('logout')}
           </Button>
         </div>
       </main>

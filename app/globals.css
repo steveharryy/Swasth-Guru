@@ -2,32 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+/* Noto Sans Devanagari for proper Hindi rendering + Mukta for warm Indian feel + Outfit for Latin */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Mukta:wght@400;500;600;700;800&display=swap');
 
 
 @layer base {
 
   :root {
-    --background: 210 40% 98%; /* Soft Clinical White (Slate-50 equivalent) */
-    --foreground: 222 47% 11%; /* Deep Navy Black for readability */
-    --card: 0 0% 100%; /* Pure White */
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%; /* Healthcare Trust Blue */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 142 71% 45%; /* Clinical Green */
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 221 83% 53%; 
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
-    --radius: 2rem;
+    /* ── Warm Indian Health Palette ─────────────────────────────── */
+
+    /* Background: warm cream — not cold clinical white */
+    --background: 38 60% 97%;          /* #FDF8F0 warm cream */
+    --foreground: 20 30% 15%;          /* #2D1F0F deep warm brown-black */
+
+    /* Cards: slightly warmer than background */
+    --card: 40 80% 99%;                /* near white with warmth */
+    --card-foreground: 20 30% 15%;
+
+    --popover: 40 80% 99%;
+    --popover-foreground: 20 30% 15%;
+
+    /* Primary: Deep Teal — medical trust, calm, Ayurvedic green */
+    --primary: 175 65% 32%;            /* #1A8A7A deep teal */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Warm Saffron — Indian warmth, energy, action */
+    --secondary: 28 90% 52%;           /* #F08020 saffron/turmeric */
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted: warm off-white for backgrounds */
+    --muted: 38 40% 93%;               /* warm light beige */
+    --muted-foreground: 25 20% 45%;    /* warm grey text */
+
+    /* Accent: same as saffron for consistency */
+    --accent: 28 90% 52%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders: warm not cold */
+    --border: 35 30% 88%;              /* warm beige border */
+    --input: 35 30% 88%;
+    --ring: 175 65% 32%;               /* teal focus ring */
+
+    --radius: 1.5rem;
   }
 }
 
@@ -39,60 +58,139 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Outfit', 'Mukta', 'Noto Sans Devanagari', system-ui, sans-serif;
     font-size: 1rem;
-    line-height: 1.5;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    line-height: 1.6;
+    /* Subtle warm grain texture on the background */
+    background-image:
+      radial-gradient(ellipse at 80% 0%, hsl(28 90% 52% / 0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 20% 100%, hsl(175 65% 32% / 0.04) 0%, transparent 60%);
+  }
+
+  /* Hindi/Devanagari text renders better with this font */
+  :lang(hi), [lang="hi"] {
+    font-family: 'Noto Sans Devanagari', 'Mukta', sans-serif;
   }
 
   ::selection {
-    @apply bg-primary/20 text-primary;
+    background-color: hsl(28 90% 52% / 0.2);
+    color: hsl(28 90% 30%);
   }
 }
 
 
 @layer components {
+
+  /* Logo: teal → saffron gradient — warm and Indian */
   .logo-text {
-    @apply bg-gradient-to-r from-primary via-blue-600 to-emerald-500 bg-clip-text text-transparent;
+    background: linear-gradient(135deg,
+      hsl(175 65% 28%) 0%,
+      hsl(175 65% 40%) 40%,
+      hsl(28 90% 52%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
     font-weight: 900;
-    letter-spacing: -0.05em;
+    letter-spacing: -0.04em;
   }
 
-
+  /* Glass card: warm frosted glass */
   .premium-glass {
-    @apply bg-white/80 backdrop-blur-xl border border-primary/10 shadow-[0_8px_32px_rgba(0,0,0,0.05)];
+    background: hsl(40 80% 99% / 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(35 40% 88%);
+    box-shadow: 0 8px 32px hsl(20 30% 15% / 0.06);
   }
 
+  /* Vibrant card: warm lift effect */
   .vibrant-card {
-    @apply bg-white rounded-[2rem] p-8 border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)] transition-all duration-200;
+    @apply bg-card rounded-[1.5rem] p-8 border border-border shadow-sm transition-all duration-200;
     transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-
-
   .vibrant-card:hover {
-    @apply border-primary/20 transform -translate-y-1;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.08);
+    border-color: hsl(175 65% 32% / 0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 48px hsl(175 65% 32% / 0.10);
   }
 
+  /* Glowing button: saffron CTA — warm, Indian, high contrast */
   .glowing-button {
-    @apply relative overflow-hidden transition-all duration-200 hover:scale-[1.03] active:scale-[0.98];
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(221, 83%, 45%) 100%);
-    box-shadow: 0 10px 20px -5px hsla(var(--primary) / 0.3);
+    @apply relative overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.98];
+    background: linear-gradient(135deg,
+      hsl(28 90% 52%) 0%,
+      hsl(20 95% 48%) 100%
+    );
+    box-shadow: 0 8px 24px hsl(28 90% 52% / 0.35);
     color: white !important;
   }
 
-
   .glowing-button:hover {
-    box-shadow: 0 20px 40px -10px hsla(var(--primary) / 0.5);
+    box-shadow: 0 16px 40px hsl(28 90% 52% / 0.50);
+  }
+
+  /* Teal primary button glow */
+  .teal-glow {
+    box-shadow: 0 8px 24px hsl(175 65% 32% / 0.30);
+  }
+
+  /* Warm stat card — used for quick stats */
+  .warm-stat-card {
+    background: linear-gradient(145deg, hsl(40 80% 99%), hsl(38 50% 96%));
+    border: 1px solid hsl(35 30% 90%);
+    border-radius: 1.5rem;
+  }
+
+  /* Indian motif decorative dot pattern — subtle background texture */
+  .motif-bg {
+    background-image: radial-gradient(circle, hsl(175 65% 32% / 0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Saffron badge / pill */
+  .saffron-pill {
+    background: hsl(28 90% 52% / 0.12);
+    color: hsl(28 90% 38%);
+    border: 1px solid hsl(28 90% 52% / 0.25);
+    border-radius: 9999px;
+    padding: 0.25rem 0.875rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Teal pill */
+  .teal-pill {
+    background: hsl(175 65% 32% / 0.1);
+    color: hsl(175 65% 28%);
+    border: 1px solid hsl(175 65% 32% / 0.2);
+    border-radius: 9999px;
+    padding: 0.25rem 0.875rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Warm section divider */
+  .warm-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      hsl(35 30% 85%),
+      transparent
+    );
   }
 }
 
 
-/* Vibrant Animations */
+/* ── Animations ─────────────────────────────────────────────────── */
+
 @keyframes float {
   0%, 100% { transform: translateY(0) scale(1.0); }
-  50% { transform: translateY(-20px) scale(1.05); }
+  50%       { transform: translateY(-16px) scale(1.04); }
 }
 
 .animate-vibrant-float {
@@ -101,23 +199,67 @@
 
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
 }
 
-/* Custom scrollbar */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg,
+    hsl(38 50% 93%) 25%,
+    hsl(38 50% 88%) 50%,
+    hsl(38 50% 93%) 75%
+  );
+  background-size: 200% auto;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes warm-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(28 90% 52% / 0.3); }
+  50%       { box-shadow: 0 0 0 8px hsl(28 90% 52% / 0); }
+}
+
+.animate-warm-pulse {
+  animation: warm-pulse 2s ease-in-out infinite;
+}
+
+
+/* ── Scrollbar: warm teal ────────────────────────────────────────── */
+
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: hsl(38 40% 94%);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, hsl(var(--primary)), hsl(var(--accent)));
-  border-radius: 5px;
+  background: linear-gradient(to bottom,
+    hsl(175 65% 32%),
+    hsl(28 90% 52%)
+  );
+  border-radius: 99px;
+}
+
+
+/* ── Tabs & interactive elements: warm teal focus ────────────────── */
+
+[data-state="active"][role="tab"] {
+  background: hsl(175 65% 32%) !important;
+  color: white !important;
+}
+
+/* High contrast focus for accessibility (rural users, older devices) */
+:focus-visible {
+  outline: 3px solid hsl(28 90% 52%);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
 }

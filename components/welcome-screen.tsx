@@ -75,9 +75,9 @@ export function WelcomeScreen() {
             className="flex items-center justify-center mb-8"
           >
 
-            <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center border border-slate-100 shadow-xl relative overflow-hidden group">
+            <div className="w-48 h-48 bg-white rounded-[2.5rem] flex items-center justify-center border border-border shadow-xl relative overflow-hidden group p-4">
                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-               <img src="/logo.png" alt="Logo" className="w-16 h-16 object-contain relative z-10" />
+               <img src="/logo.png" alt="Logo" className="w-40 h-40 object-contain relative z-10" />
             </div>
           </motion.div>
 
@@ -90,7 +90,7 @@ export function WelcomeScreen() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-lg font-bold text-slate-400 max-w-[320px] mx-auto leading-relaxed"
+            className="text-lg font-bold text-muted-foreground max-w-[320px] mx-auto leading-relaxed"
           >
             {t('tagline')}
           </motion.p>
@@ -98,13 +98,13 @@ export function WelcomeScreen() {
         </div>
 
         {/* Action Card */}
-        <div className="bg-white/80 backdrop-blur-3xl border border-slate-100 shadow-[0_30px_60px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-10 relative overflow-hidden">
+        <div className="bg-card/80 backdrop-blur-3xl border border-border shadow-[0_30px_60px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-10 relative overflow-hidden">
            <div className="absolute top-0 right-0 p-4 opacity-5 animate-spin-slow">
               <Sparkles className="w-24 h-24 text-primary" />
            </div>
 
            <div className="relative z-10 space-y-8">
-              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] text-center mb-10">
+              <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] text-center mb-10">
                 {t('chooseLanguage')}
               </h2>
 
@@ -128,7 +128,7 @@ export function WelcomeScreen() {
                         "w-full justify-between h-18 text-lg font-black transition-all rounded-2xl relative overflow-hidden group border",
                         language === lang.code 
                           ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02] border-transparent" 
-                          : "bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100"
+                          : "bg-muted text-foreground/70 border-border hover:bg-muted/80"
                       )}
                     >
                       <span className="flex items-center">
@@ -143,11 +143,11 @@ export function WelcomeScreen() {
                 ))}
               </div>
 
-              <div className="pt-6 border-t border-slate-50">
+              <div className="pt-6 border-t border-border/50">
                 <Button
                   onClick={() => speakText(t('welcome'))}
                   variant="ghost"
-                  className="w-full h-12 text-slate-300 hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em]"
+                  className="w-full h-12 text-muted-foreground/60 hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em]"
                 >
                   <Volume2 className="w-5 h-5 mr-3" />
                   <span>{t('speakText') || 'Activate Guidance'}</span>
@@ -173,11 +173,11 @@ export function WelcomeScreen() {
             >
 
               <div className={cn(
-                "w-16 h-16 rounded-[1.5rem] flex items-center justify-center bg-white border border-slate-100 text-primary shadow-lg shadow-slate-100 hover:scale-110 transition-transform"
+                "w-16 h-16 rounded-[1.5rem] flex items-center justify-center bg-card border border-border text-primary shadow-lg shadow-primary/10 hover:scale-110 transition-transform"
               )}>
                 <feature.icon className="w-7 h-7" />
               </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{feature.label}</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{feature.label}</p>
 
             </motion.div>
           ))}
@@ -224,13 +224,13 @@ export function WelcomeScreen() {
               Directing to Secure Gate...
             </motion.p>
           )}
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em] animate-pulse">
+          <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.5em] animate-pulse">
             24/7 AI Healthcare Active
           </p>
 
         </div>
 
-        <div className="text-center text-[10px] text-slate-200 font-black pt-12 uppercase tracking-[0.4em]">
+        <div className="text-center text-[10px] text-muted-foreground/30 font-black pt-12 uppercase tracking-[0.4em]">
           SwasthGuru Health &bull; 2026
         </div>
 

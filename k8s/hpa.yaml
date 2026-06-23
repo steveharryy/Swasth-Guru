@@ -1,0 +1,92 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SwasthGuru — Horizontal Pod Autoscaler (HPA)
+# Automatically scales microservices under load to support 300+ concurrent sessions
+# Requires Kubernetes Metrics Server to be installed on the cluster
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Signal Service HPA — scales for video session concurrency
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: signal-service-hpa
+  namespace: swasthguru
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: signal-service
+  minReplicas: 2
+  maxReplicas: 20  # ~100 sessions per replica * 20 = 2000 max concurrent
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30   # Fast scale-up for traffic spikes
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 30
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Slow scale-down to avoid session disruption
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+---
+# Data Service HPA — scales for API request load
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: data-service-hpa
+  namespace: swasthguru
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: data-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+---
+# Auth Service HPA — lower scale since auth traffic is bursty during login peaks
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: auth-service-hpa
+  namespace: swasthguru
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: auth-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

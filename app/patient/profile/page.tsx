@@ -40,7 +40,7 @@ export default function PatientProfilePage() {
   const { signOut } = useClerk();
   const isAuthenticated = !!user;
   const isDoctor = user?.unsafeMetadata?.role === 'doctor';
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { showNotification } = useNotification();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -78,6 +78,29 @@ export default function PatientProfilePage() {
     if (!isAuthenticated || isDoctor) {
       router.push('/');
     } else if (user) {
+      // Cache-first: load from localStorage immediately
+      const cached = localStorage.getItem(`patient_profile_${user.id}`);
+      if (cached) {
+        try {
+          const p = JSON.parse(cached);
+          setFormData(prev => ({
+            ...prev,
+            name: p.fullName || p.name || user.fullName || '',
+            phone: p.phone || '',
+            email: p.email || user.primaryEmailAddress?.emailAddress || '',
+            address: p.address || '',
+            dateOfBirth: p.dateOfBirth || p.date_of_birth || '',
+            gender: p.gender || '',
+            bloodGroup: p.bloodGroup || p.blood_group || '',
+            height: p.height || '',
+            weight: p.weight || '',
+            emergencyContact: p.emergencyContact || p.emergency_contact || '',
+            allergies: p.allergies || '',
+            currentMedications: p.currentMedications || p.current_medications || ''
+          }));
+        } catch (_) {}
+      }
+
       // Fetch profile from backend
       const fetchProfile = async () => {
         try {
@@ -85,6 +108,8 @@ export default function PatientProfilePage() {
           const res = await fetch(`${apiUrl}/users/patient/${user.id}`);
           if (res.ok) {
             const profileData = await res.json();
+            // Persist to localStorage for next visit
+            localStorage.setItem(`patient_profile_${user.id}`, JSON.stringify(profileData));
             setFormData({
               name: profileData.name || user.fullName || '',
               phone: profileData.phone || user.primaryPhoneNumber?.phoneNumber || '',
@@ -197,15 +222,28 @@ export default function PatientProfilePage() {
     router.push('/');
   };
 
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b sticky top-0 z-50 h-[57px]" />
+        <main className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
+          <div className="h-40 rounded-3xl bg-muted/40 animate-pulse" />
+          <div className="h-24 rounded-3xl bg-muted/40 animate-pulse" />
+          <div className="h-64 rounded-3xl bg-muted/40 animate-pulse" />
+        </main>
+      </div>
+    );
+  }
+
   if (!isAuthenticated || !user || isDoctor) {
     return null;
   }
 
   const stats = [
-    { label: 'Total Appointments', value: statsData.totalAppointments, icon: Calendar },
-    { label: 'Medical Records', value: statsData.medicalRecords, icon: FileText },
-    { label: 'Health Score', value: statsData.healthScore, icon: Heart },
-    { label: 'Last Checkup', value: statsData.lastCheckup, icon: Activity }
+    { label: t('my_appointments'), value: statsData.totalAppointments, icon: Calendar },
+    { label: t('stat_records'), value: statsData.medicalRecords, icon: FileText },
+    { label: t('stat_score'), value: statsData.healthScore, icon: Heart },
+    { label: t('stat_last_checkup'), value: statsData.lastCheckup, icon: Activity }
   ];
 
   return (
@@ -223,7 +261,7 @@ export default function PatientProfilePage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <h1 className="text-xl font-bold logo-text">प्रोफ़ाइल (Profile)</h1>
+              <h1 className="text-xl font-bold logo-text">{t('my_profile_title')}</h1>
             </div>
             <div className="flex items-center gap-2">
               {!isEditing ? (
@@ -232,16 +270,16 @@ export default function PatientProfilePage() {
                   className="h-9 px-4 rounded-xl font-bold border"
                 >
                   <Edit className="w-4 h-4 mr-2" />
-                  Edit
+                  {t('edit')}
                 </Button>
               ) : (
                 <div className="flex gap-2">
                   <Button variant="ghost" className="h-9 rounded-xl text-sm" onClick={() => setIsEditing(false)}>
-                    Cancel
+                    {t('cancel')}
                   </Button>
                   <Button onClick={handleSave} className="h-9 rounded-xl text-sm">
                     <Save className="w-4 h-4 mr-2" />
-                    Save
+                    {t('save')}
                   </Button>
                 </div>
               )}
@@ -271,7 +309,7 @@ export default function PatientProfilePage() {
             )}
           </div>
           <div className="flex-1 text-center md:text-left space-y-1">
-            <h2 className="text-2xl font-bold text-foreground">नमस्ते, {user.fullName}</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t('namaste')}, {user.fullName}</h2>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Patient ID: {user.id.slice(-8).toUpperCase()}</p>
             <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-3">
               <div className="flex items-center px-3 py-1.5 bg-background rounded-full text-xs font-bold text-muted-foreground shadow-none border">
@@ -298,7 +336,7 @@ export default function PatientProfilePage() {
                 </div>
                 <div>
                   <div className="text-xl font-bold text-foreground">{stat.value}</div>
-                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{stat.label.split(' ')[0]}</div>
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
                 </div>
               </CardContent>
             </Card>
@@ -309,15 +347,15 @@ export default function PatientProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card className="shadow-none border bg-card">
             <CardHeader className="py-4 px-6 border-b bg-muted/30">
-              <CardTitle className="text-lg font-bold text-foreground">निजी जानकारी (Personal)</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">{t('personal_info')}</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               {[
-                { label: 'Full Name', field: 'name', type: 'text' },
-                { label: 'Phone Number', field: 'phone', type: 'text' },
-                { label: 'Email Address', field: 'email', type: 'email' },
-                { label: 'Date of Birth', field: 'dateOfBirth', type: 'date' },
-                { label: 'Blood Group', field: 'bloodGroup', type: 'text' },
+                { label: t('full_name'), field: 'name', type: 'text' },
+                { label: t('phone'), field: 'phone', type: 'text' },
+                { label: t('email'), field: 'email', type: 'email' },
+                { label: t('dob'), field: 'dateOfBirth', type: 'date' },
+                { label: t('blood_group'), field: 'bloodGroup', type: 'text' },
               ].map((item) => (
                 <div key={item.field} className="space-y-1">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{item.label}</label>
@@ -336,7 +374,7 @@ export default function PatientProfilePage() {
                 </div>
               ))}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Address</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('address')}</label>
                 {isEditing ? (
                   <Textarea
                     value={formData.address}
@@ -345,7 +383,7 @@ export default function PatientProfilePage() {
                   />
                 ) : (
                   <p className="text-sm font-medium text-muted-foreground leading-relaxed italic">
-                    {formData.address || 'No address provided'}
+                    {formData.address || '—'}
                   </p>
                 )}
               </div>
@@ -354,27 +392,27 @@ export default function PatientProfilePage() {
 
           <Card className="shadow-none border bg-card">
             <CardHeader className="py-4 px-6 border-b bg-muted/30">
-              <CardTitle className="text-lg font-bold text-foreground">चिकित्सा डेटा (Medical)</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">{t('medical_info')}</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Height</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('height')}</label>
                   {isEditing ? (
                     <Input value={formData.height} onChange={(e) => handleInputChange('height', e.target.value)} className="h-10 border rounded-xl font-bold bg-muted/20" />
                   ) : <p className="text-lg font-bold text-foreground">{formData.height || '—'}</p>}
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Weight</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('weight')}</label>
                   {isEditing ? (
                     <Input value={formData.weight} onChange={(e) => handleInputChange('weight', e.target.value)} className="h-10 border rounded-xl font-bold bg-muted/20" />
                   ) : <p className="text-lg font-bold text-foreground">{formData.weight || '—'}</p>}
                 </div>
               </div>
               {[
-                { label: 'Emergency Contact', field: 'emergencyContact', type: 'text' },
-                { label: 'Current Allergies', field: 'allergies', type: 'text' },
-                { label: 'Current Medications', field: 'currentMedications', type: 'text' },
+                { label: t('emergency_contact'), field: 'emergencyContact', type: 'text' },
+                { label: t('allergies'), field: 'allergies', type: 'text' },
+                { label: t('current_medications'), field: 'currentMedications', type: 'text' },
               ].map((item) => (
                 <div key={item.field} className="space-y-1">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{item.label}</label>
@@ -385,13 +423,13 @@ export default function PatientProfilePage() {
                       className="h-10 text-sm font-medium border rounded-xl bg-muted/20"
                     />
                   ) : (
-                    <p className="text-sm font-bold text-foreground">{(formData as any)[item.field] || 'None'}</p>
+                    <p className="text-sm font-bold text-foreground">{(formData as any)[item.field] || '—'}</p>
                   )}
                 </div>
               ))}
               <div className="space-y-1 pt-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase border-b pb-1 flex items-center">
-                  <Activity className="w-3 h-3 mr-2" /> Medical History
+                  <Activity className="w-3 h-3 mr-2" /> {t('medical_history')}
                 </label>
                 {isEditing ? (
                   <Textarea
@@ -401,7 +439,7 @@ export default function PatientProfilePage() {
                   />
                 ) : (
                   <p className="text-sm font-medium text-muted-foreground italic">
-                    {formData.medicalHistory || 'No medical history reported.'}
+                    {formData.medicalHistory || '—'}
                   </p>
                 )}
               </div>
@@ -411,18 +449,53 @@ export default function PatientProfilePage() {
 
         {/* Settings & Actions */}
         <div className="space-y-6">
+          {/* Language Selection Card */}
+          <Card className="shadow-none border bg-card overflow-hidden">
+            <CardHeader className="py-4 px-6 border-b bg-muted/30">
+              <CardTitle className="flex items-center text-lg font-bold text-foreground">
+                🗣️ {t('chooseLanguage')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => setLanguage('english')}
+                  variant={language === 'english' ? 'premium' : 'outline'}
+                  className={`flex-1 h-12 rounded-xl text-sm font-bold transition-all ${
+                    language === 'english'
+                      ? 'shadow-md shadow-primary/20 brightness-110'
+                      : 'border-border dark:border-border'
+                  }`}
+                >
+                  🇺🇸 English
+                </Button>
+                <Button
+                  onClick={() => setLanguage('hindi')}
+                  variant={language === 'hindi' ? 'premium' : 'outline'}
+                  className={`flex-1 h-12 rounded-xl text-sm font-bold transition-all ${
+                    language === 'hindi'
+                      ? 'shadow-md shadow-primary/20 brightness-110'
+                      : 'border-border dark:border-border'
+                  }`}
+                >
+                  🇮🇳 हिन्दी (Hindi)
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="shadow-none border bg-card overflow-hidden">
             <CardHeader className="py-4 px-6 border-b bg-muted/30">
               <CardTitle className="flex items-center text-lg font-bold text-foreground">
                 <Bell className="w-5 h-5 mr-3 text-primary" />
-                सूचना सेटिंग (Notifications)
+                {t('notification_settings')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 space-y-2">
               {[
-                { label: 'Visits', sub: 'Reminders for appointments', field: 'appointments' },
-                { label: 'Health Tips', sub: 'Daily advice for you', field: 'healthTips' },
-                { label: 'Emergency', sub: 'Critical health alerts', field: 'emergency' },
+                { label: t('stat_upcoming_short'), sub: t('notification_visits_desc'), field: 'appointments' },
+                { label: t('health_tips'), sub: t('notification_tips_desc'), field: 'healthTips' },
+                { label: t('emergency'), sub: t('notification_emergency_desc'), field: 'emergency' },
               ].map((item) => (
                 <div key={item.field} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-xl transition-colors">
                   <div>
@@ -448,8 +521,8 @@ export default function PatientProfilePage() {
                   <Settings className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Settings</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account & Prefs</p>
+                  <p className="text-sm font-bold text-foreground">{t('settings')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('account_prefs')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -460,8 +533,8 @@ export default function PatientProfilePage() {
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Privacy</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Data & Security</p>
+                  <p className="text-sm font-bold text-foreground">{t('privacy')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('data_security')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -473,7 +546,7 @@ export default function PatientProfilePage() {
             className="w-full h-12 text-sm font-bold rounded-xl shadow-none mt-4 transition-all active:scale-95"
           >
             <LogOut className="w-4 h-4 mr-2" />
-            लॉग आउट (Log Out)
+            {t('logout')}
           </Button>
         </div>
       </main>

@@ -1,0 +1,88 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SwasthGuru Signal Service — GCP Kubernetes Deployment
+# Supports 300+ concurrent WebRTC sessions via horizontal scaling
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: signal-service
+  namespace: swasthguru
+  labels:
+    app: signal-service
+    component: realtime
+    version: "2.0.0"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: signal-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
+  template:
+    metadata:
+      labels:
+        app: signal-service
+        component: realtime
+    spec:
+      containers:
+        - name: signal-service
+          image: gcr.io/PROJECT_ID/signal-service:latest
+          ports:
+            - containerPort: 5001
+              name: http
+          env:
+            - name: PORT
+              value: "5001"
+            - name: NODE_ENV
+              value: production
+            - name: MAX_PARTICIPANTS
+              value: "2"
+            - name: CORS_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: swasthguru-config
+                  key: FRONTEND_URL
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+# Signal Service — Kubernetes Service (ClusterIP with session affinity for WebSocket)
+apiVersion: v1
+kind: Service
+metadata:
+  name: signal-service
+  namespace: swasthguru
+  labels:
+    app: signal-service
+spec:
+  selector:
+    app: signal-service
+  ports:
+    - name: http
+      port: 5001
+      targetPort: 5001
+  # Session affinity ensures WebSocket connections stick to the same pod
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600

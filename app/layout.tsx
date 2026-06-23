@@ -1,12 +1,11 @@
-import { ChatWidget } from '@/components/chat/ChatWidget';
 import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Outfit } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { Providers } from '@/components/providers';
 import { ClerkProvider } from '@clerk/nextjs';
 
-const inter = Inter({ subsets: ['latin'] });
+const outfit = Outfit({ subsets: ['latin'], weight: ['400','500','600','700','800','900'] });
 
 export const metadata: Metadata = {
   title: 'SwasthGuru - Telemedicine for Rural India',
@@ -14,12 +13,18 @@ export const metadata: Metadata = {
   keywords: 'telemedicine, healthcare, rural India, doctor consultation, medical records',
   authors: [{ name: 'SwasthGuru Team' }],
   manifest: '/manifest.json',
-  themeColor: '#5D5CDE',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   icons: {
     icon: '/icon-192x192.png',
     apple: '/icon-192x192.png',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#1A8A7A',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -29,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en" className="dark" suppressHydrationWarning>
+      <html lang="hi" suppressHydrationWarning>
         <head>
           <link rel="icon" href="/favicon.ico" />
           <link rel="apple-touch-icon" href="/icon-192x192.png" />
@@ -38,7 +43,7 @@ export default function RootLayout({
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
         </head>
-        <body className={cn(inter.className, 'antialiased min-h-screen')}>
+        <body className={cn(outfit.className, 'antialiased min-h-screen')}>
           <Providers>
             {children}
           </Providers>

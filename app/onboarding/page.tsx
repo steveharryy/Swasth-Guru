@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ interface UserMetadata {
 export default function OnboardingPage() {
     const { user, isLoaded } = useUser();
     const router = useRouter();
+    const { t } = useLanguage();
     const [role, setRole] = useState<"patient" | "doctor" | null>(null);
     const [formData, setFormData] = useState({
         fullName: "",
@@ -191,24 +193,24 @@ export default function OnboardingPage() {
                         animate={{ scale: 1 }}
                         className="flex items-center justify-center mb-8"
                     >
-                       <div className="w-20 h-20 bg-white/5 backdrop-blur-2xl rounded-3xl flex items-center justify-center border border-white/10 shadow-2xl">
-                          <img src="/logo.png" className="w-12 h-12 object-contain" alt="Logo" />
+                       <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center border border-white/10 shadow-2xl p-4">
+                          <img src="/logo.png" className="w-32 h-32 object-contain" alt="Logo" />
                        </div>
                     </motion.div>
                     <h1 className="text-6xl font-black logo-text tracking-tighter">
-                        Profile Setup
+                        {t('profile_setup')}
                     </h1>
-                    <p className="text-lg font-bold text-slate-400">
-                        Complete your medical profile to get started
+                    <p className="text-lg font-bold text-muted-foreground">
+                        {t('onboarding_desc')}
                     </p>
                 </div>
 
 
-                <div className="bg-white/80 backdrop-blur-3xl border border-slate-100 shadow-[0_30px_60px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-12 relative overflow-hidden w-full max-w-4xl">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-8 mb-16 border-b border-slate-50 pb-10">
+                <div className="bg-card/80 backdrop-blur-3xl border border-border shadow-[0_30px_60px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-12 relative overflow-hidden w-full max-w-4xl">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-8 mb-16 border-b border-border pb-10">
                         <div className="space-y-2 text-center sm:text-left">
-                            <h3 className="text-4xl font-black text-slate-900 tracking-tight">Select your role</h3>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Establish Your Identity</p>
+                            <h3 className="text-4xl font-black text-foreground tracking-tight">{t('select_role')}</h3>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em]">{t('establish_identity')}</p>
                         </div>
                         <Button
                             variant="ghost"
@@ -216,7 +218,7 @@ export default function OnboardingPage() {
                             className="h-12 px-8 text-[10px] font-black text-rose-500 hover:bg-rose-50 rounded-2xl transition-all uppercase tracking-widest border border-rose-100"
                             onClick={() => window.location.reload()}
                         >
-                            <X className="w-4 h-4 mr-2" /> Reset selection
+                            <X className="w-4 h-4 mr-2" /> {t('reset_selection')}
                         </Button>
                     </div>
 
@@ -226,16 +228,16 @@ export default function OnboardingPage() {
                             {[
                                 { 
                                     id: "patient", 
-                                    label: "Patient", 
-                                    sub: "I seek care", 
+                                    label: t('patient'), 
+                                    sub: t('patient_sub'), 
                                     icon: UserRound, 
                                     color: "from-blue-500/20 to-indigo-600/20",
                                     iconColor: "text-blue-400"
                                 },
                                 { 
                                     id: "doctor", 
-                                    label: "Doctor", 
-                                    sub: "I provide care", 
+                                    label: t('doctor'), 
+                                    sub: t('doctor_sub'), 
                                     icon: Stethoscope, 
                                     color: "from-emerald-500/20 to-teal-600/20",
                                     iconColor: "text-emerald-400"
@@ -250,7 +252,7 @@ export default function OnboardingPage() {
                                         "group cursor-pointer rounded-[2.5rem] border-2 p-10 transition-all duration-300 relative overflow-hidden",
                                         role === item.id
                                             ? "border-primary bg-primary/5 shadow-3xl shadow-primary/10"
-                                            : "border-slate-50 bg-slate-50 hover:border-primary/20 hover:bg-white"
+                                            : "border-border bg-muted hover:border-primary/20 hover:bg-card"
                                     )}
 
                                 >
@@ -262,7 +264,7 @@ export default function OnboardingPage() {
                                     <div className="flex flex-col items-center justify-center space-y-8 relative z-10 text-center">
                                         <div className={cn(
                                             "w-24 h-24 rounded-3xl flex items-center justify-center transition-all duration-300 shadow-xl border border-white",
-                                            role === item.id ? "bg-primary text-white scale-110" : "bg-white text-slate-300"
+                                            role === item.id ? "bg-primary text-white scale-110" : "bg-card text-muted-foreground/60"
                                         )}>
 
                                             <item.icon className="w-12 h-12" />
@@ -270,9 +272,9 @@ export default function OnboardingPage() {
                                         <div>
                                             <h3 className={cn(
                                                 "text-3xl font-black tracking-tight",
-                                                role === item.id ? "text-slate-900" : "text-slate-400"
+                                                role === item.id ? "text-foreground" : "text-muted-foreground"
                                             )}>{item.label}</h3>
-                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2">{item.sub}</p>
+                                            <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mt-2">{item.sub}</p>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -291,46 +293,46 @@ export default function OnboardingPage() {
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-4 md:col-span-2">
-                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Full Name</Label>
+                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('full_name')}</Label>
                                         <Input
                                             name="fullName"
-                                            placeholder="Enter your full name"
+                                            placeholder={t('full_name')}
                                             required
-                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all shadow-inner"
+                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border focus:border-primary text-foreground transition-all shadow-inner"
                                             value={formData.fullName}
                                             onChange={handleInputChange}
                                         />
                                     </div>
                                     <div className="space-y-4">
-                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Phone Number</Label>
+                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('phone')}</Label>
                                         <Input
                                             name="phone"
                                             placeholder="+91 XXXXX XXXXX"
                                             required
-                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all shadow-inner"
+                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border focus:border-primary text-foreground transition-all shadow-inner"
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                         />
                                     </div>
                                     <div className="space-y-4">
-                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Date of Birth</Label>
+                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('dob')}</Label>
                                         <Input
                                             name="dob"
                                             type="date"
                                             required
-                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all"
+                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border focus:border-primary text-foreground transition-all"
                                             value={formData.dob}
                                             onChange={handleInputChange}
                                         />
                                     </div>
                                     <div className="space-y-4">
-                                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Age</Label>
+                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('age')}</Label>
                                         <Input
                                             name="age"
                                             type="number"
-                                            placeholder="Age"
+                                            placeholder={t('age')}
                                             required
-                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all"
+                                            className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border focus:border-primary text-foreground transition-all"
                                             value={formData.age}
                                             onChange={handleInputChange}
                                         />
@@ -338,12 +340,12 @@ export default function OnboardingPage() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Gender</Label>
+                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('gender')}</Label>
                                     <Select onValueChange={(val) => handleSelectChange("gender", val)} required>
-                                        <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all">
-                                            <SelectValue placeholder="Select Gender" />
+                                        <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border focus:border-primary text-foreground transition-all">
+                                            <SelectValue placeholder={t('gender')} />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-2xl border-slate-100 bg-white shadow-2xl overflow-hidden">
+                                        <SelectContent className="rounded-2xl border-border bg-card shadow-2xl overflow-hidden">
                                             <SelectItem value="male" className="font-black py-4">Male</SelectItem>
                                             <SelectItem value="female" className="font-black py-4">Female</SelectItem>
                                             <SelectItem value="other" className="font-black py-4">Other</SelectItem>
@@ -354,12 +356,12 @@ export default function OnboardingPage() {
                                 {role === "patient" && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="space-y-4">
-                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Blood Group</Label>
+                                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('blood_group')}</Label>
                                             <Select onValueChange={(val) => handleSelectChange("bloodGroup", val)} required>
-                                                <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900">
-                                                    <SelectValue placeholder="Group" />
+                                                <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border text-foreground">
+                                                    <SelectValue placeholder={t('blood_group')} />
                                                 </SelectTrigger>
-                                                <SelectContent className="bg-white border-slate-100">
+                                                <SelectContent className="bg-card border-border">
                                                     {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
                                                         <SelectItem key={bg} value={bg} className="font-black py-3">{bg}</SelectItem>
                                                     ))}
@@ -367,53 +369,53 @@ export default function OnboardingPage() {
                                             </Select>
                                         </div>
                                         <div className="space-y-4">
-                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Weight (kg)</Label>
+                                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('weight')}</Label>
                                             <Input
                                                 name="weight"
                                                 type="number"
                                                 placeholder="e.g. 70"
-                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border text-foreground"
                                                 value={formData.weight}
                                                 onChange={handleInputChange}
                                             />
                                         </div>
                                         <div className="space-y-4">
-                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Height (cm)</Label>
+                                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('height')}</Label>
                                             <Input
                                                 name="height"
                                                 type="number"
                                                 placeholder="e.g. 170"
-                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border text-foreground"
                                                 value={formData.height}
                                                 onChange={handleInputChange}
                                             />
                                         </div>
                                         <div className="space-y-4">
-                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Emergency Contact</Label>
+                                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('emergency_contact')}</Label>
                                             <Input
                                                 name="emergencyContact"
                                                 placeholder="+91 XXXXX XXXXX"
-                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border text-foreground"
                                                 value={formData.emergencyContact}
                                                 onChange={handleInputChange}
                                             />
                                         </div>
                                         <div className="space-y-4 md:col-span-2">
-                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Allergies</Label>
+                                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('allergies')}</Label>
                                             <Input
                                                 name="allergies"
-                                                placeholder="Any allergies? (e.g. Penicillin, Peanuts)"
-                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                placeholder={t('allergies')}
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border text-foreground"
                                                 value={formData.allergies}
                                                 onChange={handleInputChange}
                                             />
                                         </div>
                                         <div className="space-y-4 md:col-span-2">
-                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Current Medications</Label>
+                                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('current_medications')}</Label>
                                             <Input
                                                 name="currentMedications"
-                                                placeholder="Any existing medications?"
-                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 text-slate-900"
+                                                placeholder={t('current_medications')}
+                                                className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border text-foreground"
                                                 value={formData.currentMedications}
                                                 onChange={handleInputChange}
                                             />
@@ -425,12 +427,12 @@ export default function OnboardingPage() {
                                 {role === "doctor" && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
                                         <div className="space-y-3">
-                                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Medical Specialization</Label>
+                                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-4">{t('specialization')}</Label>
                                             <Select onValueChange={(val) => handleSelectChange("specialization", val)} required>
-                                                <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-slate-50 border-slate-100 focus:border-primary text-slate-900 transition-all">
-                                                    <SelectValue placeholder="Select Specialization" />
+                                                <SelectTrigger className="h-16 px-8 text-lg font-black rounded-2xl bg-muted border-border focus:border-primary text-foreground transition-all">
+                                                    <SelectValue placeholder={t('specialization')} />
                                                 </SelectTrigger>
-                                                <SelectContent className="rounded-2xl border-slate-100 bg-white shadow-2xl max-h-[300px]">
+                                                <SelectContent className="rounded-2xl border-border bg-card shadow-2xl max-h-[300px]">
                                                     {MEDICAL_SPECIALIZATIONS.map((spec) => (
                                                         <SelectItem key={spec.id} value={spec.name} className="font-black py-4">
                                                             {spec.name}
@@ -447,17 +449,17 @@ export default function OnboardingPage() {
                                             <div className="col-span-full mb-4">
                                                 <h4 className="text-sm font-black text-blue-600 flex items-center gap-3">
                                                     <ShieldCheck className="w-5 h-5" />
-                                                    Professional Verification
+                                                    {t('professional_verification')}
                                                 </h4>
                                             </div>
                                             
                                             <div className="space-y-3">
-                                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Medical Council</Label>
+                                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">{t('medical_council')}</Label>
                                                 <Select onValueChange={(val) => handleSelectChange("medicalCouncil", val)} required disabled={isVerified}>
-                                                    <SelectTrigger className="h-14 px-6 font-black rounded-xl bg-white border-slate-100 text-slate-900">
-                                                        <SelectValue placeholder="Select Council" />
+                                                    <SelectTrigger className="h-14 px-6 font-black rounded-xl bg-card border-border text-foreground">
+                                                        <SelectValue placeholder={t('medical_council')} />
                                                     </SelectTrigger>
-                                                    <SelectContent className="bg-white border-slate-100 font-bold">
+                                                    <SelectContent className="bg-card border-border font-bold">
                                                         <SelectItem value="Delhi Medical Council">Delhi Medical Council</SelectItem>
                                                         <SelectItem value="Maharashtra Medical Council">Maharashtra Medical Council</SelectItem>
                                                         <SelectItem value="Other State Council">Other State Council</SelectItem>
@@ -466,7 +468,7 @@ export default function OnboardingPage() {
                                             </div>
 
                                             <div className="space-y-3">
-                                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">License ID</Label>
+                                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">{t('license_id')}</Label>
                                                 <div className="flex gap-3">
                                                     <Input
                                                         id="licenseNumber"
@@ -474,7 +476,7 @@ export default function OnboardingPage() {
                                                         placeholder="NMC-XXXX"
                                                         required
                                                         disabled={isVerified}
-                                                        className="h-14 bg-white border-slate-100 rounded-xl text-slate-900 font-black px-6"
+                                                        className="h-14 bg-card border-border rounded-xl text-foreground font-black px-6"
                                                         value={formData.licenseNumber}
                                                         onChange={handleInputChange}
                                                     />
@@ -488,7 +490,7 @@ export default function OnboardingPage() {
                                                         )}
                                                     >
                                                         {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : 
-                                                        isVerified ? <CheckCircle2 className="w-5 h-5" /> : "Verify"}
+                                                        isVerified ? <CheckCircle2 className="w-5 h-5" /> : t('verify')}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -504,11 +506,11 @@ export default function OnboardingPage() {
                                     {isSubmitting ? (
                                         <div className="flex items-center gap-6">
                                             <Loader2 className="h-10 w-10 animate-spin" />
-                                            <span>Saving Profile...</span>
+                                            <span>{t('saving_profile')}</span>
                                         </div>
                                     ) : (
                                         <>
-                                           Complete Onboarding
+                                           {t('complete_onboarding')}
                                            <ArrowRight className="ml-4 w-8 h-8 group-hover:translate-x-2 transition-transform" />
                                         </>
                                     )}
@@ -520,7 +522,7 @@ export default function OnboardingPage() {
                 </div>
             </motion.div>
             
-            <div className="text-center text-[10px] text-slate-200 font-black py-10 uppercase tracking-[0.5em] relative z-10">
+            <div className="text-center text-[10px] text-muted-foreground/30 font-black py-10 uppercase tracking-[0.5em] relative z-10">
                 SwasthGuru &bull; 2026
             </div>
 

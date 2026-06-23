@@ -280,7 +280,7 @@ export default function BookAppointmentPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-white">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-100">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-2xl border-b border-border">
 
         <div className="container mx-auto px-6 py-4 max-w-6xl">
           <div className="flex items-center justify-between">
@@ -293,17 +293,10 @@ export default function BookAppointmentPage() {
               >
                 <ArrowLeft className="h-6 w-6" />
               </Button>
-              <h1 className="text-3xl font-black logo-text tracking-tighter">Booking Portal</h1>
+              <h1 className="text-3xl font-black logo-text tracking-tighter">{t('booking_portal')}</h1>
             </div>
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex flex-col items-end">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Node Address</p>
-                <p className="text-xs font-bold font-mono text-primary">SWG-PATH-242</p>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center">
-                <Activity className="w-6 h-6 text-primary animate-pulse" />
-              </div>
-
+              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -313,7 +306,7 @@ export default function BookAppointmentPage() {
         {/* Progress Stepper */}
         <div className="mb-20">
           <div className="flex items-center justify-between relative px-2 max-w-3xl mx-auto">
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-slate-200 -translate-y-1/2 z-0"></div>
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-border -translate-y-1/2 z-0"></div>
             {bookingSteps.map((step) => (
               <div key={step.step} className="relative z-10 flex flex-col items-center">
                 <motion.div
@@ -321,11 +314,11 @@ export default function BookAppointmentPage() {
                     scale: currentStep === step.step ? 1.2 : 1,
                     backgroundColor: currentStep >= step.step ? 'hsl(var(--primary))' : 'rgba(0,0,0,0.05)'
                   }}
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all border ${currentStep >= step.step ? 'border-primary shadow-2xl shadow-primary/20' : 'border-slate-200 text-slate-300'}`}>
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all border ${currentStep >= step.step ? 'border-primary shadow-2xl shadow-primary/20' : 'border-border text-muted-foreground/60'}`}>
                   {currentStep > step.step ? <CheckCircle className="w-6 h-6 text-white" /> : <span className={currentStep >= step.step ? 'text-white' : ''}>{step.step}</span>}
                 </motion.div>
-                <span className={`mt-4 text-[10px] font-black uppercase tracking-[0.4em] ${currentStep >= step.step ? 'text-primary' : 'text-slate-300'}`}>
-                  {step.title.split(' ')[0]}
+                <span className={`mt-4 text-[10px] font-black uppercase tracking-[0.4em] ${currentStep >= step.step ? 'text-primary' : 'text-muted-foreground/60'}`}>
+                  {step.step === 1 ? t('select_symptoms') : step.step === 2 ? t('choose_doctor') : step.step === 3 ? t('select_date_time') : t('confirm_booking')}
                 </span>
 
               </div>
@@ -336,8 +329,8 @@ export default function BookAppointmentPage() {
         {currentStep === 1 && (
           <div className="space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-4">
-              <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Symptom Selection</h2>
-              <p className="text-lg font-medium text-slate-500">Select the neurological or physical flags reported by your core.</p>
+              <h2 className="text-5xl font-black text-foreground tracking-tighter">{t('symptom_selection')}</h2>
+              <p className="text-lg font-medium text-muted-foreground">{t('symptom_desc')}</p>
             </div>
 
 
@@ -351,7 +344,7 @@ export default function BookAppointmentPage() {
                     "px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-500 flex items-center gap-3 border",
                     activeCategory === cat.id
                       ? "bg-primary text-white border-primary shadow-2xl shadow-primary/20 scale-105"
-                      : "bg-white text-slate-600 border-slate-200 hover:border-primary/40"
+                      : "bg-card text-foreground/70 border-border hover:border-primary/40"
                   )}
                 >
 
@@ -400,7 +393,6 @@ export default function BookAppointmentPage() {
                           <Plus className={cn("w-6 h-6 transition-transform duration-500", selectedSymptoms.includes(symptom.name) && "rotate-45")} />
                         </div>
                         <h4 className="mt-4 text-xl font-black text-white tracking-tight">{symptom.name}</h4>
-                        <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mt-1">Detected ID: REF-{idx}</p>
                       </div>
 
                     </motion.div>
@@ -412,33 +404,33 @@ export default function BookAppointmentPage() {
               <div className="mt-16 pt-16 border-t border-white/5 space-y-10">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                   <div className="space-y-3 text-center md:text-left">
-                    <h3 className="text-2xl font-black text-slate-800">Active Flags</h3>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedSymptoms.length} Anomalies detected</p>
+                    <h3 className="text-2xl font-black text-foreground">Selected Symptoms / चुने गए लक्षण</h3>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{selectedSymptoms.length} Selected / {selectedSymptoms.length} चुने गए</p>
                   </div>
                   <div className="flex flex-wrap justify-center md:justify-end gap-3 max-w-xl">
                     {selectedSymptoms.map(s => (
-                      <Badge key={s} className="px-5 py-3 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-rose-500 hover:text-white transition-all cursor-pointer" onClick={() => handleSymptomToggle(s)}>
+                      <Badge key={s} className="px-5 py-3 rounded-xl bg-primary text-white font-black uppercase tracking-wider text-xs hover:bg-rose-500 hover:text-white transition-all cursor-pointer" onClick={() => handleSymptomToggle(s)}>
                         {s} ×
                       </Badge>
                     ))}
-                    {selectedSymptoms.length === 0 && <span className="text-slate-300 font-bold italic">No symptoms selected...</span>}
+                    {selectedSymptoms.length === 0 && <span className="text-muted-foreground font-bold italic">No symptoms selected / कोई लक्षण नहीं चुना गया</span>}
                   </div>
                 </div>
 
-                <div className="pt-10 border-t border-slate-100">
+                <div className="pt-10 border-t border-border">
                   <div className="flex items-center justify-between mb-8">
                     <div className="space-y-1">
-                      <h4 className="text-xl font-black text-slate-800 uppercase tracking-wider">Voice Diagnostics</h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Hands-free symptom reporting</p>
+                      <h4 className="text-xl font-black text-foreground uppercase tracking-wider">{t('voice_diagnostics')}</h4>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{t('voice_diagnostics_desc')}</p>
                     </div>
                     <Button
                       onClick={() => setShowVoiceInput(!showVoiceInput)}
                       className={cn(
                         "px-6 py-2 rounded-xl font-black text-[10px] tracking-widest transition-all",
-                        showVoiceInput ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                        showVoiceInput ? "bg-rose-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
                       )}
                     >
-                      {showVoiceInput ? 'DISABLE VOICE' : 'ENABLE VOICE MODE'}
+                      {showVoiceInput ? (language === 'hindi' ? 'बंद करें' : 'DISABLE VOICE') : (language === 'hindi' ? 'बोलकर बताएं' : 'ENABLE VOICE MODE')}
                     </Button>
                   </div>
 
@@ -468,15 +460,15 @@ export default function BookAppointmentPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Custom Anomalies</label>
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.5em] ml-2">Custom Anomalies</label>
                       <div className="flex gap-4">
                         <Input
-                          className="h-16 px-8 text-lg font-bold rounded-2xl bg-slate-50 border-slate-200 text-slate-900 focus:border-primary transition-all"
+                          className="h-16 px-8 text-lg font-bold rounded-2xl bg-muted border-border text-foreground focus:border-primary transition-all"
                           placeholder="Describe other issues..."
                           value={customSymptom}
                           onChange={(e) => setCustomSymptom(e.target.value)}
                         />
-                        <Button onClick={handleAddCustomSymptom} disabled={!customSymptom.trim()} className="h-16 px-10 rounded-2xl bg-slate-100 text-slate-600 font-black hover:bg-primary hover:text-white transition-all">
+                        <Button onClick={handleAddCustomSymptom} disabled={!customSymptom.trim()} className="h-16 px-10 rounded-2xl bg-muted text-foreground/70 font-black hover:bg-primary hover:text-white transition-all">
                           ADD
                         </Button>
                       </div>
@@ -487,7 +479,7 @@ export default function BookAppointmentPage() {
                       disabled={selectedSymptoms.length === 0}
                       className="glowing-button h-24 text-3xl font-black rounded-[2.5rem] flex items-center justify-center group"
                     >
-                      Proceed to Doctor Selection
+                      {t('proceed_doctor')}
                       <ChevronRight className="ml-4 w-8 h-8 group-hover:translate-x-2 transition-transform" />
                     </Button>
                   </div>
@@ -499,30 +491,30 @@ export default function BookAppointmentPage() {
 
         {currentStep === 2 && (
           <div className="space-y-12">
-            <div className="vibrant-card p-10 bg-white">
+            <div className="vibrant-card p-10 bg-card">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
                 <div className="space-y-2 text-center md:text-left">
-                  <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Doctor Selection</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Choose your preferred healthcare professional</p>
+                  <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">{t('doctor_selection')}</h2>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em]">{t('choose_doctor')}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                   <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/60" />
                     <Input
                       placeholder="Search Registry..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-14 pl-12 pr-6 rounded-2xl bg-slate-50 border-slate-200 text-slate-900 font-bold min-w-[300px]"
+                      className="h-14 pl-12 pr-6 rounded-2xl bg-muted border-border text-foreground font-bold min-w-[300px]"
                     />
                   </div>
                   <select
                     value={selectedSpecialization}
                     onChange={(e) => setSelectedSpecialization(e.target.value)}
-                    className="h-14 px-6 rounded-2xl bg-slate-50 border-slate-200 text-slate-900 font-black uppercase text-[10px] tracking-widest outline-none transition-all hover:bg-slate-100"
+                    className="h-14 px-6 rounded-2xl bg-muted border-border text-foreground font-black uppercase text-[10px] tracking-widest outline-none transition-all hover:bg-muted"
                   >
                     <option value="">All Fields</option>
                     {MEDICAL_SPECIALIZATIONS.map((spec) => (
-                      <option key={spec.id} value={spec.name} className="bg-white">{spec.name}</option>
+                      <option key={spec.id} value={spec.name} className="bg-card">{spec.name}</option>
                     ))}
                   </select>
                 </div>
@@ -541,7 +533,7 @@ export default function BookAppointmentPage() {
                       <motion.div
                         key={doctor.id}
                         whileHover={{ y: -10 }}
-                        className="p-8 rounded-[2.5rem] bg-white border border-slate-100 hover:border-primary/40 transition-all duration-500 relative overflow-hidden group/doc"
+                        className="p-8 rounded-[2.5rem] bg-card border border-border hover:border-primary/40 transition-all duration-500 relative overflow-hidden group/doc"
                       >
                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/doc:opacity-10 transition-opacity">
                           <Stethoscope className="w-24 h-24 text-primary" />
@@ -550,19 +542,19 @@ export default function BookAppointmentPage() {
                           <div className="relative">
                             <Avatar className="w-24 h-24 rounded-3xl border-2 border-primary/20 p-1">
                               <AvatarImage src={getDoctorAvatar(doctor)} className="rounded-2xl object-cover" />
-                              <AvatarFallback className="bg-slate-100 rounded-2xl text-2xl font-black">{doctor.name[0]}</AvatarFallback>
+                              <AvatarFallback className="bg-muted rounded-2xl text-2xl font-black">{doctor.name[0]}</AvatarFallback>
                             </Avatar>
                             <div className="absolute -bottom-2 -right-2 bg-primary text-white px-2 py-1 rounded-lg text-[10px] font-black">
                               {doctor.rating} ★
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">{doctor.name}</h3>
+                            <h3 className="text-2xl font-black text-foreground tracking-tight">{doctor.name}</h3>
                             <Badge className="bg-primary/10 text-primary border-none font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
                               {doctor.specialization}
                             </Badge>
                             <div className="flex items-center gap-4 pt-2">
-                              <div className="flex items-center gap-2 text-slate-400">
+                              <div className="flex items-center gap-2 text-muted-foreground">
                                 <Clock className="w-4 h-4" />
                                 <span className="text-xs font-bold">Available Now</span>
                               </div>
@@ -573,13 +565,13 @@ export default function BookAppointmentPage() {
                             </div>
                           </div>
                         </div>
-                        <p className="mt-8 text-sm font-medium text-slate-500 italic leading-relaxed line-clamp-2">“{doctor.about}”</p>
+                        <p className="mt-8 text-sm font-medium text-muted-foreground italic leading-relaxed line-clamp-2">"{doctor.about}"</p>
 
                         <Button
                           onClick={() => handleDoctorSelect(doctor)}
                           className="glowing-button w-full h-16 mt-10 rounded-2xl text-[10px] font-black uppercase tracking-widest"
                         >
-                          Connect to Specialist
+                          {t('connect_specialist')}
                         </Button>
                       </motion.div>
                     ))}
@@ -598,20 +590,20 @@ export default function BookAppointmentPage() {
 
         {currentStep === 3 && selectedDoctor && (
           <div className="max-w-4xl mx-auto space-y-12">
-            <h2 className="text-4xl font-black text-center text-slate-900 tracking-tighter">Scheduling Matrix</h2>
+            <h2 className="text-4xl font-black text-center text-foreground tracking-tighter">{t('scheduling_matrix')}</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               <div className="lg:col-span-1 space-y-8">
-                <div className="vibrant-card p-8 bg-white">
+                <div className="vibrant-card p-8 bg-card">
                   <Avatar className="w-full aspect-square rounded-[2rem] border-2 border-primary/20 mb-6">
                     <AvatarImage src={getDoctorAvatar(selectedDoctor)} className="object-cover" />
                   </Avatar>
-                  <h3 className="text-2xl font-black text-center text-slate-800">{selectedDoctor.name}</h3>
+                  <h3 className="text-2xl font-black text-center text-foreground">{selectedDoctor.name}</h3>
                   <p className="text-[10px] font-black text-primary uppercase text-center tracking-widest mt-2">{selectedDoctor.specialization}</p>
                 </div>
-                <div className="vibrant-card p-6 bg-white space-y-4">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Consultation Fee</h4>
+                <div className="vibrant-card p-6 bg-card space-y-4">
+                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em]">Consultation Fee</h4>
                   <div className="flex items-center justify-between">
-                    <span className="text-3xl font-black font-mono text-slate-900">₹{selectedDoctor.consultationFee}</span>
+                    <span className="text-3xl font-black font-mono text-foreground">₹{selectedDoctor.consultationFee}</span>
                     <Badge className="bg-emerald-500/10 text-emerald-600 border-none px-4 rounded-lg uppercase tracking-widest font-black text-[9px]">Verified Node</Badge>
                   </div>
                 </div>
@@ -619,10 +611,10 @@ export default function BookAppointmentPage() {
 
 
               <div className="lg:col-span-2 space-y-10">
-                <Card className="vibrant-card border border-slate-100 bg-white shadow-xl shadow-slate-200/50 overflow-hidden">
+                <Card className="vibrant-card border border-border bg-card shadow-xl shadow-primary/10 overflow-hidden">
                   <CardContent className="p-10 space-y-12">
                     <div className="space-y-6">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Communication Protocol</label>
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.5em] ml-2">Communication Protocol</label>
                       <div className="grid grid-cols-2 gap-6">
                         {[
                           { id: 'video', label: 'Video Call', sub: 'Video Session', icon: Video },
@@ -635,7 +627,7 @@ export default function BookAppointmentPage() {
                               "p-8 rounded-[2rem] border-2 transition-all duration-700 flex flex-col items-center gap-4 text-center group",
                               consultationType === type.id
                                 ? "bg-primary text-white border-primary shadow-2xl shadow-primary/20"
-                                : "bg-slate-50 text-slate-400 border-slate-100 hover:border-primary/40"
+                                : "bg-muted text-muted-foreground border-border hover:border-primary/40"
                             )}
                           >
                             <type.icon className={cn("w-10 h-10 transition-transform duration-500 group-hover:scale-110", consultationType === type.id ? "text-white" : "text-primary")} />
@@ -650,7 +642,7 @@ export default function BookAppointmentPage() {
 
 
                     <div className="space-y-6">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">Time-Window Allocation</label>
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.5em] ml-2">Time-Window Allocation</label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {getNextAvailableDates().map((date) => (
                           <button
@@ -660,7 +652,7 @@ export default function BookAppointmentPage() {
                               "p-4 rounded-2xl border transition-all duration-500 flex flex-col items-center gap-1",
                               selectedDate === date
                                 ? "bg-primary text-white border-primary shadow-xl"
-                                : "bg-slate-50 text-slate-400 border-slate-100 hover:border-primary/40"
+                                : "bg-muted text-muted-foreground border-border hover:border-primary/40"
                             )}
                           >
                             <span className="text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">{new Date(date).toLocaleDateString(undefined, { weekday: 'short' })}</span>
@@ -684,7 +676,7 @@ export default function BookAppointmentPage() {
                                 "h-12 text-xs font-black rounded-xl border transition-all duration-500",
                                 selectedTime === time
                                   ? "bg-primary text-white border-primary shadow-lg"
-                                  : "bg-slate-50 text-slate-600 border-slate-100 hover:border-primary/40"
+                                  : "bg-muted text-foreground/70 border-border hover:border-primary/40"
                               )}
                             >
                               {time}
@@ -699,7 +691,7 @@ export default function BookAppointmentPage() {
                       disabled={!selectedDate || !selectedTime}
                       className="glowing-button w-full h-24 text-2xl font-black rounded-[2.5rem] shadow-2xl flex items-center justify-center gap-4 group mt-10"
                     >
-                      Review Session Allocation
+                      {t('review_allocation')}
                       <ArrowLeft className="w-8 h-8 rotate-180 group-hover:translate-x-2 transition-transform" />
                     </Button>
                   </CardContent>
@@ -712,30 +704,32 @@ export default function BookAppointmentPage() {
         {currentStep === 4 && selectedDoctor && (
           <div className="max-w-3xl mx-auto space-y-16">
             <div className="text-center space-y-4">
-              <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Confirmation Logic</h2>
-              <p className="text-lg font-medium text-slate-500">Finalizing your direct path with {selectedDoctor.name}.</p>
+              <h2 className="text-5xl font-black text-foreground tracking-tighter">{t('confirmation_logic')}</h2>
+              <p className="text-lg font-medium text-muted-foreground">{selectedDoctor.name}</p>
             </div>
 
-            <div className="vibrant-card p-12 bg-white space-y-12 relative overflow-hidden border border-slate-100">
+            <div className="vibrant-card p-12 bg-card space-y-12 relative overflow-hidden border border-border">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-emerald-500" />
 
-              <div className="flex flex-col md:flex-row items-center gap-10 p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative">
+              <div className="flex flex-col md:flex-row items-center gap-10 p-10 bg-muted rounded-[2.5rem] border border-border relative">
                 <Avatar className="w-32 h-32 rounded-[2rem] border-2 border-primary/20">
                   <AvatarImage src={getDoctorAvatar(selectedDoctor)} className="object-cover" />
                 </Avatar>
                 <div className="space-y-4 text-center md:text-left">
                   <div className="space-y-1">
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">{selectedDoctor.name}</h3>
+                    <h3 className="text-3xl font-black text-foreground tracking-tight">{selectedDoctor.name}</h3>
                     <p className="text-sm font-black text-primary uppercase tracking-[0.4em]">{selectedDoctor.specialization}</p>
                   </div>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                    <div className="px-4 py-2 bg-white rounded-xl border border-slate-100 flex items-center gap-3">
+                    <div className="px-4 py-2 bg-card rounded-xl border border-border flex items-center gap-3">
                       <Video className="w-4 h-4 text-primary" />
-                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{consultationType} Node</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        {consultationType === 'video' ? 'Video Call / वीडियो कॉल' : 'Voice Call / आवाज़ कॉल'}
+                      </span>
                     </div>
-                    <div className="px-4 py-2 bg-white rounded-xl border border-slate-100 flex items-center gap-3">
+                    <div className="px-4 py-2 bg-card rounded-xl border border-border flex items-center gap-3">
                       <Clock className="w-4 h-4 text-primary" />
-                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{selectedTime}</span>
+                      <span className="text-xs font-bold text-foreground/70 uppercase tracking-wider">{selectedTime}</span>
                     </div>
                   </div>
                 </div>
@@ -743,13 +737,13 @@ export default function BookAppointmentPage() {
 
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center gap-6">
+                <div className="p-8 rounded-[2rem] bg-muted border border-border flex items-center gap-6">
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
                     <Calendar className="w-8 h-8 text-primary" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-1">Session Date</p>
-                    <p className="text-xl font-black text-slate-900">{selectedDate}</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-1">{t('session_date')}</p>
+                    <p className="text-xl font-black text-foreground">{selectedDate}</p>
                   </div>
                 </div>
                 <div className="p-8 rounded-[2rem] bg-emerald-50 border border-emerald-100 flex items-center gap-6">
@@ -757,8 +751,8 @@ export default function BookAppointmentPage() {
                     <IndianRupee className="w-8 h-8" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-1">Execution Fee</p>
-                    <p className="text-xl font-black text-slate-900 font-mono">₹{selectedDoctor.consultationFee}</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-1">{t('execution_fee')}</p>
+                    <p className="text-xl font-black text-foreground font-mono">₹{selectedDoctor.consultationFee}</p>
                   </div>
                 </div>
               </div>
@@ -771,20 +765,17 @@ export default function BookAppointmentPage() {
               >
                 {isSubmitting ? (
                   <div className="flex items-center gap-6">
-                    <Loader2 className="w-10 h-10 animate-spin" />
-                    <span className="uppercase tracking-widest">Compiling Transaction...</span>
+                    <Loader2 className="h-10 w-10 animate-spin" />
+                    <span className="uppercase tracking-widest">{t('compiling_transaction')}</span>
                   </div>
                 ) : (
                   <>
-                    Book Appointment
+                    {t('book_appointment')}
                     <Activity className="ml-4 w-10 h-10 group-hover:scale-125 transition-transform" />
                   </>
                 )}
               </Button>
 
-              <p className="text-center text-[10px] font-black text-white/20 uppercase tracking-[0.5em] mt-8 animate-pulse">
-                Node Handshake Initialized &bull; Secure Protocol Active
-              </p>
             </div>
           </div>
         )}
@@ -792,9 +783,9 @@ export default function BookAppointmentPage() {
 
       <footer className="fixed bottom-0 left-0 right-0 z-50 py-10 bg-gradient-to-t from-background to-transparent pointer-events-none">
         <div className="container mx-auto px-6 max-w-6xl flex justify-center">
-          <div className="px-6 py-2 rounded-full bg-white border border-slate-100 shadow-xl pointer-events-auto">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">
-              SwasthGuru Ecosystem &bull; Core Ver 4.0.2
+          <div className="px-6 py-2 rounded-full bg-card border border-border shadow-xl pointer-events-auto">
+            <p className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
+              SwasthGuru Healthcare / स्वस्थगुरु टेलीमेडिसिन
             </p>
           </div>
         </div>

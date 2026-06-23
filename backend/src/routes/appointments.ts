@@ -3,19 +3,20 @@ import { supabase } from '../config/supabase';
 
 const router = express.Router();
 
-// @desc    Get a single appointment by ID
-// @route   GET /api/appointments/:id
-// @access  Public
-router.get('/:id', async (req, res) => {
+// ─── IMPORTANT: Specific named routes MUST come before /:id ─────────────────
+// Otherwise Express will match 'patient' and 'doctor' as the :id param.
+
+// @desc    Get all appointments
+// @route   GET /api/appointments
+router.get('/', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('appointments')
             .select('*')
-            .eq('id', req.params.id)
-            .single();
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
-        res.json(data);
+        res.json(data || []);
     } catch (error: any) {
         console.error('Supabase Error:', error);
         res.status(500).json({ message: error.message });
@@ -24,7 +25,6 @@ router.get('/:id', async (req, res) => {
 
 // @desc    Create an appointment
 // @route   POST /api/appointments
-// @access  Public
 router.post('/', async (req, res) => {
     try {
         const appointment = req.body;
@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
 
 // @desc    Get appointments for a patient
 // @route   GET /api/appointments/patient/:clerkId
-// @access  Public
+// NOTE: Must be BEFORE /:id
 router.get('/patient/:clerkId', async (req, res) => {
     try {
         const { data: appointments, error } = await supabase
@@ -71,13 +71,11 @@ router.get('/patient/:clerkId', async (req, res) => {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-
         if (!appointments || appointments.length === 0) return res.json([]);
 
-        // Get patient info for complete display
         const { data: patient } = await supabase
             .from('patients')
-            .select('name, avatar, email, phone')
+            .select('name, email, phone')
             .eq('clerk_id', req.params.clerkId)
             .maybeSingle();
 
@@ -96,14 +94,32 @@ router.get('/patient/:clerkId', async (req, res) => {
 
 // @desc    Get appointments for a doctor
 // @route   GET /api/appointments/doctor/:clerkId
-// @access  Public
+// NOTE: Must be BEFORE /:id
 router.get('/doctor/:clerkId', async (req, res) => {
     try {
-        const { data: appointments, error } = await supabase
+        // Look up the doctor's name so we can fuzzy-match appointments
+        // booked via static mock doctor entries (which may use a name instead of clerk ID)
+        const { data: dbDoctor } = await supabase
+            .from('doctors')
+            .select('name')
+            .eq('clerk_id', req.params.clerkId)
+            .maybeSingle();
+
+        let appointmentsQuery = supabase
             .from('appointments')
-            .select('*')
-            .eq('doctor_id', req.params.clerkId)
-            .order('created_at', { ascending: false });
+            .select('*');
+
+        if (dbDoctor && dbDoctor.name) {
+            const docName = dbDoctor.name.trim();
+            // Match by Clerk ID OR by doctor name — covers bookings via static/mock doctor entries
+            appointmentsQuery = appointmentsQuery.or(
+                `doctor_id.eq.${req.params.clerkId},doctor_name.ilike.%${docName}%`
+            );
+        } else {
+            appointmentsQuery = appointmentsQuery.eq('doctor_id', req.params.clerkId);
+        }
+
+        const { data: appointments, error } = await appointmentsQuery.order('created_at', { ascending: false });
 
         if (error) {
             console.error('Supabase Appointments Fetch Error:', error);
@@ -118,12 +134,11 @@ router.get('/doctor/:clerkId', async (req, res) => {
         const patientIds = [...new Set(appointments.map(a => a.patient_id))];
         const { data: patients, error: pError } = await supabase
             .from('patients')
-            .select('clerk_id, name, avatar, email, phone')
+            .select('clerk_id, name, email, phone')
             .in('clerk_id', patientIds);
 
         if (pError) {
             console.error('Error fetching patients for join:', pError);
-            // Non-blocking, just return appointments as is
             return res.json(appointments);
         }
 
@@ -145,9 +160,27 @@ router.get('/doctor/:clerkId', async (req, res) => {
     }
 });
 
+// @desc    Get a single appointment by ID
+// @route   GET /api/appointments/:id
+// NOTE: Must be AFTER all named subroutes above
+router.get('/:id', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('appointments')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error) throw error;
+        res.json(data);
+    } catch (error: any) {
+        console.error('Supabase Error:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Update appointment status or payment
 // @route   PATCH /api/appointments/:id
-// @access  Public
 router.patch('/:id', async (req, res) => {
     try {
         const { status, payment_status } = req.body;

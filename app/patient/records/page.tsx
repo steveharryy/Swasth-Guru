@@ -228,7 +228,17 @@ export default function PatientRecordsPage() {
     }
   };
 
-  if (!isLoaded) return <div className="min-h-screen bg-background flex items-center justify-center font-bold">Loading...</div>;
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-card sticky top-0 z-40 h-[57px]" />
+        <main className="container mx-auto px-4 py-6 max-w-4xl space-y-4">
+          <div className="h-10 w-48 bg-muted/40 rounded-xl animate-pulse" />
+          <div className="h-[400px] bg-muted/40 rounded-3xl animate-pulse" />
+        </main>
+      </div>
+    );
+  }
   if (!isAuthenticated || !user || isDoctor) return null;
 
   const recordCounts = {
@@ -328,9 +338,10 @@ export default function PatientRecordsPage() {
           {['all', 'consultation', 'lab-report', 'prescription', 'vaccination'].map((tabValue) => (
             <TabsContent key={tabValue} value={tabValue} className="space-y-4 pt-2">
               {isLoading ? (
-                <div className="py-20 text-center text-muted-foreground">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-                  <p className="font-bold">Loading your records...</p>
+                <div className="space-y-4 pt-2">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="h-28 rounded-2xl bg-muted/40 animate-pulse" />
+                  ))}
                 </div>
               ) : (
                 <>

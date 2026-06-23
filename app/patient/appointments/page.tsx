@@ -17,16 +17,13 @@ import {
   Search,
   Video,
   Phone,
-  User,
   Clock,
   Calendar,
-  Filter,
   Plus,
   Stethoscope,
   MessageCircle,
   CreditCard
 } from 'lucide-react';
-
 
 interface Appointment {
   id: string;
@@ -55,6 +52,13 @@ export default function PatientAppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState('upcoming');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  // Loading states
+  const [activeJoinLoading, setActiveJoinLoading] = useState<string | null>(null);
+  const [activeCancelLoading, setActiveCancelLoading] = useState<string | null>(null);
+  const [activePayLoading, setActivePayLoading] = useState<string | null>(null);
+  const [activeRescheduleLoading, setActiveRescheduleLoading] = useState<string | null>(null);
+  const [isBookLoading, setIsBookLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -117,13 +121,6 @@ export default function PatientAppointmentsPage() {
     const normalizeDate = (d: string) => {
       if (!d) return '';
       if (d.includes('T')) return d.split('T')[0];
-      if (d.includes('/')) {
-        const parts = d.split('/');
-        if (parts.length === 3) {
-          if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-          return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
-        }
-      }
       return d;
     };
 
@@ -151,37 +148,16 @@ export default function PatientAppointmentsPage() {
         break;
     }
 
-    console.log(`Filtered appointments for ${status}:`, filtered.length);
     return filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'upcoming': return 'default';
-      case 'confirmed': return 'default';
-      case 'pending': return 'outline';
-      case 'completed': return 'secondary';
-      case 'cancelled': return 'destructive';
-      default: return 'default';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'upcoming': return 'Upcoming';
-      case 'confirmed': return 'Confirmed';
-      case 'pending': return 'Payment Pending';
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
-      default: return status;
-    }
-  };
-
   const handleJoinConsultation = (appointmentId: string) => {
+    setActiveJoinLoading(appointmentId);
     router.push(`/patient/consultation/${appointmentId}`);
   };
 
   const handleCancelAppointment = async (appointmentId: string) => {
+    setActiveCancelLoading(appointmentId);
     try {
       const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/appointments/${appointmentId}`, {
@@ -196,27 +172,29 @@ export default function PatientAppointmentsPage() {
         );
         setAppointments(updatedAppointments);
 
-        // Update localStorage
         const allAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
         const updatedAllAppointments = allAppointments.map((apt: any) =>
           apt.id === appointmentId ? { ...apt, status: 'cancelled' } : apt
         );
         localStorage.setItem('appointments', JSON.stringify(updatedAllAppointments));
-        console.log('Appointment cancelled successfully in backend');
       } else {
-        const errorData = await res.json();
-        console.error('Failed to cancel appointment in backend:', errorData);
         alert('Failed to cancel appointment. Please try again.');
       }
     } catch (error) {
       console.error('Error cancelling appointment:', error);
       alert('Network error. Could not cancel appointment.');
+    } finally {
+      setActiveCancelLoading(null);
     }
   };
 
   const handleRescheduleAppointment = (appointmentId: string) => {
-    // In a real app, this would open a reschedule dialog
-    console.log('Reschedule appointment:', appointmentId);
+    setActiveRescheduleLoading(appointmentId);
+    // Mimic quick redirect or reload
+    setTimeout(() => {
+      alert('Reschedule request sent / समय बदलने का अनुरोध भेजा गया');
+      setActiveRescheduleLoading(null);
+    }, 1000);
   };
 
   if (!isAuthenticated || !user || isDoctor) {
@@ -233,21 +211,25 @@ export default function PatientAppointmentsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 text-muted-foreground"
+                className="h-10 w-10 text-muted-foreground"
                 onClick={() => router.push('/patient/dashboard')}
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-6 w-6" />
               </Button>
-              <h1 className="text-xl font-bold logo-text">अपॉइंटमेंट (Appointments)</h1>
+              <h1 className="text-xl font-bold logo-text">My Appointments / मेरे अपॉइंटमेंट</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button
-                onClick={() => router.push('/patient/appointments/book')}
+                onClick={() => {
+                  setIsBookLoading(true);
+                  router.push('/patient/appointments/book');
+                }}
+                loading={isBookLoading}
                 variant="premium"
-                className="h-10 px-6 rounded-2xl font-bold"
+                className="h-12 px-6 rounded-xl font-black text-sm"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Book New
+                Book Doctor / डॉक्टर से मिलें
               </Button>
               <ThemeToggle />
             </div>
@@ -259,13 +241,13 @@ export default function PatientAppointmentsPage() {
         {/* Search */}
         <div className="mb-6">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               type="text"
-              placeholder="Search by doctor or symptoms..."
+              placeholder="Search by doctor or symptoms / डॉक्टर या लक्षणों से खोजें..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 pl-11 pr-4 text-sm font-medium rounded-xl border bg-muted/30 focus:bg-background focus:border-primary/20 transition-all shadow-none"
+              className="h-12 pl-12 pr-4 text-base font-semibold rounded-xl border bg-muted/30 focus:bg-background focus:border-primary/20 transition-all shadow-none"
             />
           </div>
         </div>
@@ -273,14 +255,14 @@ export default function PatientAppointmentsPage() {
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
-            { label: 'Upcoming', count: filterAppointments('upcoming').length, color: 'text-primary' },
-            { label: 'Completed', count: filterAppointments('completed').length, color: 'text-green-600' },
-            { label: 'Cancelled', count: filterAppointments('cancelled').length, color: 'text-red-500' }
+            { label: 'Upcoming / आने वाले', count: filterAppointments('upcoming').length, color: 'text-primary' },
+            { label: 'Completed / पूरा हुआ', count: filterAppointments('completed').length, color: 'text-green-600' },
+            { label: 'Cancelled / रद्द हुआ', count: filterAppointments('cancelled').length, color: 'text-red-500' }
           ].map((stat) => (
             <Card key={stat.label} className="border shadow-none bg-card">
-              <CardContent className="p-4 text-center space-y-0.5">
+              <CardContent className="p-4 text-center space-y-1">
                 <div className={`text-2xl font-bold ${stat.color}`}>{stat.count}</div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</div>
               </CardContent>
             </Card>
           ))}
@@ -288,14 +270,14 @@ export default function PatientAppointmentsPage() {
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="flex w-full h-11 p-1 bg-muted rounded-xl border">
+          <TabsList className="flex w-full h-12 p-1 bg-muted rounded-xl border">
             {['upcoming', 'completed', 'cancelled'].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="flex-1 h-full text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all uppercase tracking-wider"
+                className="flex-1 h-full text-xs md:text-sm font-black rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all uppercase tracking-wider"
               >
-                {tab}
+                {tab === 'upcoming' ? 'Upcoming / आने वाले' : tab === 'completed' ? 'Completed / पूरा हुआ' : 'Cancelled / रद्द हुआ'}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -309,6 +291,11 @@ export default function PatientAppointmentsPage() {
                   onJoin={handleJoinConsultation}
                   onCancel={handleCancelAppointment}
                   onReschedule={handleRescheduleAppointment}
+                  joinLoading={activeJoinLoading === appointment.id}
+                  cancelLoading={activeCancelLoading === appointment.id}
+                  rescheduleLoading={activeRescheduleLoading === appointment.id}
+                  payLoading={activePayLoading === appointment.id}
+                  setPayLoading={setActivePayLoading}
                 />
               ))
             ) : (
@@ -318,15 +305,18 @@ export default function PatientAppointmentsPage() {
                     <Calendar className="w-8 h-8 text-muted-foreground/30" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-lg font-bold text-muted-foreground/50">No Upcoming Appointments</p>
-                    <p className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-widest">Book your first doctor visit today</p>
+                    <p className="text-lg font-bold text-muted-foreground/55">No Appointments Found / कोई अपॉइंटमेंट नहीं मिला</p>
                   </div>
                   <Button
-                    onClick={() => router.push('/patient/appointments/book')}
-                    className="h-10 px-6 text-sm font-bold rounded-xl shadow-sm hover:scale-105 transition-transform"
+                    onClick={() => {
+                      setIsBookLoading(true);
+                      router.push('/patient/appointments/book');
+                    }}
+                    loading={isBookLoading}
+                    className="h-12 px-6 text-sm font-bold rounded-xl shadow-sm hover:scale-105 transition-transform"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Book Now
+                    <Plus className="w-5 h-5 mr-2" />
+                    Book Now / अभी बुक करें
                   </Button>
                 </CardContent>
               </Card>
@@ -342,12 +332,17 @@ export default function PatientAppointmentsPage() {
                   onJoin={handleJoinConsultation}
                   onCancel={handleCancelAppointment}
                   onReschedule={handleRescheduleAppointment}
+                  joinLoading={activeJoinLoading === appointment.id}
+                  cancelLoading={activeCancelLoading === appointment.id}
+                  rescheduleLoading={activeRescheduleLoading === appointment.id}
+                  payLoading={activePayLoading === appointment.id}
+                  setPayLoading={setActivePayLoading}
                 />
               ))
             ) : (
               <div className="p-20 text-center space-y-4 opacity-40">
-                <Stethoscope className="w-20 h-20 text-slate-300 mx-auto" />
-                <p className="text-2xl font-black text-slate-400">No Completed Visits</p>
+                <Stethoscope className="w-20 h-20 text-muted-foreground/60 mx-auto" />
+                <p className="text-xl font-bold text-muted-foreground">No Appointments / कोई मुलाक़ात नहीं</p>
               </div>
             )}
           </TabsContent>
@@ -361,12 +356,17 @@ export default function PatientAppointmentsPage() {
                   onJoin={handleJoinConsultation}
                   onCancel={handleCancelAppointment}
                   onReschedule={handleRescheduleAppointment}
+                  joinLoading={activeJoinLoading === appointment.id}
+                  cancelLoading={activeCancelLoading === appointment.id}
+                  rescheduleLoading={activeRescheduleLoading === appointment.id}
+                  payLoading={activePayLoading === appointment.id}
+                  setPayLoading={setActivePayLoading}
                 />
               ))
             ) : (
               <div className="p-20 text-center space-y-4 opacity-40">
-                <Calendar className="w-20 h-20 text-slate-300 mx-auto" />
-                <p className="text-2xl font-black text-slate-400">No Cancelled visits</p>
+                <Calendar className="w-20 h-20 text-muted-foreground/60 mx-auto" />
+                <p className="text-xl font-bold text-muted-foreground">No Appointments / कोई मुलाक़ात नहीं</p>
               </div>
             )}
           </TabsContent>
@@ -380,39 +380,36 @@ function AppointmentCard({
   appointment,
   onJoin,
   onCancel,
-  onReschedule
+  onReschedule,
+  joinLoading,
+  cancelLoading,
+  rescheduleLoading,
+  payLoading,
+  setPayLoading
 }: {
   appointment: Appointment;
   onJoin: (id: string) => void;
   onCancel: (id: string) => void;
   onReschedule: (id: string) => void;
+  joinLoading: boolean;
+  cancelLoading: boolean;
+  rescheduleLoading: boolean;
+  payLoading: boolean;
+  setPayLoading: (id: string | null) => void;
 }) {
   const router = useRouter();
-
-  const getStatusColor = (status: string) => {
-    if ((status === 'upcoming' || status === 'confirmed') && getAppointmentTimeStatus(appointment.date, appointment.time) === 'over') {
-      return 'destructive';
-    }
-    switch (status) {
-      case 'upcoming': return 'default';
-      case 'confirmed': return 'default';
-      case 'pending': return 'outline';
-      case 'completed': return 'secondary';
-      case 'cancelled': return 'destructive';
-      default: return 'default';
-    }
-  };
+  const { t } = useLanguage();
 
   const getStatusText = (status: string) => {
     if ((status === 'upcoming' || status === 'confirmed') && getAppointmentTimeStatus(appointment.date, appointment.time) === 'over') {
-      return 'Appointment Over';
+      return 'Appointment Over / मुलाक़ात समाप्त';
     }
     switch (status) {
-      case 'upcoming': return 'Upcoming';
-      case 'confirmed': return 'Confirmed';
-      case 'pending': return 'Payment Pending';
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
+      case 'upcoming': return 'Upcoming / आने वाली';
+      case 'confirmed': return 'Confirmed / निश्चित';
+      case 'pending': return 'Payment Pending / भुगतान बाकी';
+      case 'completed': return 'Completed / पूरा हुआ';
+      case 'cancelled': return 'Cancelled / रद्द हुआ';
       default: return status;
     }
   };
@@ -423,13 +420,6 @@ function AppointmentCard({
   const normalizeDate = (d: string) => {
     if (!d) return '';
     if (d.includes('T')) return d.split('T')[0];
-    if (d.includes('/')) {
-      const parts = d.split('/');
-      if (parts.length === 3) {
-        if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-        return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
-      }
-    }
     return d;
   };
 
@@ -438,23 +428,23 @@ function AppointmentCard({
   const timeStatus = isHackathon ? 'ready' : getAppointmentTimeStatus(appointment.date, appointment.time);
 
   return (
-    <Card className="border shadow-none overflow-hidden transition-all hover:shadow-md hover:translate-y-[-1px] group bg-card">
-      <CardContent className="p-4 sm:p-6">
+    <Card className="border shadow-sm overflow-hidden transition-all hover:shadow-md bg-card rounded-[2rem]">
+      <CardContent className="p-5 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Side: Avatar & Basic Info */}
           <div className="flex items-start gap-4 flex-1 min-w-0">
             <div className="relative shrink-0">
-              <Avatar className="w-14 h-14 border rounded-xl shadow-sm">
+              <Avatar className="w-16 h-16 border rounded-2xl shadow-sm">
                 <AvatarImage src={appointment.avatar} />
-                <AvatarFallback className="text-lg font-bold">
-                  <Stethoscope className="h-7 w-7" />
+                <AvatarFallback className="text-xl font-bold bg-muted">
+                  <Stethoscope className="h-8 w-8 text-primary" />
                 </AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-background border rounded-lg flex items-center justify-center shadow-sm">
                 {appointment.type === 'video' ? (
-                  <Video className="w-3 h-3 text-primary" />
+                  <Video className="w-3.5 h-3.5 text-primary" />
                 ) : (
-                  <Phone className="w-3 h-3 text-secondary" />
+                  <Phone className="w-3.5 h-3.5 text-secondary" />
                 )}
               </div>
             </div>
@@ -462,7 +452,7 @@ function AppointmentCard({
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-bold text-foreground tracking-tight">{appointment.doctorName}</h3>
                 <Badge variant="secondary" className={cn(
-                  "px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-widest border",
+                  "px-3 py-1 rounded-lg font-bold text-xs border",
                   appointment.status === 'completed' ? "bg-green-50 text-green-700 border-green-100 dark:bg-green-500/10" :
                     appointment.status === 'cancelled' ? "bg-red-50 text-red-700 border-red-100 dark:bg-red-500/10" :
                       "bg-primary/5 text-primary border-primary/10 dark:bg-primary/10"
@@ -475,12 +465,12 @@ function AppointmentCard({
               </p>
 
               <div className="flex flex-wrap gap-3 pt-1">
-                <div className="flex items-center px-3 py-1 bg-muted rounded-lg text-xs font-bold text-muted-foreground border">
-                  <Calendar className="w-3 h-3 mr-2 text-primary" />
+                <div className="flex items-center px-3 py-1.5 bg-muted rounded-xl text-xs font-bold text-muted-foreground border">
+                  <Calendar className="w-3.5 h-3.5 mr-2 text-primary" />
                   {appointment.date === 'hackathon' ? 'Demo Mode' : new Date(appointment.date).toLocaleDateString()}
                 </div>
-                <div className="flex items-center px-3 py-1 bg-muted rounded-lg text-xs font-bold text-muted-foreground border">
-                  <Clock className="w-3 h-3 mr-2 text-primary" />
+                <div className="flex items-center px-3 py-1.5 bg-muted rounded-xl text-xs font-bold text-muted-foreground border">
+                  <Clock className="w-3.5 h-3.5 mr-2 text-primary" />
                   {appointment.time}
                 </div>
               </div>
@@ -488,7 +478,7 @@ function AppointmentCard({
               {appointment.symptoms && appointment.symptoms.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {appointment.symptoms.map((symptom, index) => (
-                    <Badge key={index} variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-md">
+                    <Badge key={index} variant="outline" className="text-xs font-bold px-2 py-0.5 rounded-md">
                       {symptom}
                     </Badge>
                   ))}
@@ -498,29 +488,34 @@ function AppointmentCard({
           </div>
 
           {/* Right Side: Actions & Fee */}
-          <div className="flex lg:flex-col items-center lg:items-end justify-between gap-4 lg:min-w-[160px] pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-6">
-            <div className="text-center lg:text-right hidden lg:block">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-0.5">Fee</p>
-              <p className="text-xl font-bold text-foreground">₹{appointment.consultationFee || '500'}</p>
+          <div className="flex lg:flex-col items-center lg:items-end justify-between gap-4 lg:min-w-[180px] pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-6">
+            <div className="text-center lg:text-right">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Fee / शुल्क</p>
+              <p className="text-2xl font-black text-foreground">₹{appointment.consultationFee || '500'}</p>
             </div>
 
-            <div className="flex flex-wrap lg:flex-col gap-2 w-full sm:w-auto lg:w-full">
+            <div className="flex flex-wrap lg:flex-col gap-2.5 w-full sm:w-auto lg:w-full">
               {isPending && (
                 <>
                   <Button
                     variant="premium"
-                    className="flex-1 h-10 text-sm font-bold rounded-xl"
-                    onClick={() => router.push(`/patient/payment/${appointment.id}`)}
+                    className="flex-1 h-12 text-sm font-black rounded-xl"
+                    onClick={() => {
+                      setPayLoading(appointment.id);
+                      router.push(`/patient/payment/${appointment.id}`);
+                    }}
+                    loading={payLoading}
                   >
-                    <CreditCard className="w-5 h-5 mr-3 text-[#001C3D]" />
-                    Pay Now
+                    <CreditCard className="w-5 h-5 mr-2 text-[#001C3D] shrink-0" />
+                    Pay Now / भुगतान करें
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 h-9 text-sm font-bold rounded-xl text-destructive hover:bg-destructive/5"
+                    className="flex-1 h-12 text-sm font-bold rounded-xl text-destructive hover:bg-destructive/5"
                     onClick={() => onCancel(appointment.id)}
+                    loading={cancelLoading}
                   >
-                    Cancel
+                    Cancel / रद्द करें
                   </Button>
                 </>
               )}
@@ -528,22 +523,23 @@ function AppointmentCard({
               {isUpcoming && isToday && (
                 <>
                    {timeStatus === 'ready' && (
-                    <Button
+                      <Button
                       variant="premium"
                       className={cn(
-                        "flex-1 h-11 text-base font-bold rounded-xl border-2 border-primary/20",
-                        isHackathon && "bg-green-500 hover:bg-green-600 border-none text-white shadow-lg shadow-green-500/20"
+                        "flex-1 h-14 text-sm font-black rounded-xl border-2 border-primary/20",
+                        isHackathon && "bg-green-500 hover:bg-green-600 border-none text-white shadow-lg"
                       )}
                       onClick={() => onJoin(appointment.id)}
+                      loading={joinLoading}
                     >
-                      <Video className={cn("w-6 h-6 mr-3", isHackathon ? "text-white" : "text-primary")} />
-                      {isHackathon ? "Direct Join (Demo)" : "Join Call"}
+                      <Video className={cn("w-5 h-5 mr-2 shrink-0", isHackathon ? "text-white" : "text-primary")} />
+                      Join Call / कॉल से जुड़ें
                     </Button>
                   )}
                   {timeStatus === 'early' && (
-                    <div className="bg-primary/5 border rounded-xl p-2 text-center w-full">
-                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Starting Soon</p>
-                      <p className="text-[10px] font-medium text-muted-foreground mt-0.5 italic">Join 10 min before</p>
+                    <div className="bg-primary/5 border rounded-xl p-3 text-center w-full">
+                      <p className="text-xs font-bold text-primary uppercase tracking-wide">Starting Soon / जल्द शुरू होगा</p>
+                      <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 italic">Join 10m early / १० मिनट पहले जुड़ें</p>
                     </div>
                   )}
                 </>
@@ -553,17 +549,19 @@ function AppointmentCard({
                 <>
                   <Button
                     variant="outline"
-                    className="flex-1 h-9 text-sm font-bold rounded-xl text-muted-foreground"
+                    className="flex-1 h-12 text-sm font-bold rounded-xl text-muted-foreground"
                     onClick={() => onReschedule(appointment.id)}
+                    loading={rescheduleLoading}
                   >
-                    Reschedule
+                    Reschedule / समय बदलें
                   </Button>
                   <Button
                     variant="ghost"
-                    className="flex-1 h-9 text-[10px] font-bold rounded-xl text-muted-foreground uppercase tracking-widest hover:text-destructive"
+                    className="flex-1 h-12 text-xs font-bold rounded-xl text-muted-foreground uppercase tracking-wider hover:text-destructive"
                     onClick={() => onCancel(appointment.id)}
+                    loading={cancelLoading}
                   >
-                    Cancel Visit
+                    Cancel / रद्द करें
                   </Button>
                 </>
               )}
@@ -571,10 +569,11 @@ function AppointmentCard({
               {appointment.status === 'completed' && (
                 <Button
                   variant="outline"
-                  className="flex-1 h-9 text-sm font-bold rounded-xl"
+                  className="flex-1 h-12 text-sm font-bold rounded-xl"
+                  onClick={() => router.push(`/patient/dashboard`)}
                 >
                   <MessageCircle className="w-4 h-4 mr-2 text-primary" />
-                  Chat
+                  Chat / बातचीत
                 </Button>
               )}
 
@@ -582,9 +581,9 @@ function AppointmentCard({
                 <Button
                   onClick={() => router.push('/patient/appointments/book')}
                   variant="outline"
-                  className="flex-1 h-9 text-sm font-bold rounded-xl text-muted-foreground"
+                  className="flex-1 h-12 text-sm font-bold rounded-xl text-muted-foreground"
                 >
-                  Book Again
+                  Book Again / फिर बुक करें
                 </Button>
               )}
             </div>

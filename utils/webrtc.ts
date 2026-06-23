@@ -12,7 +12,8 @@ const ICE_SERVERS = {
 export function createPeerConnection(
   localStream: MediaStream,
   setRemoteStream: (stream: MediaStream) => void,
-  onIceCandidate: (candidate: RTCIceCandidate) => void
+  onIceCandidate: (candidate: RTCIceCandidate) => void,
+  onConnectionStateChange?: (state: string) => void
 ): RTCPeerConnection {
   // Close existing connection if any
   closePeerConnection();
@@ -40,9 +41,20 @@ export function createPeerConnection(
     }
   };
 
-  pc.oniceconnectionstatechange = () => {
-    console.log('ICE Connection State:', pc.iceConnectionState);
+  const handleStateChange = () => {
+    const state = pc.connectionState || pc.iceConnectionState;
+    console.log('Connection state change:', {
+      connectionState: pc.connectionState,
+      iceConnectionState: pc.iceConnectionState,
+      effectiveState: state
+    });
+    if (onConnectionStateChange) {
+      onConnectionStateChange(state);
+    }
   };
+
+  pc.onconnectionstatechange = handleStateChange;
+  pc.oniceconnectionstatechange = handleStateChange;
 
   pc.onsignalingstatechange = () => {
     console.log('Signaling State:', pc.signalingState);

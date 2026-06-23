@@ -1,0 +1,112 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SwasthGuru — GCP Ingress (GKE Load Balancer)
+# Routes external traffic to microservices with path-based routing
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: swasthguru-ingress
+  namespace: swasthguru
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "swasthguru-ip"
+    networking.gke.io/managed-certificates: "swasthguru-ssl"
+    kubernetes.io/ingress.allow-http: "false"
+    # WebSocket support for signal service
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+spec:
+  rules:
+    - host: swasthguru.your-domain.com
+      http:
+        paths:
+          # Signal service (WebSocket / Socket.IO)
+          - path: /socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: signal-service
+                port:
+                  number: 5001
+          # Auth service routes
+          - path: /api/users
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 5002
+          - path: /webhooks
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 5002
+          # Data service routes
+          - path: /api/doctors
+            pathType: Prefix
+            backend:
+              service:
+                name: data-service
+                port:
+                  number: 5003
+          - path: /api/appointments
+            pathType: Prefix
+            backend:
+              service:
+                name: data-service
+                port:
+                  number: 5003
+          - path: /api/records
+            pathType: Prefix
+            backend:
+              service:
+                name: data-service
+                port:
+                  number: 5003
+          - path: /api/recognize-medicine
+            pathType: Prefix
+            backend:
+              service:
+                name: data-service
+                port:
+                  number: 5003
+          # Core engine (GenAI)
+          - path: /api/ai
+            pathType: Prefix
+            backend:
+              service:
+                name: core-engine
+                port:
+                  number: 8000
+          # Frontend (catch-all)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+---
+# Managed SSL Certificate for HTTPS
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: swasthguru-ssl
+  namespace: swasthguru
+spec:
+  domains:
+    - swasthguru.your-domain.com
+---
+# Namespace definition
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: swasthguru
+  labels:
+    app.kubernetes.io/name: swasthguru
+    environment: production
