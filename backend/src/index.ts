@@ -19,7 +19,7 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 // ─── Route Handlers ─────────────────────────────────────────────────────────
 import doctorRoutes from './routes/doctors';
@@ -278,7 +278,7 @@ io.on('connection', (socket) => {
     socket.on('chat-message', (data: any) => {
         socket.to(data.roomId).emit('chat-message', {
             ...data,
-            messageId: uuidv4(),
+            messageId: randomUUID(),
             timestamp: data.timestamp || Date.now(),
         });
     });
