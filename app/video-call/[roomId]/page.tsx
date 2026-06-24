@@ -14,7 +14,8 @@ import {
 } from '@/utils/webrtc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, AlertCircle, MessageSquare, Send, Paperclip, X, FileText, Image as ImageIcon, Download, Loader2 } from 'lucide-react';
+import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, AlertCircle, MessageSquare, Send, Paperclip, X, FileText, Image as ImageIcon, Download, Loader2, FolderOpen } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { getAppointmentTimeStatus, getApiUrl } from '@/lib/utils';
 
@@ -35,6 +36,8 @@ export default function VideoCallPage() {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isSendingFile, setIsSendingFile] = useState(false);
+    const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
+    const [isRecordsListOpen, setIsRecordsListOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +55,25 @@ export default function VideoCallPage() {
             scrollToChatBottom();
         }
     }, [messages, isChatOpen]);
+
+    useEffect(() => {
+        if (!user || user.unsafeMetadata?.role === 'doctor') return;
+
+        const fetchPatientRecords = async () => {
+            try {
+                const apiUrl = getApiUrl();
+                const res = await fetch(`${apiUrl}/records/${user.id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setMedicalRecords(data);
+                }
+            } catch (err) {
+                console.error('Error fetching patient records:', err);
+            }
+        };
+
+        fetchPatientRecords();
+    }, [user]);
 
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -227,6 +249,26 @@ export default function VideoCallPage() {
 
     const endCall = () => {
         router.back();
+    };
+
+    const handleSendMedicalRecord = (record: any) => {
+        const messageObj = {
+            roomId,
+            senderId: user?.id,
+            senderName: user?.fullName || 'User',
+            senderRole: user?.unsafeMetadata?.role === 'doctor' ? 'doctor' : 'patient',
+            text: `Sent a medical record: ${record.title}`,
+            file: {
+                name: record.file_name || record.title,
+                type: record.file_name?.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+                size: 1024 * 1024 * 1.5,
+                data: record.file_url
+            },
+            timestamp: Date.now()
+        };
+
+        socket.emit('chat-message', messageObj);
+        setMessages((prev) => [...prev, messageObj]);
     };
 
     const handleSend = () => {
@@ -549,6 +591,7 @@ export default function VideoCallPage() {
                                     disabled={isSendingFile}
                                     onClick={() => fileInputRef.current?.click()}
                                     className="h-10 w-10 text-gray-400 hover:text-white rounded-xl hover:bg-gray-800 flex-shrink-0"
+                                    title="Upload from Device"
                                 >
                                     {isSendingFile ? (
                                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -556,6 +599,19 @@ export default function VideoCallPage() {
                                         <Paperclip className="h-4 w-4" />
                                     )}
                                 </Button>
+
+                                {user?.unsafeMetadata?.role !== 'doctor' && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setIsRecordsListOpen(true)}
+                                        className="h-10 w-10 text-gray-400 hover:text-white rounded-xl hover:bg-gray-800 flex-shrink-0"
+                                        title="Attach from Medical Records"
+                                    >
+                                        <FolderOpen className="h-4 w-4" />
+                                    </Button>
+                                )}
                                 <input
                                     type="text"
                                     value={chatInput}
@@ -576,6 +632,54 @@ export default function VideoCallPage() {
                     </div>
                 )}
             </div>
+            {/* Medical Records Dialog */}
+            <Dialog open={isRecordsListOpen} onOpenChange={setIsRecordsListOpen}>
+                <DialogContent className="max-w-md bg-gray-900 border-gray-800 text-white rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold flex items-center text-white">
+                            <FileText className="w-5 h-5 mr-2 text-primary" />
+                            Select from Medical Records
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            Choose a file from your saved medical records to send to the consultation chat.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="max-h-60 overflow-y-auto space-y-2 mt-4 pr-1">
+                        {medicalRecords.length === 0 ? (
+                            <div className="text-center py-6 text-gray-500 text-sm">
+                                No medical records found.
+                            </div>
+                        ) : (
+                            medicalRecords.map((record: any) => (
+                                <div
+                                    key={record.id}
+                                    onClick={() => {
+                                        handleSendMedicalRecord(record);
+                                        setIsRecordsListOpen(false);
+                                        toast.success(`Sent record: ${record.title}`);
+                                    }}
+                                    className="p-3 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-primary/55 rounded-2xl cursor-pointer transition-all flex items-center justify-between"
+                                >
+                                    <div className="flex items-center space-x-3 min-w-0">
+                                        <FileText className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                                        <div className="text-left min-w-0">
+                                            <p className="font-extrabold text-sm text-gray-100 truncate">{record.title}</p>
+                                            <p className="text-xs text-gray-550 capitalize">{record.category} • {new Date(record.date).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <DialogFooter className="mt-4">
+                        <Button variant="ghost" onClick={() => setIsRecordsListOpen(false)} className="rounded-xl text-gray-400 hover:text-white hover:bg-gray-800">
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

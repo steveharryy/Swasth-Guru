@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useUser, UserButton } from '@clerk/nextjs';
@@ -11,6 +11,12 @@ import { ChatWidget } from '@/components/chat/ChatWidget';
 import { Button } from '@/components/ui/button';
 import { BackendStatusPanel } from '@/components/backend-status-panel';
 import { getSocket } from '@/lib/socket';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +36,8 @@ import {
   Clock,
   Phone,
   Pill,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react';
 import { cn, getApiUrl } from '@/lib/utils';
 
@@ -101,7 +108,98 @@ export default function PatientDashboard() {
   const [activeConsultationLoading, setActiveConsultationLoading] = useState<string | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isRecordsLoading, setIsRecordsLoading] = useState(false);
+
+  // Upload Record states
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState<string>('');
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadDescription, setUploadDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMedicationLoading, setIsMedicationLoading] = useState(false);
+
+  const fetchRecords = async () => {
+    if (!user) return;
+    try {
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/records/${user.id}`);
+      if (res.ok) {
+        const records = await res.json();
+        const totalRecords = records.length;
+        
+        setStatsData(prev => ({
+          ...prev,
+          medicalRecords: totalRecords.toString(),
+          healthScore: totalRecords > 0 ? "95%" : "100%"
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching medical records:', error);
+    }
+  };
+
+  const handleFileUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile || !uploadCategory || !uploadTitle) {
+      toast.error('Please fill in all required fields / कृपया सभी आवश्यक फ़ील्ड भरें');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        resolve(reader.result as string);
+      });
+      
+      const fileBase64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result as string);
+        r.onerror = reject;
+        r.readAsDataURL(selectedFile);
+      });
+
+      const apiUrl = getApiUrl();
+
+      const res = await fetch(`${apiUrl}/records`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: user?.id,
+          category: uploadCategory,
+          title: uploadTitle,
+          description: uploadDescription,
+          fileName: selectedFile.name,
+          fileBase64
+        })
+      });
+
+      if (res.ok) {
+        toast.success('Record uploaded successfully / रिकॉर्ड सफलतापूर्वक अपलोड किया गया');
+        setIsUploadOpen(false);
+        resetUploadForm();
+        fetchRecords();
+      } else {
+        const err = await res.json();
+        throw new Error(err.message || 'Upload failed');
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload record');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const resetUploadForm = () => {
+    setUploadCategory('');
+    setUploadTitle('');
+    setUploadDescription('');
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -269,25 +367,6 @@ export default function PatientDashboard() {
     };
     fetchAppointments();
 
-    // Load medical records from Backend
-    const fetchRecords = async () => {
-      try {
-        const apiUrl = getApiUrl();
-        const res = await fetch(`${apiUrl}/records/${user.id}`);
-        if (res.ok) {
-          const records = await res.json();
-          const totalRecords = records.length;
-          
-          setStatsData(prev => ({
-            ...prev,
-            medicalRecords: totalRecords.toString(),
-            healthScore: totalRecords > 0 ? "95%" : "100%"
-          }));
-        }
-      } catch (error) {
-        console.error('Error fetching medical records:', error);
-      }
-    };
     fetchRecords();
 
     // Fetch doctors
@@ -394,6 +473,19 @@ export default function PatientDashboard() {
               <div className="flex flex-col items-start leading-tight text-left">
                 <span className="text-sm md:text-base font-extrabold">Appointments</span>
                 <span className="text-xs font-semibold text-primary/70">मेरे अपॉइंटमेंट</span>
+              </div>
+            </Button>
+
+            {/* Upload Record Button */}
+            <Button
+              onClick={() => setIsUploadOpen(true)}
+              variant="outline"
+              className="h-14 md:h-16 px-8 rounded-2xl border-2 border-indigo-500/40 hover:bg-indigo-50/50 transition-all text-indigo-600 font-black flex items-center justify-center"
+            >
+              <Upload className="w-6 h-6 mr-2 shrink-0" />
+              <div className="flex flex-col items-start leading-tight text-left">
+                <span className="text-sm md:text-base font-extrabold">Upload Record</span>
+                <span className="text-xs font-semibold text-indigo-600/70">दस्तावेज़ अपलोड</span>
               </div>
             </Button>
           </div>
@@ -823,6 +915,126 @@ export default function PatientDashboard() {
           </div>
         </div>
       </nav>
+      {/* Upload Dialog */}
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent className="max-w-md bg-card border-border rounded-3xl overflow-hidden shadow-2xl">
+          <DialogHeader className="py-4 px-6 border-b">
+            <DialogTitle className="text-xl font-bold flex items-center text-foreground">
+              <Upload className="w-5 h-5 mr-3 text-primary" />
+              Upload Medical Record / रिकॉर्ड अपलोड करें
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground mt-1">
+              Add reports, prescriptions, or lab results.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleFileUpload} className="p-6 space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="category" className="font-extrabold text-sm text-foreground">
+                Category / श्रेणी <span className="text-destructive">*</span>
+              </Label>
+              <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                <SelectTrigger className="rounded-xl h-11 border-border bg-background">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border rounded-xl">
+                  <SelectItem value="visits">Doctor Visit / डॉक्टर पर्ची</SelectItem>
+                  <SelectItem value="labs">Lab Report / लैब रिपोर्ट</SelectItem>
+                  <SelectItem value="meds">Prescriptions / दवाई सूची</SelectItem>
+                  <SelectItem value="vax">Vaccines / टीका रिकॉर्ड</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title" className="font-extrabold text-sm text-foreground">
+                Document Title / शीर्षक <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="title"
+                value={uploadTitle}
+                onChange={(e) => setUploadTitle(e.target.value)}
+                placeholder="e.g., Blood Test, Allergy Report"
+                className="rounded-xl h-11 border-border bg-background"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="font-extrabold text-sm text-foreground">
+                Short Notes / संक्षिप्त विवरण
+              </Label>
+              <Textarea
+                id="description"
+                value={uploadDescription}
+                onChange={(e) => setUploadDescription(e.target.value)}
+                placeholder="Optional description..."
+                className="rounded-xl border-border min-h-[80px] bg-background"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-extrabold text-sm text-foreground">
+                Choose File / फ़ाइल चुनें <span className="text-destructive">*</span>
+              </Label>
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-border hover:border-primary/55 rounded-2xl p-6 text-center cursor-pointer hover:bg-primary/5 transition-all bg-background"
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setSelectedFile(file);
+                  }}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,image/*"
+                />
+                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                {selectedFile ? (
+                  <p className="text-sm font-bold text-foreground truncate max-w-xs mx-auto">
+                    {selectedFile.name}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm font-bold text-foreground">Click to upload document</p>
+                    <p className="text-xs text-muted-foreground mt-1">PDF, DOC, TXT, or Image up to 10MB</p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 border-t flex gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => {
+                  setIsUploadOpen(false);
+                  resetUploadForm();
+                }} 
+                className="rounded-xl font-bold flex-1 h-12"
+              >
+                Cancel / रद्द करें
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isUploading}
+                className="rounded-xl font-bold flex-1 h-12"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Uploading...
+                  </>
+                ) : (
+                  'Upload / अपलोड'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <ChatWidget />
     </div>
   );
