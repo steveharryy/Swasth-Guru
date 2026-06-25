@@ -37,7 +37,8 @@ import {
   Phone,
   Pill,
   Loader2,
-  Upload
+  Upload,
+  MapPin
 } from 'lucide-react';
 import { cn, getApiUrl } from '@/lib/utils';
 
@@ -199,6 +200,26 @@ export default function PatientDashboard() {
     setUploadDescription('');
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const findNearestHospital = () => {
+    toast.info('Fetching your location... / आपकी स्थिति प्राप्त की जा रही है...');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const url = `https://www.google.com/maps/search/?api=1&query=hospital&ll=${lat},${lon}`;
+          window.open(url, '_blank');
+        },
+        (error) => {
+          console.warn("Geolocation failed or denied, using fallback hospital search:", error);
+          window.open('https://www.google.com/maps/search/?api=1&query=nearest+emergency+hospital', '_blank');
+        }
+      );
+    } else {
+      window.open('https://www.google.com/maps/search/?api=1&query=nearest+emergency+hospital', '_blank');
+    }
   };
 
   useEffect(() => {
@@ -788,6 +809,15 @@ export default function PatientDashboard() {
               >
                 <Phone className="w-6 h-6 mr-4 animate-pulse text-white" />
                 CALL / कॉल करें: 102
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full h-16 text-base md:text-lg font-black rounded-2xl border-2 border-rose-200 text-rose-600 hover:bg-rose-100/50 bg-white transition-all shadow-md flex items-center justify-center mt-3"
+                onClick={findNearestHospital}
+              >
+                <MapPin className="w-6 h-6 mr-4 text-rose-600" />
+                NEAREST HOSPITAL / नजदीकी अस्पताल खोजें
               </Button>
             </CardContent>
           </Card>
